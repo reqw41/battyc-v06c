@@ -189,6 +189,9 @@ show_window_round_number:
 ; Рисуем чёрное окно
 	LD HL,$A458		; Координаты на экране
 	CALL screen_addr_calc
+	LD A,H
+	ADD A,$20		; temporary round window belongs to sprite plane
+	LD H,A
 	LD C,$20		; Высота окна а пикселях
 next_win_line:
 	LD B,$0A		; Ширина окна в знакоместах
@@ -319,66 +322,27 @@ current_game_mode_line_prop:
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 ; Закрашивает текущий режим игры в главном меню нужным цветом (для мигания)
-fill_color_current_game_mode:		; Specialist ready
-	LD A,(DE)
-	LD H,A
-	LD L,$70
-	CALL screen_coord_attrib
-	INC DE
-	LD A,(DE)
-	PUSH HL
-	LD HL,flash_colors
-	CALL hl_add_a
-	LD A,(HL)
-	INC DE
-
-	ld hl,last_color
-	cp (HL)
-	jp z,nac_2
-
- ; Перерисовываем буквы, только если изменился цвет
-	ld (hl),a
-;	ld (color_port),a
-	;Считываем и записываем обратно данные
-	pop hl
-	ld b,$0B
-next_attr_column:
-	ld c,$08
-nac_1:
-	ld a,(hl)
-	ld (hl),a
-	dec hl
-	dec c
-	jp nz,nac_1
-	ld a,l
-	add $08
-	ld l,a
-	inc h
-	dec B
-	JP NZ,next_attr_column
-	push hl
-nac_2:
-	pop hl
-	LD A,(counter_misc)
-	AND $1F
-	RET NZ
-	DEC DE
-	LD A,(DE)
-	INC A
-	AND $0F
-	LD (DE),A
-	INC DE
-	RET
-
-; Последний используемый цвет в мигалке
-last_color:
-	defb $00
-
-; Чередующиеся цвета для мигания надписи режима игры в главном меню
-; $10 цветов крутятся по кругу
-flash_colors:
-	DEFB c00,c00,c00,c00,c00,c00,c00,c00	; Чёрный
-	DEFB c47,c47,c47,c47,c47,c47,c47,c47	; Яркий белый
+fill_color_current_game_mode:
+ ; Re-render the selected text at a frame-based blink rate.
+ ld a,(IntCount)
+ and $10
+ ld a,c00
+ jp z,UiFlashReady
+ ld a,c47
+UiFlashReady:
+ ld hl,last_color
+ cp (hl)
+ ret z
+ ld (hl),a
+ ld hl,(pointer_game_mode_text)
+ inc hl
+ inc hl
+ ld (hl),a
+ dec hl
+ dec hl
+ ex de,hl
+ jp print_line
+last_color: db $ff
 
 ; Признак необходимости смены игрока, которому зачислять счёт при Double Play
 ; Если 0, то менять игрока не нужно
@@ -463,7 +427,7 @@ score_update_2:
 	ld (IXobj),HL
 	CALL hl_buf_addr_calc
 	CALL print_obj_to_buff
-	CALL print_obj_from_buf_to_scr
+	CALL plane_static_object
 	ld HL,(IXobj)
 	ld DE,$0011
 	add HL,DE
@@ -523,74 +487,14 @@ next_digit:
 ; Used by the routine at add_points_to_score.
 ; Печать цифры счёта на поле
 print_digit:
-	LD HL,spr_score_digits+2
-	ADD A,L
-	LD L,A
-	JP NC,print_digit_0
-	INC H
-print_digit_0:
-	LD (print_digit_ld_sp_1+$01),HL	; Адрес спрайта цифры
-	LD HL,(score_screen_ptr)
-	LD (print_digit_ld_hl+$01),HL	; Адрес в буфере
-	EX DE,HL			; DE = адрес в буфере, HL свободен
-
-	ld hl,$0000
-	add hl,sp
-	ld (print_digit_ld_sp_2+$01),hl	; сохраняем SP
-	di
-
-	ld hl,$0090
-	ADD HL,DE
-	LD A,$08
-print_digit_ld_sp_1:
-	LD SP,$0000			; Адрес спрайта цифры
-print_digit_1:
-	ld (print_digit_2+1),A	; save A
-	POP BC			; берём пиксели и маску
-	LD A,C
-	OR (HL)
-	XOR B
-	LD (DE),A
-	inc l
-	;EX DE,HL
-	inc E			; НЕ поправлено направление для Вектора
-	;EX DE,HL
-print_digit_2:
-	ld A,$00		; restore A
-	DEC A
-	JP NZ,print_digit_1
-
-print_digit_ld_hl:
-	LD HL,$0000		; Адрес в буфере
-	inc h
-	LD (score_screen_ptr),HL	; сохраняем для следующего вызова (замена EXX)
-
-print_digit_ld_sp_2:
-	ld SP,$0000		; restore SP
-	ei
-	RET
+ jp NativePrintDigit
 
 ; Used by the routines at add_points_for_left_briks and play_sounds_queue.
 ; Обновляет участок экрана со счётом текущего игрока
 scr_score_update:
 	XOR A
 	LD (scr_score_need_upd),A
-	LD BC,$0608
-	LD HL,$1510
-	LD A,(game_mode)
-	CP $02
-	JP NZ,scr_score_update_0
-; Режим Double Play
-	CALL win_bg_recovery	; слева
-	LD BC,$0608
-	LD HL,$15C0
-	JP win_bg_recovery	; справа и выход
-scr_score_update_0:
-	LD A,(player_number)
-	AND A
-	JP Z,win_bg_recovery	; слева и выход
-	LD L,$C0
-	JP win_bg_recovery	; справа и выход
+	RET ; NativePrintDigit updates the persistent HUD directly.
 
 ; Used by the routines at game_restart and briks_calc.
 ; Поиск адреса уровня по номеру, заданному в ячейке current_level_number_1up
@@ -643,32 +547,9 @@ press_1_4_check:
 ;	RET
 
 ; Used by the routines at input_new_record_name, draw_frame, game_restart and LBC10.
-clear_screen_pix:		; Vector 8080 ready
-	LD HL,$0000
-	LD D,H
-	LD E,L
-	ADD HL,SP
-	LD (clear_screen_1+1),HL ; сохраняем стек
-	LD HL,zx_scr+$2000	; поправка для Вектора
-	LD C,$20
-	di
-clear_screen_3:
-	DEC H
-	LD SP,HL
-	LD B,$60
-clear_screen_2:
-	PUSH DE
-	dec B
-	jp nz,clear_screen_2
-	dec C
-	jp nz,clear_screen_3
-clear_screen_1:
-	LD SP,$0000		; восстанавливаем стек
-	ei
-	RET
+clear_screen_pix:
+ jp planes_reset
 
-; Used by the routines at input_new_record_name, add_points_for_left_briks, pause_clear_screen_attrib, pause_long and print_kinnock.
-; Пауза. Длительность задаётся в регистре D.
 pause_short:
 	LD E,$FF
 pause_short_0:
@@ -679,172 +560,15 @@ pause_short_0:
 	RET
 
 ; Сюда временно сохраняется SP
-sp_storage:
-	DEFW $0000
+; Obsolete shadow-renderer SP storage removed.
 
 ; Used by the routines at LBAED, LBB97 and LBC10.
 ; Сохранение объектов с экранного буфера с тенью и фоном в save_objs_buff
 ; Перенос объектов (макс. $0B) в буфер
-save_objs_to_buff:
-	LD HL,object_ball_1
-	LD (cur_obj),HL
-	LD B,$0B		; 11
-	XOR A
-	LD (save_objs_buff),A		; В первой ячейке хранится количество объектов
-	LD HL,save_objs_buff+$01
-next_obj_to_buff:
-	PUSH BC
-	PUSH HL
-	LD HL,(cur_obj)
-	LD A,(HL)
-	POP HL
-	AND A
-	CALL NZ,save_one_obj_to_buff
-	POP BC
-	PUSH HL
-	LD HL,(cur_obj)
-	LD DE,$0016
-	ADD HL,DE
-	LD (cur_obj),HL
-	POP HL
-	dec B
-	jp nz,next_obj_to_buff
-	LD (save_obj_buff_end),HL	; Бесполезная команда
-	RET
-
-; Сюда один раз сохраняется указатель на конец буфера save_objs_buff,
-; но потом это значение никогда не считывается
-; Без записи в эту ячейку всё работает без проблем
-; Скорее всего сделано для отладки, чтобы выяснить сколько максимум занимает буфер
-save_obj_buff_end:
-	DEFW $0000
-cur_obj:
-	DEFW $0000
-
-; Used by the routine at save_objs_to_buff.
-; Сохранение одного объекта с тенью и фоном в текущее место (HL) буфера
-save_one_obj_to_buff:
-	; Check Y coord (offset +4)
-	PUSH HL
-	LD HL,(cur_obj)
-	LD DE,$0004
-	ADD HL,DE
-	LD A,(HL)		; координата Y объекта
-	POP HL
-	CP $C0
-	JP C,out_of_bottom	; Переходим, если координата не ниже границы экрана
-	; Делаем объект невидимым (он за пределами экрана)
-	PUSH HL
-	LD HL,(cur_obj)
-	LD A,(HL)
-	OR $80
-	LD (HL),A
-	POP HL
-out_of_bottom:
-	PUSH HL
-	LD HL,(cur_obj)
-	LD A,(HL)		; flags
-	POP HL
-	or A		; BIT 7,(IX+$00)
-	RET M			; Выходим, если объект за пределами экрана
-	LD A,(save_objs_buff)
-	INC A
-	LD (save_objs_buff),A
-	; Load C=ширина (+8), B=X coord (+2) as temp
-	PUSH HL
-	LD HL,(cur_obj)
-	INC HL
-	INC HL			; +2: координата Х
-	LD B,(HL)		; B = X coord (temp until height load)
-	LD DE,$0006
-	ADD HL,DE		; +8
-	LD C,(HL)		; C = ширина спрайта с тенью в байтах
-	POP HL
-	LD A,B			; A = X coord
-	AND $07
-	JP Z,sprite_width_const
-	INC C			; если спрайт сдвинут, то увеличиваем его ширину
-sprite_width_const:
-	LD A,C
-	ADD A,A
-	ADD A,A
-	ADD A,A
-	ADD A,B			; координата Х правого края объекта (B = X coord)
-	JP NC,no_cross_right_margin	; переход если не вышло за границы правого края экрана (255)
-
-	LD A,$FF
-	SUB B			; координата Х объекта (B = X coord)
-	or a
-	rra		; SRL A
-	or a
-	rra		; SRL A
-	or a
-	rra		; SRL A
-	INC A
-	LD C,A			; номер столбца (1-32)
-
-no_cross_right_margin:
-	; Load D=(+$0A), E=(+$0B) screen buf addr
-	PUSH HL
-	LD HL,(cur_obj)
-	LD DE,$000A
-	ADD HL,DE
-	LD D,(HL)		; старший адрес в экранном буфере
-	INC HL
-	LD E,(HL)		; младший адрес в экранном буфере
-	POP HL
-	LD (HL),E
-	INC HL
-	LD (HL),D
-	INC HL
-	ld a,c
-	LD (HL),A		; Ширина сохраняемого окна в байтах
-	INC HL
-	; Load B=высота (+9)
-	PUSH DE			; DE = адрес в экранном буфере, LD DE,$0009 ниже его затрёт
-	PUSH HL
-	LD HL,(cur_obj)
-	LD DE,$0009
-	ADD HL,DE
-	LD B,(HL)		; высота спрайта с тенью в пикселях
-	POP HL
-	LD (HL),B
-	INC HL
-	POP DE
-	EX DE,HL
-
-; HL - адрес в экранном буфере
-; DE - адрес в save_objs_buff
-; B - высота спрайта с тенью в пикселях
-	ld a,b
-	ld (save_obj_02+$01),a
-	ld (save_obj_03+$01),a
-save_obj_02:
-	ld b,$00		; Высота сохраняемого окна
-save_obj_01:
-	ld a,(hl)
-	ld (de),a
-	inc l
-	inc de
-	dec B
-	jp nz,save_obj_01
-	ld a,l
-save_obj_03:
-	sub $00			; Высота сохраняемого окна
-	ld l,a
-	inc h
-	dec c
-	jp nz,save_obj_02
-
-	EX DE,HL
-	RET
-
-; Used by the routine at LBAED.
-; Восстанавливает магнит и все объекты
 restore_objs_and_magnet:
 	LD A,(current_magnet_prop+1)
 	AND A
-	JP Z,restore_objs
+	RET Z
 ; Восстанавливаем магнит с фоном и с припуском 5 пикселей
 	LD HL,(current_magnet_prop)
 	inc HL
@@ -861,120 +585,16 @@ restore_objs_and_magnet:
 	CALL win_bg_recovery
 	XOR A
 	LD (current_magnet_prop+1),A
+	RET
 
 ; This entry point is used by the routines at LBB97 and LBC10.
 ; Восстанавливает объекты из save_objs_buff в экранный буфер
-restore_objs:
-	LD A,(save_objs_buff)	; Количество восстанавливаемых объектов
-	AND A
-	RET Z			; Возвращаемся, если нечего восстанавливать
-	LD HL,save_objs_buff+$01
-next_restore_obj:
-	ld (rest_obj_04+1),A	; save A
-	LD E,(HL)		; младший адрес в экранном буфере
-	INC HL
-	LD D,(HL)		; старший адрес в экранном буфере
-	INC HL
-	LD A,(HL)		; шаг отступа для выполнения череды LDI
-	; LD (next_line_restore_obj+$01),A
-	INC HL
-	LD B,(HL)		; высота спрайта с тенью в пикселях
-	INC HL
-
-	ld c,a			; ширина
-	ld a,b			; высота спрайта с тенью в пикселях
-	ld (rest_obj_02+$01),a
-	ld (rest_obj_03+$01),a
-
-rest_obj_02:
-	ld b,$00		; Высота восстанавливаемого окна
-rest_obj_01:
-	ld a,(hl)
-	ld (de),a
-	inc hl
-	inc e
-	dec B
-	jp nz,rest_obj_01
-	ld a,e
-rest_obj_03:
-	sub $00			; Высота восстанавливаемого окна
-	ld e,a
-	inc d
-	dec c
-	jp nz,rest_obj_02
-rest_obj_04:
-	ld A,$00		; restore A
-	DEC A
-	JP NZ,next_restore_obj
-	RET
-
-  ; LD C,$FF
-  ; LD A,E
-  ; JP next_line_restore_obj
-; check_next_obj:
-  ; EX AF,AF'
-  ; DEC A
-  ; JP NZ,next_restore_obj
-  ; RET
-
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; LDI
-  ; DEC DE
-  ; ADD A,$20
-  ; LD E,A
-  ; JP NC,next_line_restore_obj
-  ; INC D
-; next_line_restore_obj:
-  ; dec B
-  ; jp nz,next_line_restore_obj
-  ; JP check_next_obj
-
-; Data block at 98DA
-; Таблица для настройки процедуры вывода спрайта в зависимости от его размера
-table_proc:
-	DEFW byte_put_width_1
-	DEFW byte_put_width_2
-	DEFW byte_put_width_3
-	DEFW byte_put_width_4
-	DEFW byte_put_width_5
-	DEFW byte_put_width_6
-	DEFW byte_put_width_7
-	DEFW byte_put_width_8
-
-	DEFW byte_put_width_shift_1
-	DEFW byte_put_width_shift_2
-	DEFW byte_put_width_shift_3
-	DEFW byte_put_width_shift_4
-	DEFW byte_put_width_shift_5
-	DEFW byte_put_width_shift_6
-	DEFW byte_put_width_shift_7
-	DEFW byte_put_width_shift_8
-
 ; Data block at 98FA
 ; Свойства всех 11-ти наборов спрайтов
 ; Для сложения с objs_width_sum.
 ; +$00 - значение для объекта без сдвига по X
 ; +$01 - значение для объекта со сдвигом по X
-objs_width:
-	DEFB $08,$0A	; $01 gfx_bat
-	DEFB $04,$06	; $02 gfx_ball
-	DEFB $00,$00	; $03 gfx_screen_elements
-	DEFB $06,$00	; $04 gfx_bonuses
-	DEFB $02,$02	; $05 gfx_bullet
-	DEFB $04,$04	; $06 anim_rocket
-	DEFB $00,$00	; $07 anim_spark
-	DEFB $09,$10	; $08 anim_ufo
-	DEFB $06,$0C	; $09 anim_bird
-	DEFB $04,$09	; $0A anim_alien_blast
-	DEFB $05,$07	; $0B gfx_last_sprite
+; Obsolete shadow-renderer width table removed.
 
 ; Routine at 9910
 ;
@@ -982,431 +602,7 @@ objs_width:
 ; Печатает спрайт с маской в буфер
 ; На входе: (IXobj) = адрес объекта (спрайт с маской)
 print_obj_to_buff:
-	ld HL,(IXobj)
-	LD A,(HL)		; IX+$00
-	or A		; BIT 7,A
-	RET M			; Возвращаемся, если объект невидим (за пределами экрана)
-	CP $02
-	JP NZ,obj_processing_1	; Переходим, если объект не шарик
-
-; Обработка объекта шарик
-	LD A,(object_bat_1+$14)	; применённый к объекту бонус
-	CP $07			; spr_bonus_smash
-	JP Z,set_big_ball
-	LD A,(object_bat_2+$14)	; применённый к объекту бонус
-	CP $07			; spr_bonus_smash
-	JP NZ,obj_processing
-
-; Установка большого шарика
-set_big_ball:
-	ld HL,(IXobj)
-	inc HL
-	LD (HL),$08		; IX+$01 = spr_big_ball
-	ld DE,$15-$01
-	add HL,DE
-	ld A,(HL)		; IX+$15
-	and %01111111		; RES 7,(IX+$15)
-	ld (HL),A		; IX+$15
-
-; Обработка длительности действия приза
-	LD A,(counter_misc)
-	RRA
-	JP C,obj_processing	; Переход, если нечётное значение counter_misc
-	LD A,(smash_counter)
-	INC A
-	LD (smash_counter),A	; Увеличение счётчика длительности приза Smash
-	CP $F8			; Длительность действия приза Smash
-	JP C,obj_processing
-
-; Отключение действия приза, если пришло время
-	LD A,(object_bat_1+$14)	; применённый к объекту бонус
-	CP $07			; spr_bonus_smash
-	JP NZ,not_smash
-	LD A,$FF
-	LD (object_bat_1+$14),A	; применённый к объекту бонус
-not_smash:
-	LD A,(object_bat_2+$14)	; применённый к объекту бонус
-	CP $07			; spr_bonus_smash
-	JP NZ,obj_processing
-	LD A,$FF
-	LD (object_bat_2+$14),A	; применённый к объекту бонус
-
-; Обработка любого объекта из списка
-; IXobj = адрес объекта
-obj_processing:
-	ld HL,(IXobj)
-	LD A,(HL)		; IX+$00
-obj_processing_1:
-	LD HL,objs_width-$02
-	CALL hl_add_2a
-	PUSH HL
-	LD HL,(IXobj)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02 координата Х объекта
-	POP HL
-	AND $07
-	JP Z,no_shift_obj
-	INC HL
-no_shift_obj:
-	LD A,(objs_width_sum)
-	ADD A,(HL)
-	LD (objs_width_sum),A	; Запись суммы ширин objs_width из всех объектов на экране
-
-	LD HL,(IXobj)		; sprite_search требует HL = адрес объекта (не таблицы objs_width!)
-	CALL sprite_search
-	EX DE,HL
-	LD (sprite_ptr_tmp),HL	; DE иначе будет затёрт ниже (LD DE,$0004 и LD DE,$0015)
-	EX DE,HL
-	LD HL,table_proc-$02
-	PUSH HL
-	LD HL,(IXobj)
-	LD DE,$0004
-	ADD HL,DE
-	LD A,(HL)		; IX+$04 координата Y объекта
-	POP HL
-
-	CP $C0
-	RET NC			; Возвращаемся, если координата больше 192, то есть объект за пределами экрана
-
-	EX DE,HL		; сохраняем HL в DE (PUSH здесь испортил бы SP до его чтения!)
-	LD HL,$0000
-	ADD HL,SP		; замена LD (sp_storage),SP (нет прямой адресации SP на i8080)
-	LD (sp_storage),HL
-	EX DE,HL		; восстанавливаем HL, не трогая SP
-
-	PUSH HL
-	LD HL,(IXobj)
-	LD DE,$0015
-	ADD HL,DE
-	LD A,(HL)		; IX+$15 BIT7 = 1 - каретка не в процессе трансформации
-	POP HL
-	or A		; BIT 7,(IX+$15)
-	LD A,$00
-	JP M,not_transform	; Переход, если каретка не в процессе трансформации
-	PUSH HL
-	LD HL,(IXobj)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02 координата Х объекта
-	POP HL
-not_transform:
-	AND $07
-	LD C,A
-	PUSH HL
-	LD HL,(sprite_ptr_tmp)	; восстанавливаем адрес спрайта, затёртый выше
-	EX DE,HL
-	POP HL
-	LD A,(DE)		; ширина в байтах (без учёта маски) (в DE адрес спрайта)
-	LD B,A			; ширина в байтах (без учёта маски)
-	JP Z,no_shift_obj_2	; Переход, если нет сдвига по X
-	ADD A,$08
-	INC B			; ширина в байтах (без учёта маски) + 1
-
-no_shift_obj_2:
-	CALL hl_add_2a
-	LD A,(HL)
-	INC HL
-	LD H,(HL)
-	LD L,A
-	LD (put_byte_1+$01),HL
-	LD (put_byte_3+$01),HL
-	LD (put_byte_4+$01),HL
-	INC DE			; в (DE) - высота в пикселях
-	ld a,b
-	LD (new_line_bytes_2+$01),A	; для byte_put_width_N: B там не увеличивался (без сдвига)
-	DEC A			; для byte_put_width_shift_N: B был увеличен на 1 (INC B выше) - отменяем
-	LD (new_line_bytes_1+$01),A
-	PUSH DE			; защищаем указатель на спрайт
-	LD HL,(IXobj)
-	LD DE,$000A
-	ADD HL,DE
-	LD A,(HL)		; IX+$0A
-	INC HL
-	LD L,(HL)		; IX+$0B -> L
-	LD H,A			; H = IX+$0A ; HL - адрес в экранном буфере
-	POP DE
-	EX DE,HL		; DE - адрес в экранном буфере
-	LD A,(HL)		; A - высота в пикселях
-	LD B,A
-	LD (blit_row_count),A	; замена EX AF,AF'
-	INC HL
-; IX+$04 (координата Y объекта) больше не читаем через регистр IX ниже —
-; SP скоро укажет на данные спрайта, PUSH/POP там небезопасны. Читаем заранее.
-; DE сейчас хранит адрес в экранном буфере - сохраняем на время расчёта (SP ещё не перенаправлен).
-	PUSH DE
-	PUSH HL
-	LD HL,(IXobj)
-	LD DE,$0004
-	ADD HL,DE
-	LD A,(HL)		; IX+$04
-	LD (obj_y_coord_tmp),A
-	POP HL
-	POP DE			; восстанавливаем адрес в экранном буфере
-	di
-	LD SP,HL		; SP - начало пикселей спрайта
-	LD A,(obj_y_coord_tmp)		; координата Y объекта
-	ADD A,B			; координата Y объекта + высота в пикселях
-	CP $C1
-	JP C,no_cross_top	; Переход, если объект не пересекает верхнюю границу
-
-	LD A,(obj_y_coord_tmp)
-	XOR $FF
-	ADD A,$C1		; A = $C0 - Y (замена SUB (IX+$04), т.к. PUSH/POP запрещены после LD SP,HL)
-	LD B,A			; Остаточная высота спрайта
-	LD (blit_row_count),A	; замена EX AF,AF'
-
-no_cross_top:
-	LD A,C
-	AND A
-	JP Z,no_shift_obj_3
-
-	ADD A,A
-	ADD A,table_shifts/$100-$02	; $F200/$100-$02=$F0
-	LD H,A
-	ex DE,HL
-	ld (scr_buff_1+$01),HL	; DE - адрес в экранном буфере
-	ld A,(HL)
-	ex DE,HL
-put_byte_4:
-	JP put_byte_4
-
-no_shift_obj_3:
-	EX DE,HL
-	JP put_byte_4
-
-;------------------------------------------------
-; В процессе игры ни разу не вызывалась процедура byte_put_width_8
-; Вывод спрайта со сдвигом. Процедура настраивается в зависимости от размеров спрайта.
-byte_put_width_8:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_7:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_6:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_5:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_4:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_3:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_2:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-byte_put_width_1:
-	POP DE
-	LD A,E
-	OR (HL)
-	XOR D
-	LD (HL),A
-	inc h
-
-	ld a,h
-new_line_bytes_2:
-	sub $00
-	ld h,a
-	inc l
-	DEC B
-put_byte_1:
-	JP NZ,put_byte_1
-byte_put_width_0:
-	LD HL,(sp_storage)
-	ld SP,HL
-	ei
-	RET
-
-;----------------------------------------------------------------
-; byte_put_width_shift_8 и byte_put_width_shift_7 в процессе игры ни разу не вызывались
-; Вывод спрайта со сдвигом. Процедура настраивается в зависимости от размеров спрайта.
-byte_put_width_shift_8:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_7:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_6:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_5:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_4:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_3:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_2:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-byte_put_width_shift_1:
-	POP BC
-	LD L,C
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	LD (DE),A
-	inc d
-	INC H
-	LD L,C
-	LD A,(DE)
-	OR (HL)
-	LD L,B
-	XOR (HL)
-	DEC H
-
-	LD (DE),A
-	LD A,(blit_row_count)	; замена EX AF,AF'
-	DEC A
-	LD (blit_row_count),A
-	JP Z,byte_put_width_shift_end
-	ld a,d
-new_line_bytes_1:
-	sub $00
-	ld d,a
-	inc e
-byte_put_width_shift_0:
-	LD A,(DE)
-put_byte_3:
-	JP put_byte_3
-
-byte_put_width_shift_end:
-	LD HL,(sp_storage)
-	ld SP,HL
-	ei
-	RET
-
-;----------------------------------------------------------------
-; Routine at 9AC0
-; Этот код нигде не вызывается. Дизассемблирован принудительно
-; 	LD A,H
-scr_buff_1:
-	LD HL,$0000
-	LD DE,$0020
-	ADD HL,DE
-	LD (scr_buff_1+$01),HL
-	EX DE,HL
-	LD H,A
-	JP byte_put_width_shift_0
-;----------------------------------------------------------------
+ jp NativeStaticObject
 
 ; Набор свойств 11 объектов по 22 байта:
 ; $00 номер набора спрайтов объекта
@@ -1506,13 +702,13 @@ object_rocket:
 
 ; Свойства объекта индикатор жизней
 object_lives_indicator:
-  DEFB $03,$00,$10,$00,$B9,$00,$00,$00
+  DEFB $03,$00,$10,$00,$C8,$00,$00,$00
   DEFB $02,$06,$00,$00,$00,$00,$00,$00
   DEFB $00,$00
 
 ; В этот объект перед выводом копируются последовательно свойства spr_1up, spr_2up, spr_hi
 object_score_indicator:
-  DEFB $03,$00,$00,$00,$0C,$00,$00,$00
+  DEFB $03,$00,$00,$00,$E8,$00,$00,$00
   DEFB $00,$00,$00,$00,$00,$00,$00,$00
   DEFB $00,$00,$00,$00,$00,$00,$00,$00
   DEFB $00,$00
@@ -1545,377 +741,25 @@ wins_counter:
 ; Данные для вывода берутся из его свойств в IX
 ; Вход: (IXobj) = адрес объекта
 print_obj_from_buf_to_scr:
-	ld HL,(IXobj)
-	LD A,(HL)		; IX+$00
-	RLA
-	JP NC,obj_on_screen
-	LD (HL),$00		; Если объект за пределами экрана, то обнуляем его
-obj_on_screen:
-	LD HL,(IXobj)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02 координата Х объекта
-	LD E,A			; temp: E = X координата (в L попадёт позже в каждой из веток)
-	LD HL,(IXobj)
-	LD BC,$0011
-	ADD HL,BC
-	LD A,(HL)		; IX+$11 предыдущая высота спрайта с тенью в пикселях
-	AND A
-	JP NZ,obj_has_height
-
-; Предыдущая высота спрайта с тенью в пикселях = 0
-	LD HL,(IXobj)
-	LD BC,$0004
-	ADD HL,BC
-	LD A,(HL)		; IX+$04 координата Y объекта
-	LD D,A			; temp: D = Y координата
-	LD HL,(IXobj)
-	LD BC,$0008
-	ADD HL,BC
-	LD A,(HL)		; IX+$08 ширина спрайта с тенью в байтах
-	ADD A,A
-	ADD A,A
-	ADD A,A
-	ADD A,E
-	LD B,A			; В - координата правой стороны объекта
-	LD HL,(IXobj)
-	LD BC,$0009
-	ADD HL,BC
-	LD C,(HL)		; IX+$09 высота спрайта с тенью в пикселях
-	LD L,E			; координата Х объекта
-	LD H,D			; координата Y объекта
-	JP ready_for_restore
-
-; Спрайт имеет какую-то высоту
-obj_has_height:
-	LD L,E		; координата Х объекта (E уже содержит её)
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$000E
-	ADD HL,BC
-	LD A,(HL)		; IX+$0E предыдущая координата Х объекта
-	POP HL
-	LD D,A
-	CP L
-	JP NC,obj_has_height_1
-	LD L,A
-obj_has_height_1:
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$0008
-	ADD HL,BC
-	LD B,(HL)		; IX+$08 ширина спрайта с тенью в байтах
-	POP HL
-	LD A,B
-	ADD A,A
-	ADD A,A
-	ADD A,A		; замена SLA B x3 (B*8)
-	LD B,A
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$0010
-	ADD HL,BC
-	LD C,(HL)		; IX+$10 предыдущая ширина спрайта с тенью в байтах
-	POP HL
-	LD A,C
-	ADD A,A
-	ADD A,A
-	ADD A,A		; замена SLA C x3 (C*8)
-	LD C,A
-	LD A,E
-	ADD A,B
-	LD B,A
-	LD A,D
-	ADD A,C
-	CP B
-	JP C,obj_has_height_2
-	LD B,A
-obj_has_height_2:
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$0004
-	ADD HL,BC
-	LD A,(HL)		; IX+$04 координата Y объекта
-	POP HL
-	LD H,A
-	LD D,H
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$000F
-	ADD HL,BC
-	LD A,(HL)		; IX+$0F предыдущая координата Y объекта
-	POP HL
-	LD E,A
-	CP H
-	JP NC,obj_has_height_3
-	LD H,A
-obj_has_height_3:
-	LD A,D
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$0009
-	ADD HL,BC
-	ADD A,(HL)	; IX+$09 высота спрайта с тенью в пикселях
-	POP HL
-	LD D,A
-	LD A,E
-	PUSH HL
-	LD HL,(IXobj)
-	LD BC,$0011
-	ADD HL,BC
-	ADD A,(HL)	; IX+$11 предыдущая высота спрайта с тенью в пикселях
-	POP HL
-	CP D
-	JP NC,obj_has_height_4
-	LD A,D
-obj_has_height_4:
-	SUB H
-	LD C,A
-
-; В - координата правой стороны объекта
-; С - высота спрайта с тенью в пикселях
-; H - координата Y объекта
-; L - координата Х объекта
-ready_for_restore:
-	LD A,L
-	AND $F8
-	LD L,A
-	CP $F8
-	RET NC			; Возвращаемся, если координата Х = $F8 и больше
-	CP B
-	JP C,ready_for_restore_1
-	LD B,$FF		; Прижимаем правую сторону к краю
-ready_for_restore_1:
-	LD E,L
-	or A	; BIT 7,A
-	JP P,ready_for_restore_2
-	LD A,L
-	AND $7F
-	LD L,A		; замена RES 7,L
-	LD A,B
-	AND $7F
-	LD B,A		; замена RES 7,B
-ready_for_restore_2:
-	LD A,B
-	ADD A,$07
-	AND $F8
-	SUB L
-	or A
-	rra	; SRL A
-	or A
-	rra	; SRL A
-	or A
-	rra	; SRL A
-	LD B,A
-	LD L,E
-
-	PUSH BC			; B,C (ширина/высота ограничивающего прямоугольника) нужны позже
-	PUSH HL
-	LD HL,(IXobj)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02 координата Х объекта
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$0E
-	LD (HL),A		; IX+$0E предыдущая координата Х объекта
-
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$04
-	LD A,(HL)		; IX+$04 координата Y объекта
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$0F
-	LD (HL),A		; IX+$0F предыдущая координата Y объекта
-
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$08
-	LD A,(HL)		; IX+$08 ширина спрайта с тенью в байтах
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$10
-	LD (HL),A		; IX+$10 предыдущая ширина спрайта с тенью в байтах
-
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$09
-	LD A,(HL)		; IX+$09 высота спрайта с тенью в пикселях
-	LD HL,(IXobj)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$11
-	LD (HL),A		; IX+$11 предыдущая высота спрайта с тенью в пикселях
-	POP HL
-	POP BC
-
-	LD A,H
-	ADD A,C
-	CP $C0
-	JP C,ready_for_restore_3
-	LD A,$C0
-	SUB H
-	LD C,A
-ready_for_restore_3:
-	xor A
-	or L		; BIT 7,L
-	JP P,ready_for_restore_5
-	LD A,L
-	AND $7F
-	LD L,A		; замена RES 7,L
-	LD A,B
-	ADD A,A
-	ADD A,A
-	ADD A,A
-	ADD A,L
-	SUB $78
-	JP C,ready_for_restore_4
-	or A
-	rra	; SRL A
-	or A
-	rra	; SRL A
-	or A
-	rra	; SRL A
-	PUSH BC
-	LD B,A
-	XOR A
-	SUB B		; замена NEG (нет NEG на i8080)
-	POP BC
-	ADD A,B
-	LD B,A
-ready_for_restore_4:
-	LD A,L
-	OR $80
-	LD L,A		; замена SET 7,L
-ready_for_restore_5:
-	LD A,H
-	SUB $08
-	JP NC,win_bg_recovery
-	ADD A,C
-	LD C,A
-	DEC A
-	RLA
-	RET C
-	LD H,$08
-
+	JP plane_object
 ; This entry point is used by the routines at scr_score_update, restore_objs_and_magnet, wins_recovery, game_restart and
 ; LBC10.
 ; Копирует прямоугольный участок из буфера на экран c цветом
 ; Вход: HL - Координаты; BC - Размеры окна
 win_bg_recovery:
-	PUSH BC
-	PUSH HL
-	CALL scr_buff_addr_calc
-	EX DE,HL
-	POP HL
-	CALL screen_addr_calc
-	EX DE,HL
-	POP BC
-	ld A,C
-	ld (win_bg_recovery_1+1),A
-	ld (win_bg_recovery_3+1),A
-	ld (win_bg_recovery_4+1),A
-win_bg_recovery_1:
-	ld c,$00
-win_bg_recovery_2:
-;	push hl
-;	ld a,l
-;	rra
-;	rra
-;	rra
-;	or $c0
-;	ld l,a
-;	ld a,(hl)
-;	ld (color_port),a	; Устанавливаем цвет точек
-;	pop hl
-	ld a,(hl)
-	ld (de),a
-	inc l
-	dec e		; поправка направления для Вектора
-	dec c
-	jp nz,win_bg_recovery_2
-	ld a,l
-win_bg_recovery_3:
-	sub $00
-	ld l,a
-	ld a,e
-win_bg_recovery_4:
-	add $00		; поправка направления для Вектора
-	ld e,a
-	inc h
-	inc d
-	dec B
-	jp nz,win_bg_recovery_1
-	ret
+ ld a,(OverlayActive)
+ or a
+ ret z
+ xor a
+ ld (OverlayActive),a
+ push bc
+ call screen_addr_calc
+ pop bc
+ ld a,h
+ add a,$20
+ ld d,a
+ ld e,l
+ jp plane_erase_dual
 
 ; Сюда сохраняется текущий бонус
 current_bonus:
@@ -2063,7 +907,14 @@ L9D5A_10:
 	LD A,(HL)		; Берёт код бонуса
 	LD (object_bonus+$14),A
 	LD (object_bonus+$01),A
-	CALL calc_write_spr_addr
+ ; calc_write_spr_addr reads IXobj: target the bonus, not the colliding ball.
+ ld hl,(IXobj)
+ push hl
+ ld hl,object_bonus
+ ld (IXobj),hl
+ CALL calc_write_spr_addr
+ pop hl
+ ld (IXobj),hl
 	POP HL
 	POP DE
 	POP BC
@@ -2225,7 +1076,7 @@ handling_bat:
 	JP Z,zero_direction
 	LD A,$05
 zero_direction:
-	LD (objs_width_sum),A	; Записываем $00 или $05, в зависимости от направления
+	; Shadow width sum removed.	; Записываем $00 или $05, в зависимости от направления
 
 ; На какой стороне всё происходит?
 	LD HL,(IXobj)
@@ -2322,9 +1173,8 @@ no_x_decrease:
 	ADD A,(HL)		; IX+$02
 	ADD A,$08
 	LD (object_bat_temp+$02),A
-	LD A,E
+	LD A,(counter_misc)	; helpers above reuse DE: reload animation parity
 	RRA
-	LD E,A		; замена RR E
 	RET C
 ; Увеличиваем ширину каретки на 2 пикселя
 	LD HL,(IXobj)
@@ -2376,9 +1226,8 @@ no_x_increase:
 	ADD A,(HL)		; IX+$02
 	ADD A,$08
 	LD (object_bat_temp+$02),A
-	LD A,E
+	LD A,(counter_misc)	; helpers above reuse DE: reload animation parity
 	RRA
-	LD E,A		; замена RR E
 	RET C
 	LD HL,(IXobj)
 	LD DE,$000C
@@ -2453,17 +1302,14 @@ handling_bat_no_transform:
 	CALL check_right_margin
 	pop AF
 
-	rla	; BIT 6,A	; BIT6 bonus_flag
-	JP P,no_bit6
+	AND $40		; BIT 6,A: rotates do not update the sign flag on i8080
+	JP Z,no_bit6
 
 	LD A,(counter_misc)
 	RRA
 	CALL C,LAAD2
 
-;TODO	LD IY,(iy_storage)
-	LD DE,$01C8
-	CALL sound_beep_cont_d
-	; DI
+; Gun mode is silent between actual shots.
 
 	LD A,(bonus_flag)
 	RLA
@@ -2941,17 +1787,20 @@ handling_ball:
 	LD HL,(IXobj)
 	LD (ball_split_src),HL	; для LA7A6 (замена самомодифицирующегося "LD IY,nnnn")
 	EX DE,HL		; DE = (IXobj)
-	LD BC,LA270
-	LD HL,object_ball_1
-	AND A
-	CALL SBCHLDE8080	; SBC HL,DE
-	JP Z,LA27E_0
-	LD BC,LA274
-	LD HL,object_ball_2
-	AND A
-	CALL SBCHLDE8080	; SBC HL,DE
-	JP Z,LA27E_0
-	LD BC,LA278
+ ; Only equality is needed here, not a translated 16-bit subtraction.
+ ASSERT object_ball_1 / 256 == object_ball_2 / 256
+ LD BC,LA278
+ LD A,D
+ CP object_ball_1 / 256
+ JP NZ,LA27E_0
+ LD BC,LA270
+ LD A,E
+ CP object_ball_1 % 256
+ JP Z,LA27E_0
+ LD BC,LA274
+ CP object_ball_2 % 256
+ JP Z,LA27E_0
+ LD BC,LA278
 LA27E_0:
 	LD L,C
 	LD H,B
@@ -3322,13 +2171,15 @@ LA27E_23:
 	LD HL,(IXobj)
 	LD DE,$0006
 	ADD HL,DE
-	LD E,(HL)		; IX+$06
+	LD A,(HL)		; direction before testing the walls
+	PUSH AF
 	CALL bounce_wall
 	LD HL,(IXobj)
 	LD DE,$0006
 	ADD HL,DE
-	LD A,(HL)		; IX+$06
-	CP E
+	LD B,(HL)
+	POP AF
+	CP B
 	CALL NZ,set_sound_bat_beat
 LA27E_24:
 	CALL LAB1F
@@ -3689,11 +2540,10 @@ bonus_flag_swap:
 ; Used by the routine at handling_bonus.
 ; Получение бонуса
 get_bonus:
-	CP $B0
-	RET NC
+ ; Let the rectangle test cover the full paddle height.
 	LD HL,object_bat_1
 	LD (IYobj),HL
-	CALL obj_compare_2pix
+	CALL obj_compare
 	JP C,LA67B_0		; Если поймал первой кареткой, то дальше
 
 	LD A,(game_mode)
@@ -3926,14 +2776,14 @@ LA67B_9:
 	LD A,(HL)		; IY+$06
 	AND $30
 	OR E
-	LD (ball2_direction+$03),A
+	LD (ball2_direction_value+1),A
 	LD HL,(IYobj)
 	LD BC,$0006
 	ADD HL,BC
 	LD A,(HL)		; IY+$06
 	AND $30
 	OR D
-	LD (ball3_direction+$03),A
+	LD (ball3_direction_value+1),A
 
 	LD HL,(IYobj)
 	LD BC,$0007
@@ -4002,6 +2852,7 @@ ball2_direction:
 	INC HL
 	INC HL
 	INC HL		; +$06
+ball2_direction_value:
 	LD (HL),$00	; IY+$06 Направление шарика
 	LD HL,object_ball_2
 	LD (IYobj),HL
@@ -4057,6 +2908,7 @@ ball3_direction:
 	LD HL,(IYobj)
 	LD DE,$0006
 	ADD HL,DE
+ball3_direction_value:
 	LD (HL),$00	; IY+$06 Направление шарика
 	RET
 
@@ -4105,7 +2957,7 @@ bonus_extra_life:
 	ld (IXobj),HL
 	CALL hl_buf_addr_calc
 	CALL print_obj_to_buff
-	CALL print_obj_from_buf_to_scr
+	CALL plane_static_object
 	xor a
 	LD (object_lives_indicator+$11),A	; IX+$11
 	ld HL,object_lives_indicator+$02
@@ -4802,7 +3654,9 @@ LAB1F_6:
 LAB1F_7:
   INC HL
   LD A,(HL)
+  LD B,A
   AND $04		; замена BIT 2,A
+  LD A,B		; preserve table index while retaining test flags
   JP NZ,LAB1F_8
   JP LAB1F_10
 LAB1F_8:
@@ -4869,39 +3723,51 @@ LAC0A:
 ; Без захлёста
 obj_compare:
   LD HL,(IXobj)
-  LD DE,$0002
-  ADD HL,DE
+  INC HL
+  INC HL
   LD E,(HL)	; temp = IX+$02
   LD HL,(IYobj)
-  LD DE,$0002
-  ADD HL,DE
+  INC HL
+  INC HL
   LD A,(HL)	; IY+$02: Координата Х для печати
   LD HL,(IXobj)
-  LD DE,$000C
+  PUSH DE
+  LD DE,12
   ADD HL,DE
+  POP DE
   LD C,(HL)	; IX+$0C: Ширина объекта без тени в пикселях
   LD HL,(IYobj)
-  LD DE,$000C
+  PUSH DE
+  LD DE,12
   ADD HL,DE
+  POP DE
   LD B,(HL)	; IY+$0C: Ширина объекта без тени в пикселях
   LD L,E	; L = IX+$02: Координата Х для печати
   CALL LAC22_0
   RET NC
   LD HL,(IXobj)
-  LD DE,$0004
-  ADD HL,DE
+  INC HL
+  INC HL
+  INC HL
+  INC HL
   LD E,(HL)	; temp = IX+$04
   LD HL,(IYobj)
-  LD DE,$0004
-  ADD HL,DE
+  INC HL
+  INC HL
+  INC HL
+  INC HL
   LD A,(HL)	; IY+$04: Координата Y для печати
   LD HL,(IXobj)
-  LD DE,$000D
+  PUSH DE
+  LD DE,13
   ADD HL,DE
+  POP DE
   LD C,(HL)	; IX+$0D: Высота объекта без тени в пикселях
   LD HL,(IYobj)
-  LD DE,$000D
+  PUSH DE
+  LD DE,13
   ADD HL,DE
+  POP DE
   LD B,(HL)	; IY+$0D: Высота объекта без тени в пикселях
   LD L,E	; L = IX+$04: Координата Y для печати
 LAC22_0:
@@ -4918,39 +3784,51 @@ LAC22_1:
 ; С захлёстом в 2 пикселя
 obj_compare_2pix:
   LD HL,(IXobj)
-  LD DE,$0002
-  ADD HL,DE
+  INC HL
+  INC HL
   LD E,(HL)	; temp = IX+$02
   LD HL,(IYobj)
-  LD DE,$0002
-  ADD HL,DE
+  INC HL
+  INC HL
   LD A,(HL)	; IY+$02: Координата Х для печати
   LD HL,(IXobj)
-  LD DE,$000C
+  PUSH DE
+  LD DE,12
   ADD HL,DE
+  POP DE
   LD C,(HL)	; IX+$0C: Ширина объекта без тени в пикселях
   LD HL,(IYobj)
-  LD DE,$000C
+  PUSH DE
+  LD DE,12
   ADD HL,DE
+  POP DE
   LD B,(HL)	; IY+$0C: Ширина объекта без тени в пикселях
   LD L,E	; L = IX+$02: Координата Х для печати
   CALL LAC45_0
   RET NC
   LD HL,(IXobj)
-  LD DE,$0004
-  ADD HL,DE
+  INC HL
+  INC HL
+  INC HL
+  INC HL
   LD E,(HL)	; temp = IX+$04
   LD HL,(IYobj)
-  LD DE,$0004
-  ADD HL,DE
+  INC HL
+  INC HL
+  INC HL
+  INC HL
   LD A,(HL)	; IY+$04: Координата Y для печати
   LD HL,(IXobj)
-  LD DE,$000D
+  PUSH DE
+  LD DE,13
   ADD HL,DE
+  POP DE
   LD C,(HL)	; IX+$0D: Высота объекта без тени в пикселях
   LD HL,(IYobj)
-  LD DE,$000D
+  PUSH DE
+  LD DE,13
   ADD HL,DE
+  POP DE
   LD B,(HL)	; IY+$0D: Высота объекта без тени в пикселях
   LD L,E	; L = IX+$04: Координата Y для печати
 LAC45_0:
@@ -5117,10 +3995,28 @@ LACF9:
   LD H,$00
   LD B,H
   LD L,H
-  LD A,$08
-  JP LAD04_0
+  ; Game objects normally use speed 1..3. Avoid the shift/add loop for
+  ; these small multipliers; the generic path still accepts all byte values.
+  LD A,D
+  CP $04
+  JP NC,LAD04_0
+  OR A
+  RET Z
+  LD L,C
+  DEC D
+  JP Z,lacf9_small_done
+  ADD HL,BC
+  DEC D
+  JP Z,lacf9_small_done
+  ADD HL,BC
+  DEC D
+lacf9_small_done:
+  XOR A
+  RET
 LAD04:
-  DEC A
+  ; The remaining multiplier is normally 0 after only two or three bits.
+  LD A,D
+  OR A
   RET Z
   LD A,C
   ADD A,A
@@ -5135,8 +4031,7 @@ LAD04_0:
   LD D,A		; замена SRL D
   JP NC,LAD04
   ADD HL,BC
-  JP NZ,LAD04
-  RET
+  JP LAD04
 
 ; Used by the routine at LAD69.
 LAD13:
@@ -5163,8 +4058,10 @@ hl_bc_calc_direction:
 	LD DE,$0006
 	ADD HL,DE
 	LD A,(HL)		; IX+$06 Направление
+	LD D,A		; hl_add_a preserves DE; retain the quadrant here
 	AND $0F
 	LD B,A
+	LD HL,direction_table
 	CALL hl_add_a
 	LD C,(HL)		; C = YY из таблицы, в зависимости от направления
 	LD A,B
@@ -5176,12 +4073,8 @@ hl_bc_calc_direction:
 
 	LD H,$00		; HL = $00XX, BC = $00YY
 	LD B,H
-	PUSH HL
-	LD HL,(IXobj)
-	LD DE,$0006
-	ADD HL,DE
-	LD A,(HL)		; IX+$06 Направление
-	POP HL
+	LD A,D
+	LD D,$00		; keep the original DE=$0006 result
 	AND $30
 	RET Z			; Если направление $00, то HL = $00XX, BC = $00YY
 
@@ -5216,50 +4109,46 @@ direction_table:
 
 ; Used by the routines at handling_ball, handling_spark, handling_ufo and handling_bird.
 LAD69:
-	CALL hl_bc_calc_direction
-	PUSH HL
-
-	CALL LAD13
-	PUSH HL			; save delta from LAD13
-	LD HL,(IXobj)
-	INC HL
-	INC HL			; +$02
-	LD D,(HL)		; IX+$02 координата Х объекта
-	INC HL
-	LD E,(HL)		; IX+$03
-	POP HL			; restore delta
-	ADD HL,DE
-	PUSH HL			; save new coord pair
-	LD HL,(IXobj)
-	INC HL
-	INC HL			; +$02
-	POP DE			; D=H(new X), E=L(new X sub)
-	LD (HL),D		; IX+$02 координата Х объекта
-	INC HL
-	LD (HL),E		; IX+$03
-
-	POP BC
-
-	CALL LAD13
-	PUSH HL			; save delta from LAD13
-	LD HL,(IXobj)
-	LD DE,$0004
-	ADD HL,DE		; +$04
-	LD D,(HL)		; IX+$04 координата Y объекта
-	INC HL
-	LD E,(HL)		; IX+$05
-	POP HL			; restore delta
-	ADD HL,DE
-	PUSH HL			; save new coord pair
-	LD HL,(IXobj)
-	LD DE,$0004
-	ADD HL,DE		; +$04
-	POP DE			; D=H(new Y), E=L(new Y sub)
-	LD (HL),D		; IX+$04 координата Y объекта
-	INC HL
-	LD (HL),E		; IX+$05
-
-	RET
+ CALL hl_bc_calc_direction
+ PUSH HL
+ CALL LAD13
+ ; Keep the coordinate pointer on the stack instead of loading IXobj twice.
+ PUSH HL
+ LD HL,(IXobj)
+ INC HL
+ INC HL
+ LD D,(HL)
+ INC HL
+ LD E,(HL)
+ EX (SP),HL
+ ADD HL,DE
+ EX DE,HL
+ POP HL
+ LD (HL),E
+ DEC HL
+ LD (HL),D
+ INC HL
+ POP BC
+ CALL LAD13
+ PUSH HL
+ LD HL,(IXobj)
+ LD DE,$0004
+ ADD HL,DE
+ LD D,(HL)
+ INC HL
+ LD E,(HL)
+ EX (SP),HL
+ ADD HL,DE
+ EX DE,HL
+ POP HL
+ LD (HL),E
+ DEC HL
+ LD (HL),D
+ INC HL
+ ; The old final IXobj+4 address calculation cleared carry for RAM objects.
+ SCF
+ CCF
+ RET
 
 ; Used by the routine at all_metal_briks_animation_snd.
 ; Печатает текущий кадр анимации перелива всех металлических кирпичей
@@ -5309,97 +4198,55 @@ LADAC_0:
 ; В IX указатель на текущий спрайт анимации перелива кирпича
 ; В HL - адрес в экранной области
 print_frame_metal_brik:
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	ld A,(HL)		; IY+$00
-	POP HL
-	and %10010000		; BIT 7,a / BIT 4,a
-	ret nz			; Возвращаемся, если BIT7 = 1 или BIT4 = 1
-
-	; Выясняем и установка цвет кирпича
-	ld a,h
-	sub zx_scr/256 - scr_buff/256
-	ld d,a
-	ld a,l
-	sub zx_scr%256 - scr_buff%256
-	rra
-	rra
-	rra
-	or %11000000
-	ld e,a
-;	ld a,(de)
-;	ld (LADBC_01+$01),a	; Устанавливаем цвет для левой половины кирпича
-	inc d
-	ld a,(de)
-;	ld (LADBC_02+$01),a	; Устанавливаем цвет для правой половины кирпича
-
-	; Индивидуальная обработка чёрного кирпича
-;   IFDEF MX
-; 	; Ничего не делаем
-;   ELSE
-	or a
-	jp nz,print_frame_metal_brik_01
-	LD HL,(anim_brik_ptr)
-	LD DE,anim_brik+$0e
-	XOR A
-	CALL SBCHLDE8080	; Z установлен, если anim_brik_ptr == anim_brik+$0e
-	jp nz,print_frame_metal_brik_01
-	xor a
-	ld (print_frame_metal_brik_02),a	; NOP
-	LD HL,anim_brik_black
-	LD (anim_brik_ptr),HL
-print_frame_metal_brik_01:
-;   ENDIF
-
-	ld HL,$0000		; HL свободен, DE трогать нельзя - там адрес в экранном буфере
-	add HL,SP
-	ld (LADDD+$01),HL	; LD (LADDD+$01),SP  - сохраняем SP
-
-	PUSH DE			; сохраняем адрес в экранном буфере
-	LD HL,(anim_brik_ptr)
-	LD A,(HL)
-	LD E,A
-	INC HL
-	LD A,(HL)
-	LD D,A
-	POP HL			; восстанавливаем адрес в экранном буфере
-	EX DE,HL
-	di
-	LD SP,HL
-	EX DE,HL
-	LD B,$08	; 8 строк по 2 байта
-LADBC_0:
-	POP DE
-LADBC_01:
-;	ld a,$00
-;	ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
-	LD (HL),E
-	INC H
-LADBC_02:
-;	ld a,$00
-;	ld (color_port),a	; Цвет правой половины кирпича
-	LD (HL),D
-	DEC H
-	dec L			; поправлено направление для Вектора
-	dec B
-	jp nz,LADBC_0
-LADDD:
-	LD SP,$0000
-	ei
-
-	; Индивидуальная обработка чёрного кирпича
-;   IFDEF MX
-; 	; Ничего не делаем
-;   ELSE
-print_frame_metal_brik_02:
-	ret			; изменяемый оператор NOP / RET
-	ld HL,anim_brik+$0e
-	ld (anim_brik_ptr),HL
-	ld a,$c9		; RET
-	ld (print_frame_metal_brik_02),a
-;   ENDIF
-
-	RET
+ push hl
+ ld hl,(cur_level_ptr)
+ ld a,(hl)
+ pop hl
+ and $90
+ ret nz
+ ; Select the same frame; the black brick has a special last frame.
+ push hl
+ ld a,h
+ sub $c0
+ add a,scr_buff/256
+ inc a
+ ld d,a
+ ld a,$e0
+ sub l
+ rrca
+ rrca
+ rrca
+ and $1f
+ or $c0
+ ld e,a
+ call NativeReadDE
+ ld hl,(anim_brik_ptr)
+ or a
+ jp nz,pm_frame
+ ld de,anim_brik+$0e
+ call SBCHLDE8080
+ ld hl,(anim_brik_ptr)
+ jp nz,pm_frame
+ ld hl,anim_brik_black
+pm_frame:
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ pop hl
+ ld b,8
+pm_row:
+ ld a,(de)
+ call plane_screen_write
+ inc de
+ inc h
+ ld a,(de)
+ call plane_screen_write
+ inc de
+ dec h
+ dec l
+ dec b
+ jp nz,pm_row
+ ret
 
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Вывод в буфер всех кирпичей уровня
@@ -5453,7 +4300,7 @@ LAE13_0:
 	PUSH HL
 	PUSH HL
 	LD HL,(cur_level_ptr)
-	ld A,(HL)		; IY+$00
+ call NativeReadHL ; IY+$00
 	POP HL
 	or A		; BIT 7,(IY+$00)
 	CALL P,print_one_brik_buf	; 	Печатаем кирпич, если не пустота
@@ -5510,119 +4357,7 @@ LAE13_0:
 ; В HL - координаты кирпича
 ; В IY - ссылка не текущий код кирпича
 print_one_brik_buf:
-	ex DE,HL		; теперь HL свободен
-	ld HL,$0000
-	add HL,SP
-	ld (LAEB4+$01),HL	; Сохраняем стек
-	ex DE,HL
-
-; Оформление верхнего края кирпича
-	PUSH HL
-	dec l
-
-	LD (HL),$00	; Линия над кирпичом
-	inc h
-	LD (HL),$00	; Линия над кирпичом
-
-	; LD (HL),$ff	; Линия над кирпичом
-	; inc h
-	; LD (HL),$ff	; Линия над кирпичом
-
-	POP HL
-
-; Оформление левого края кирпича
-; Проверка на левый крайний кирпич
-	ld a,h
-
-	PUSH HL
-
-	ld c,h
-
-	cp scr_buff/256+1
-	JP Z,LAE82_1
-
-	dec h
-	LD B,$08
-LAE82_0:
-	; SET 0,(HL)		; Сброс стороны справа от кирпича
-	ld A,(HL)
-	and %11111110	; RES 0,(HL)	; Сброс стороны справа от кирпича
-	ld (HL),A
-
-	inc l
-	dec B
-	jp nz,LAE82_0
-LAE82_1:
-
-; Раскрашивание кирпича
-	LD HL,(brik_attr_buf)	; Адрес атрибутов текущего кирпича
-	ld h,c
-	dec l
-	PUSH HL
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	LD A,(HL)		; IY+$00
-	POP HL
-	AND $0F
-	LD HL,briks_colors-$01
-	CALL hl_add_a
-	LD B,(HL)
-	POP HL
-	LD (HL),B
-	inc h
-	LD (HL),B
-
-	POP HL
-; Рисование кирпича
-	di
-	LD SP,spr_brik_1
-
-;   IFDEF MX
-; 	; Ничего не делаем
-;   ELSE
-	ld a,b
-	or a
-	jp nz,LAE82_21
-	LD SP,spr_brik_black
-LAE82_21:
-;   ENDIF
-
-	LD A,$08
-LAE82_2:
-	POP BC
-	LD (HL),C
-	INC H
-	LD (HL),B
-	dec h
-	inc l
-	DEC A
-	JP NZ,LAE82_2
-
-LAEB4:
-	LD SP,$0000	; Восстанавливаем стек
-	ei
-; Оформление левого края кирпича
-	ld c,h		; Номер знакоместа второй половины кирпича
-	LD (HL),A
-	inc h
-	LD (HL),A
-; Проверка на левый крайний кирпич
-	ld a,h
-	cp scr_buff/256+$1e
-	ret Z
-	inc h
-	dec l
-
-	LD B,$08
-LAE82_3:
-; В обеих версиях рисуем эту линию
-	ld A,(HL)
-	and %01111111	; RES 7,(HL)		; Сброс стороны слева кирпича
-	ld (HL),A
-	dec l
-	dec B
-	jp nz,LAE82_3
-	RET
+ jp NativePrintBrick
 
 ; Цвета кирпичей
 briks_colors:
@@ -5756,6 +4491,7 @@ LAFFC:
   LD DE,$0004
   ADD HL,DE
   LD A,(HL)		; IX+$04
+  LD (laffc_row_y+1),A
   POP HL
   CP $80
   RET NC
@@ -5763,6 +4499,10 @@ LAFFC:
   LD HL,(IXobj)
   LD DE,$000D
   ADD HL,DE
+  PUSH AF
+  LD A,(HL)
+  LD (laffc_row_height+1),A
+  POP AF
   ADD A,(HL)		; IX+$0D
   POP HL
   CP $20
@@ -5775,23 +4515,12 @@ LAFFC:
   LD C,$20
 LAFFC_0:
   LD A,C
-  PUSH HL
-  PUSH DE
-  LD HL,(IXobj)
-  LD DE,$0004
-  ADD HL,DE
-  SUB (HL)		; IX+$04
-  POP DE
-  POP HL
+  ; Position and height cannot change while searching brick rows.
+laffc_row_y:
+  SUB $00
   JP C,LAFFC_1
-  PUSH HL
-  PUSH DE
-  LD HL,(IXobj)
-  LD DE,$000D
-  ADD HL,DE
-  SUB (HL)		; IX+$0D
-  POP DE
-  POP HL
+laffc_row_height:
+  SUB $00
   JP C,LAFFC_3
   JP LAFFC_2
 LAFFC_1:
@@ -6045,7 +4774,7 @@ LAFFC_13:
   ADD HL,BC
   LD A,(HL)		; IX+$06
   POP HL
-  LD (LB28B+$03),A
+  LD (smash_direction_value+1),A
   CP $20
   JP NC,LAFFC_14
   PUSH AF
@@ -6084,12 +4813,14 @@ LAFFC_18:
   RRA			; замена SRL A
   LD B,$1F
   JP NC,LAFFC_19
+  OR A		; i8080 RRA leaves Z unchanged; test the shifted result
   JP Z,LAFFC_26
   JP LAFFC_21
 LAFFC_19:
   OR A
   RRA			; замена SRL A
   JP NC,LAFFC_20
+  OR A		; i8080 RRA leaves Z unchanged; test the shifted result
   JP Z,LAFFC_27
   JP LAFFC_21
 LAFFC_20:
@@ -6097,11 +4828,13 @@ LAFFC_20:
   OR A
   RRA			; замена SRL A
   JP NC,LAFFC_29
+  OR A		; i8080 RRA leaves Z unchanged; test the shifted result
   JP Z,LAFFC_28
 LAFFC_21:
   LD A,D
   AND $01		; замена BIT 0,D
   JP Z,LAFFC_22
+  PUSH BC
   PUSH HL
   LD HL,(IXobj)
   LD BC,$000C
@@ -6114,6 +4847,7 @@ LAFFC_21:
   POP AF
   ADD A,(HL)		; IX+$02
   POP HL
+  POP BC
   SUB L
   JP LAFFC_23
 LAFFC_22:
@@ -6127,6 +4861,7 @@ LAFFC_22:
   POP HL
 LAFFC_23:
   LD C,A
+  PUSH BC
   LD A,D
   AND $04		; замена BIT 2,D
   JP Z,LAFFC_24
@@ -6154,6 +4889,7 @@ LAFFC_24:
   SUB (HL)		; IX+$04
   POP HL
 LAFFC_25:
+  POP BC
   LD E,D
   CP C
   PUSH AF		; сохраняем флаги от CP C (RES не трогает флаги, AND трогает)
@@ -6166,6 +4902,7 @@ LAFFC_25:
   AND $0C
   JP LAFFC_18
 LAFFC_26:
+  PUSH BC
   LD A,L
   PUSH HL
   LD HL,(IXobj)
@@ -6179,6 +4916,7 @@ LAFFC_26:
   INC HL		; +$02
   LD (HL),A		; IX+$02
   POP HL
+  POP BC
   CALL change_direction
   JP LAFFC_30
 LAFFC_27:
@@ -6193,6 +4931,7 @@ LAFFC_27:
   CALL change_direction
   JP LAFFC_30
 LAFFC_28:
+  PUSH BC
   LD A,H
   PUSH HL
   LD HL,(IXobj)
@@ -6206,6 +4945,7 @@ LAFFC_28:
   ADD HL,BC
   LD (HL),A		; IX+$04
   POP HL
+  POP BC
   CALL change_direction
   JP LAFFC_30
 LAFFC_29:
@@ -6410,6 +5150,7 @@ LB28B:
   LD HL,(IXobj)
   LD DE,$0006
   ADD HL,DE
+smash_direction_value:
   LD (HL),$00	; IX+$06
 LB28F:
   LD HL,$0000		; Координаты на экране
@@ -6436,24 +5177,19 @@ LAFFC_43:
 ;===============================================
 ; Выбивание кирпича
 LAFFC_44:
-	LD DE,scr_buff+$0290	; Адрес низа экрана с текстурой для восстановления под выбитым кирпичом
 brik_value:
-	LD A,$00		; Здесь хранится ценность кирпича: чем выше число, тем меньше очков за него
-	AND $01
-; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
-	jp z,brik_value_0
-	ld a,$08
-	add e
-	ld e,a
+ LD A,0 ; collision row index, also used for scoring
 brik_value_0:
 	LD A,(random_number_1)
 	AND $0F
 	CP $05
 	CALL C,set_bonus
+	PUSH HL	; keep brick coordinates through object-type check
 	LD HL,(IXobj)
 	LD A,(HL)		; IX+$00
 	AND $7F
 	CP $05
+	POP HL
 	JP Z,LB2D8
 	push HL
 	push DE
@@ -6466,675 +5202,34 @@ brik_value_0:
 	pop DE
 	pop HL
 LB2D8:
-	EX DE,HL		; HL=адрес текстуры(временно), DE=координаты(X=E,Y=D)
-	PUSH HL			; сохраняем адрес текстуры
-	LD HL,(wins_recovery_ptr)
-	INC HL		; +$01
-	LD A,E			; X
-	LD (HL),A		; IX+$01 Координата окна - X
-	DEC HL		; +$00
-	LD A,D			; Y
-	LD (HL),A		; IX+$00 Координата окна - Y
-	INC HL
-	INC HL		; +$02
-	LD (HL),B		; IX+$02 Размер окна - ширина в байтах
-	INC HL		; +$03
-	LD (HL),C		; IX+$03 Размер окна - высота в пикселях
-	POP HL			; адрес текстуры восстановлен
-	EX DE,HL		; HL=координаты, DE=адрес текстуры (роли восстановлены)
-	PUSH BC
-	CALL scr_buff_addr_calc	; На выходе в HL адрес в буфере scr_buff
-	POP BC
-	LD A,(wins_counter)
-	INC A
-	LD (wins_counter),A
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	LD A,(HL)		; IX+$00
-	POP HL
-	AND $01		; BIT 0,(IX+$00)
-	JP Z,LAFFC_46
-; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
-	dec e
-LAFFC_46:
-; в HL адрес в буфере scr_buff
-	ld a,h
-	and $01
-; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
-	add a,d
-	ld d,a
-	LD (LB3DF+$01),HL	; в HL адрес в буфере scr_buff
-	EX DE,HL
-;-----------------------------------------------
-; Восстановление линии фона НАД выбитым кирпичом
-	LD A,C	; Размер окна
-	CP $08
-	JP Z,LAFFC_47
-	PUSH HL
-	PUSH DE
-	LD HL,(wins_recovery_ptr)
-	LD A,(HL)		; IX+$00
-	POP DE
-	POP HL
-	AND $01		; BIT 0,(IX+$00)
-	JP Z,LAFFC_47
+ ex de,hl
+ ; Keep the recovery queue used by the game loop; A/C are updated immediately.
+ ld hl,(wins_recovery_ptr)
+ ld (hl),d
+ inc hl
+ ld (hl),e
+ inc hl
+ ld (hl),b
+ inc hl
+ ld (hl),c
+ inc hl
+ ld (wins_recovery_ptr),hl
+ ld a,(wins_counter)
+ inc a
+ ld (wins_counter),a
+ ld hl,(cur_level_ptr)
+ ld a,(hl)
+ or $80
+ ld (hl),a
+ jp NativeRestoreBrick
 
-	PUSH DE
-	PUSH HL
-	ld a,h
-	or $01
-	ld h,a		; замена set 0,h
-	ld a,d
-	or $01
-	ld d,a		; замена set 0,d
-	ld a,(hl)
-	ld (de),a
-	inc h
-	inc d
-	ld a,(hl)
-	ld (de),a
-	POP HL ; адрес текстуры внизу экрана для восстановления фона под кирпичом
-	POP DE ; адрес в буфере scr_buff
-
-	inc e
-	inc l
-;-----------------------------------------
-; Восстановление фона ЗА выбитым кирпичом
-LAFFC_47:
-	ex DE,HL
-	ld (LB3E2+$01),HL
-	ex DE,HL
-	PUSH DE
-	LD A,B
-	LD (LB33D+$01),A
-	LD (LB33D_1+$01),A
-	LD A,$08
-	LD B,$00
-LAFFC_48:
-	ld (LB33D_2+1),A	; save A
-LB33D:
-	LD C,$00		; Размер окна
-LB33D_0:
-	ld a,(hl)
-	ld (de),a
-	inc h
-	inc d
-	dec c
-	jp nz,LB33D_0
-LB33D_1:
-	LD C,$00		; Размер окна
-	ld a,h
-	sub c
-	ld h,a
-	inc l
-	ld a,d
-	sub c
-	ld d,a
-	inc e
-LB33D_2:
-	ld A,$00		; restore A
-	DEC A
-	JP NZ,LAFFC_48
-
-;-----------------------------------------------
-; Восстановление линии фона ПОД выбитым кирпичом
-	PUSH DE
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL
-	INC HL
-	INC HL		; +$03
-	LD A,(HL)		; IX+$03
-	POP HL
-	CP $08
-	JP Z,LAFFC_51
-	CP $0A
-	JP Z,LAFFC_49
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	LD A,(HL)		; IX+$00
-	POP HL
-	and $01		; BIT 0,(IX+$00)
-	JP NZ,LAFFC_51
-LAFFC_49:
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL		; +$01
-	LD A,(HL)		; IX+$01
-	POP HL
-	and %00001000	; BIT 3,(IX+$01)
-	JP NZ,LAFFC_50
-	inc h
-	inc d
-LAFFC_50:
-	ld a,(hl)
-	ld (de),a
-	inc h
-	inc d
-	ld a,(hl)
-	ld (de),a
-
-;============================================================================
-; Манипуляции с вертикальными линии по краям экрана шириной в знакоместо
-; Слева второй сверху элемент в виде ракетки - вплотную к нему
-; Справа второй снизу элемент в виде ракетки - вплотную к нему
-; Назначение неизвестно. Возможно буфер портится в какой-то момент и эта процедура его восстанавливает
-; Возможно это костыль, чтобы за вороной не оставался след, который ранее появлялся чаще
-LAFFC_51:
-	LD HL,(wins_recovery_ptr)
-	INC HL		; +$01
-	LD A,(HL)		; IX+$01 (входящий HL здесь мёртв, ниже переопределяется в обеих ветках)
-	CP $E0
-	JP C,LAFFC_52
-	LD HL,scr_buff+$1e32
-	LD C,$FE
-	JP LAFFC_53
-LAFFC_52:
-	CP $10
-	JP NC,LAFFC_56
-	LD HL,scr_buff+$0132
-	LD C,$7F
-LAFFC_53:
-	LD B,$1C
-LAFFC_54:
-	LD A,(HL)
-	AND C
-	LD (HL),A
-	inc l
-	dec B
-	jp nz,LAFFC_54
-	ld a,l
-	add $1c
-	ld l,a
-	LD B,$18
-LAFFC_55:
-	LD A,(HL)
-	AND C
-	LD (HL),A
-	inc l
-	dec B
-	jp nz,LAFFC_55
-;=======================================
-
-LAFFC_56:
-	ex DE,HL
-	ld HL,(LB28F+$01)	; Координаты на экране
-	ex DE,HL
-	POP HL			; Адрес в экранном буфере
-	LD B,H
-	LD C,L
-; BC - адрес в экранном буфере
-	LD A,D
-	CP $78
-	JP Z,LAFFC_58
-	dec c
-	ld a,h
-	or $01
-	ld h,a		; замена set 0,h
-	LD A,E
-	CP $08
-	JP Z,LAFFC_57
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$0E
-	LD A,(HL)		; IY+$0E
-	POP HL
-	AND $80		; BIT 7,(IY+$0E)
-	JP NZ,LAFFC_57
-	ld A,(HL)
-	and %01111111	; RES 7,(HL)
-	ld (HL),A
-	PUSH AF		; сохраняем A (нужен позже в LAFFC_57 при переходе)
-	ld a,b
-	and $01		; замена bit 0,b
-	JP Z,LAFFC_56_0
-	POP AF
-	JP LAFFC_57
-LAFFC_56_0:
-	POP AF
-
-	XOR A
-	LD (BC),A
-
-	LD A,E
-LAFFC_57:
-	CP $E0
-	JP NC,LAFFC_58
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL
-	INC HL		; +$10
-	LD A,(HL)		; IY+$10
-	POP HL
-	or A		; BIT 7,(IY+$10)
-	JP M,LAFFC_58
-	inc h
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02
-	POP HL
-	DEC A
-	add a,b
-	ld b,a
-
-	ld A,(HL)
-	and %11111110	; RES 0,(HL)
-	ld (HL),A
-	ld A,B
-
-	AND $01
-	JP Z,LAFFC_58
-
-	XOR A
-	; ld a,$ff
-	LD (BC),A
-
-LAFFC_58:
-	LD A,D
-	CP $20
-	JP Z,LAFFC_60
-LB3DF:
-	LD HL,$0000
-LB3E2:
-	LD BC,$0000
-	ld a,h
-	or $01
-	ld h,a		; замена set 0,h
-	LD A,E
-	CP $08
-	JP Z,LAFFC_59
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL		; -$10
-	LD A,(HL)		; IY-$10
-	POP HL
-	AND $80		; BIT 7,(IY-$10)
-	JP NZ,LAFFC_59
-	ld A,(HL)
-	and %01111111	; RES 7,(HL)
-	ld (HL),A
-	PUSH AF		; сохраняем A (нужен позже в LAFFC_59 при переходе)
-	ld a,b
-	and $01		; замена bit 0,b
-	JP Z,LAFFC_58_0
-	POP AF
-	JP LAFFC_59
-LAFFC_58_0:
-	POP AF
-	XOR A
-	LD (BC),A
-	LD A,E
-LAFFC_59:
-	CP $E0
-	JP NC,LAFFC_60
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL
-	DEC HL		; -$0E
-	LD A,(HL)		; IY-$0E
-	POP HL
-	or A		; BIT 7,(IY-$0E)
-	JP M,LAFFC_60
-	inc h
-	ld A,(HL)
-	and %11111110	; RES 0,(HL)
-	ld (HL),A
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02
-	POP HL
-	DEC A
-	add a,b
-	ld b,a
-	AND $01
-	JP Z,LAFFC_60
-	XOR A
-	LD (BC),A
-
-;------------------------------------------------------
-; Обработка соседнего кирпича СЛЕВА от выбитого кирпича
-LAFFC_60:
-	POP HL
-	ld d,$00		; Для дальнейших манипуляций в d нужен 0
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL		; +$01
-	LD A,(HL)		; IX+$01
-	POP HL
-	CP $08
-	JP Z,LAFFC_62
-	and %00001000		; BIT 3,A
-	JP Z,LAFFC_62
-	PUSH HL
-	LD B,$08
-LAFFC_61:
-	ld A,(HL)
-	and %01111111	; RES 7,(HL)
-	ld (HL),A
-	inc l
-	dec B
-	jp nz,LAFFC_61
-	POP HL
-
-;-------------------------------------------------------
-; Обработка соседнего кирпича СПРАВА от выбитого кирпича
-LAFFC_62:
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL		; +$01
-	LD A,(HL)		; IX+$01
-	POP HL
-	CP $E0
-	JP NC,LAFFC_64
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL
-	INC HL		; +$02
-	LD B,(HL)		; IX+$02
-	POP HL
-	LD C,A		; сохраняем A
-	LD A,B
-	ADD A,A
-	ADD A,A
-	ADD A,A		; замена SLA B x3
-	LD B,A
-	LD A,C		; восстанавливаем
-	ADD A,B
-	CP $F8
-	JP Z,LAFFC_64
-	AND $08
-	JP Z,LAFFC_64
-
-	PUSH HL
-	LD HL,(wins_recovery_ptr)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02
-	POP HL
-	DEC A
-	add a,h
-	ld h,a
-	LD B,$08
-LAFFC_63:
-	; SET 0,(HL)
-	ld A,(HL)
-	and %11111110	; RES 0,(HL)
-	ld (HL),A
-
-	inc l
-	dec B
-	jp nz,LAFFC_63
-	POP HL
-
-;-----------------------------------------------
-; Обработка стороны кирпича над и под выбитым кирпичом
-LAFFC_64:
-	ld A,H
-	or $01		; set 0,h
-	ld H,A
-	LD A,(LB292+1)
-	AND $04		; замена BIT 2,A
-	JP NZ,LAFFC_65
-; В D - 0
-; Подводка под кирпичом, который над выбитым
-	LD (HL),D
-	inc h
-	LD (HL),D
-	dec h
-LAFFC_65:
-	AND $08
-	JP NZ,LAFFC_66
-	ld a,l
-	add $07
-	ld l,a
-
-	; ld a,$ff
-	; ld (hl),a
-	; inc h
-	; ld (hl),a
-
-	LD (HL),D
-	inc h
-	LD (HL),D
-
-;------------------------------------------
-; Восстановление цвета под выбитым кирпичом
-LAFFC_66:
-	LD HL,(wins_recovery_ptr)
-	LD DE,$0004
-	ADD HL,DE
-	LD (wins_recovery_ptr),HL
-	LD HL,(LB28F+$01)
-	CALL scr_buff_attr_calc
-;  В HL адрес в буфере атрибутов
-
-;   IFDEF MX
-; 	PUSH HL
-; 	ex DE,HL
-; 	ld HL,(attr_buff+$0202)
-; 	ex DE,HL
-
-; 	ld a,e
-; 	and %01110111	; RES 6,E
-; 	ld e,a
-; 	LD A,(LB28F+$01)
-; 	CP $08
-; 	JP Z,LAFFC_67
-; 	ld a,e
-; 	and %00000111	; SET 6,E
-; 	ld a,e
-; 	jp nz,col_res_01
-; 	or %10000000
-; 	jp col_res_02
-; col_res_01:
-; 	or %10001000
-; col_res_02:
-; 	ld e,a
-
-; LAFFC_67:
-; 	LD A,(LB28F+$02)
-; 	CP $20
-; 	JP Z,LAFFC_69
-; 	or A		; BIT 7,(IY-$10)
-; 	JP M,LAFFC_68
-; 	ld a,e
-; 	and %01110111		; RES 6,E
-; 	ld e,a
-
-; LAFFC_68:
-; 	ld A,(IY-$0F)
-; 	or A		; BIT 7,(IY-$0F)
-; 	JP M,LAFFC_69
-; 	ld a,d
-; 	and %01110111		; RES 6,D
-; 	ld d,a
-
-; LAFFC_69:
-; 	LD (HL),E
-; 	inc h
-; 	LD (HL),D
-; 	inc l
-; 	LD A,(LB28F+$02)
-; 	CP $78
-; 	JP NZ,LAFFC_70
-
-;   	; SET 6,(HL)
-; 	ld a,(hl)
-; 	and %00000111
-; 	ld a,(hl)
-; 	jp nz,col_res_03
-; 	or %10000000
-; 	jp col_res_04
-; col_res_03:
-; 	or %10001000
-; col_res_04:
-; 	ld (hl),a
-; 	inc h
-
-;   	; SET 6,(HL)
-; 	ld a,(hl)
-; 	and %00000111
-; 	ld a,(hl)
-; 	jp nz,col_res_05
-; 	or %10000000
-; 	jp col_res_06
-; col_res_05:
-; 	or %10001000
-; col_res_06:
-; 	ld (hl),a
-
-; 	JP LAFFC_72
-; LAFFC_70:
-; 	ld A,(IY+$0F)
-; 	or A		; BIT 7,(IY+$0F)
-; 	JP P,LAFFC_71
-
-;   	; SET 6,(HL)
-; 	ld a,(hl)
-; 	and %00000111
-; 	ld a,(hl)
-; 	jp nz,col_res_07
-; 	or %10000000
-; 	jp col_res_08
-; col_res_07:
-; 	or %10001000
-; col_res_08:
-; 	ld (hl),a
-
-; LAFFC_71:
-; 	inc h
-; 	LD A,(LB28F+$01)
-; 	CP $E8
-; 	JP Z,LAFFC_72
-; 	ld A,(IY+$10)
-; 	or A		; BIT 7,(IY+$10)
-; 	JP P,LAFFC_72
-
-;   	; SET 6,(HL)
-; 	ld a,(hl)
-; 	and %00000111
-; 	ld a,(hl)
-; 	jp nz,col_res_09
-; 	or %10000000
-; 	jp col_res_10
-; col_res_09:
-; 	or %10001000
-; col_res_10:
-; 	ld (hl),a
-; LAFFC_72:
-; 	POP HL		; hl - адрес в буфере атрибутов
-;   ELSE
-	ex DE,HL
-	ld HL,(attr_buff+$0202)
-	ex DE,HL
-	ld (hl),e
-	inc h
-	ld (hl),d
-;   ENDIF
-
-;----------------------------------------------------------------
-; Моментальное восстановление цвета на экране из буфера атрибутов
-	call col_zm_rest
-	inc h
-	call col_zm_rest
-	inc l
-	call col_zm_rest
-	inc h
-	call col_zm_rest
-	PUSH HL
-	LD HL,(cur_level_ptr)
-	LD A,(HL)
-	OR $80
-	LD (HL),A		; замена SET 7,(IY+$00)
-	POP HL
-	RET
+ INCLUDE "./routines/restore_brick_background.asm"
+ INCLUDE "./routines/restore_magnet_sample.asm"
 
 ; Обновление цвета знакоместа сразу на экране по данным из буфера цвета
 ; На входе в HL - адрес в буфере атрибутов
 col_zm_rest:
-	push hl
-; Устанавливаем текущий цвет для знакоместа
-;	ld a,(hl)
-;	ld (color_port),a
-	; Из адреса знакоместа буфере получаем адрес байта на экране
-	ld a,l
-	rla
-	rla
-	rla
-	and %11111000
-	add zx_scr%256 - scr_buff%256
-	ld l,a
-	ld a,h
-	add zx_scr/256 - scr_buff/256
-	ld h,a
-; Освежаем данные на экране
-	ld b,$08
-col_zm_rest_0:
-	;ld a,(hl)
-	;ld (hl),a
-	inc l
-	dec B
-	jp nz,col_zm_rest_0
-	pop hl
-	ret
+ jp NativeRecolorCell
 
 ; Used by the routines at show_window_round_number, input_new_record_name, disp_main_menu_and_wait_keys, print_message and print_txt_players_1_and_2.
 ; На входе в DE адрес сообщения
@@ -7144,8 +5239,8 @@ print_line:			; Specialist ready
 	INC HL
 	LD D,(HL)
 	INC HL
-;	LD A,(HL)
-;	ld (color_port),a
+	LD A,(HL)
+	CALL UiSetColor
 	INC HL
 	LD B,(HL)
 	INC HL
@@ -7216,7 +5311,7 @@ symbol_call_jump:
 
 LB551:
 	LD A,(DE)
-	LD (HL),A
+	CALL UiPixelWrite
 	DEC DE
 	inc l		; поправлено направление для Вектора
 	DEC B
@@ -7232,10 +5327,10 @@ LB551:
 ; Удвоение по высоте символов при печати
 LB55D:
 	LD A,(DE)
-	LD (HL),A
+	CALL UiPixelWrite
 	DEC HL
 	LD A,(DE)
-	LD (HL),A
+	CALL UiPixelWrite
 	inc L		; изменение направления для Вектора
 	DEC DE
 	DEC B
@@ -7285,33 +5380,55 @@ hl_add_a:
 ; Вывод ч/б спрайта без маски в буфер
 ; Спрайт рисуется снизу вверх
 print_sprite_pix:
-	push hl
-	call scr_buff_addr_calc
-	ld a,(de)	; Ширина спрайта
-	ld c,a
-	inc de
-	ld a,(de)	; Высота спрайта
-	ld (print_sprite_pix_1+$01),a
-	ld (print_sprite_pix_3+$01),a
-	inc de
-print_sprite_pix_1:
-	ld b,$00	; B - высота
-print_sprite_pix_2:
-	ld a,(de)
-	ld (hl),a
-	inc de
-	dec l		; НЕ поправлено направление для Вектора (рисуем в буфер)
-	dec B
-	jp nz,print_sprite_pix_2
-	ld a,l
-print_sprite_pix_3:
-	add $00		; B - высота	; НЕ поправлено направление для Вектора (рисуем в буфер)
-	ld l,a
-	inc h
-	dec c
-	jp nz,print_sprite_pix_1
-	POP HL
-	RET
+ push hl
+ call scr_buff_addr_calc
+ ld a,h
+ add $50
+ ld h,a
+ ld a,$e0
+ sub l
+ ld l,a
+ ld a,(de)
+ ld c,a
+ inc de
+ ld a,(de)
+ ld (print_sprite_pix_height+1),a
+ ld (print_sprite_pix_stride+1),a
+ inc de
+print_sprite_pix_height:
+ ld b,0
+print_sprite_pix_byte:
+ ld a,(de)
+ ld (NativeWriteValue),a
+ ld a,l
+ cp $21
+ jp c,print_sprite_pix_skip
+ cp $e1
+ jp nc,print_sprite_pix_skip
+ ld a,(NativeWriteValue)
+ ld (hl),a
+ ld a,h
+ sub $20
+ ld h,a
+ xor a
+ ld (hl),a
+ ld a,h
+ add $20
+ ld h,a
+print_sprite_pix_skip:
+ inc de
+ inc l
+ dec b
+ jp nz,print_sprite_pix_byte
+ ld a,l
+print_sprite_pix_stride:
+ sub 0
+ ld l,a
+ inc h
+ dec c
+ jp nz,print_sprite_pix_height
+ pop hl
+ ret
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 ; Вывод ч/б спрайта без маски на экран
@@ -7330,7 +5447,7 @@ LB605:
 	LD B,$00
 print_sprite_1:
 	LD A,(DE)
-	LD (HL),A
+	CALL UiPixelWrite
 	INC DE
 	INC H
 	DEC B
@@ -7361,7 +5478,8 @@ print_sprite_attrib_2:
 	or %11000000	; Костыль, чтобы атрибуты всегда писались исключительно в буфер атрибутов
 	ld l,a
 	ld a,(de)
-	ld (hl),a
+	call NativeWriteHL
+	call NativeRecolorCell
 	inc de
 	dec l
 	dec B
@@ -7384,19 +5502,19 @@ call_hl_for_all_obj:
 	LD HL,object_ball_1
 	LD B,$0B
 LB66A_0:
-	PUSH BC
 	LD A,(HL)
 	ADD A,A
 	JP Z,LB678_1
+	PUSH BC		; only live objects call a handler
 	ld (IXobj),HL		; Текущий объект с которым работают процедуры
 	push HL
 LB678:
 	CALL LB678		; Вызов подпрограммы поданной на вход этой процедуры в HL
 	pop HL
+	POP BC
 LB678_1:
 	LD DE,$0016
 	ADD HL,DE
-	POP BC
 	dec B
 	jp nz,LB66A_0
 	RET
@@ -7471,42 +5589,31 @@ metal_brik_anim:
 	LD (HL),$00		; IY+$00 Помечаем текущий слот данных свободным
 	RET
 LB6A9_0:
-	ld e,a
-
-; Установка цвета для переливающегося кирпича
-	PUSH HL
-	LD HL,(metal_brik_slot_ptr)
-	INC HL
-	INC HL
-	INC HL		; +$03
-	LD C,(HL)		; IY+$03
-	INC HL		; +$04
-	LD B,(HL)		; IY+$04
-	POP HL
-; BC - адрес кирпич в буфере
-	ld d,c
-	ld a,c
-	rra
-	rra
-	rra
-	or %11000000
-	ld c,a
-; BC - адрес атрибута кирпича
-	;ld a,(bc)
-	;ld (LB6A9_10+$01),a	; Цвет левой половины кирпича
-	;inc b
-	;ld a,(bc)
-	;ld (LB6A9_11+$01),a	; Цвет правой половины кирпича
-	;dec B
-	ld c,d
-; Индивидуальная обработка чёрного кирпича
-	or a
-	jp nz,LB6A9_01
-	ld a,e
-	cp 15
-	jp nz,LB6A9_03
-	ld hl,anim_brik_black
-	jp LB6A9_02
+ ; Use the animation slot counter, not the level byte (strength/color bits).
+ ld hl,(metal_brik_slot_ptr)
+ ld e,(hl)
+ inc hl
+ inc hl
+ inc hl
+ ld c,(hl)
+ inc hl
+ ld b,(hl)
+ ld d,c
+ ld a,c
+ rrca
+ rrca
+ rrca
+ or $c0
+ ld c,a
+ call NativeReadBC
+ ld c,d
+ or a
+ jp nz,LB6A9_01
+ ld a,e
+ cp 15
+ jp nz,LB6A9_03
+ ld hl,anim_brik_black
+ jp LB6A9_02
 
 LB6A9_01:
 	ld a,e
@@ -7543,8 +5650,8 @@ LB6A9_10:
 ;	ld a,$00
 ;	ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
 	LD A,(DE)		; байт из спрайта
-	LD (HL),A		; Экран
-	LD (BC),A		; Буфер
+	CALL plane_screen_write	; Both background planes
+	; Native background already updated
 	INC H
 	inc b
 	INC DE
@@ -7552,8 +5659,8 @@ LB6A9_11:
 ;	ld a,$00
 ;	ld (color_port),a	; Цвет правой половины кирпича
 	LD A,(DE)		; байт из спрайта
-	LD (HL),A		; Экран
-	LD (BC),A		; Буфер
+	CALL plane_screen_write	; Both background planes
+	; Native background already updated
 	DEC H
 	dec L			; Изменено направление для Вектора
 	INC DE
@@ -7709,7 +5816,7 @@ print_message:		; Specialist ready
 ;--------------------------
 ; Данные для первого игрока
 score_1up_in_game:
-	DEFW $0F00	; Адрес в буфере (на старте игры вычисляется по координатам $1510)
+	DEFW $0F00	; Адрес в буфере (на старте игры вычисляется по координатам $F010)
 	DEFB $47,$06	; Рудимент, не используется?
 	DEFW $0000	; 6-й и 5-й разряды счёта
 	DEFW $0000	; 4-й и 3-й разряды счёта
@@ -7720,7 +5827,7 @@ score_1up_in_game:
 	DEFB $78,$07,$43,$02,$11,$12
 
 hi_score_in_game:
-	DEFW $0F68	; Адрес в буфере (на старте игры вычисляется по координатам $1568)
+	DEFW $0F68	; Адрес в буфере (на старте игры вычисляется по координатам $F068)
 	DEFB $47,$06	; Рудимент, не используется?
 
 ;HI score - 3 ячейки
@@ -7733,7 +5840,7 @@ hi_score:
 
 ;--------------------------
 score_2up_in_game:
-	DEFW $0FD0	; Адрес в буфере (на старте игры вычисляется по координатам $15C0)
+	DEFW $0FD0	; Адрес в буфере (на старте игры вычисляется по координатам $F0C0)
 	DEFB $47,$06	; Рудимент, не используется?
 	DEFW $0000	; 6-й и 5-й разряды счёта
 	DEFW $0000	; 4-й и 3-й разряды счёта
@@ -7759,9 +5866,7 @@ pause_long:
 	jp nz,pause_long
 	RET
 
-; Неиспользуемый байт - копия предыдущего? Мусор?
-; Data block at B7E4
-	RET
+; Unreferenced duplicated RET at the old B7E4 location removed.
 
 ; Общие переменные игры
 ; Режим игры:
@@ -7817,11 +5922,8 @@ all_var_init:
 	LD (ball_x_coord+$01),A	; Запись в object_ball_1+2
 	LD A,$0C
 	LD (spr_bonus_rocket_1+$01),A
-; Переносим свойства 11 объектов в буфер
-	LD DE,object_ball_1
-	LD HL,objects_buff_2
-	LD BC,11*$0016		; 242
-	call LDIR8080B		; LDIR
+; Restore all 11 original records from the immutable packed snapshot.
+	CALL InitialObjectsRestore
 ; A = 0
 	xor A
 	;LD (LBAEB+$01),A	; меняем параметр команды JR (но нет других мест изменения параметра)
@@ -7859,11 +5961,7 @@ LB7F8_1:
 	LD HL,$8CC0			; Это не адрес!
 	LD (object_ball_1+$14),HL
 	LD L,$08
-	LD A,(current_level_number_1up)
-	ADD A,$02
-	CP $04
-	JP C,LB7F8_2
-	LD A,$04
+; Ball speed below is fixed at 3; the old level clamp was overwritten.
 LB7F8_2:
 	LD A,$03
 	LD H,A
@@ -7906,7 +6004,7 @@ bricks_reset_0:
 	CP $C0
 	JP Z,bricks_reset_1	; Если пустое место, то пропускаем
 	ld C,A		; save A
-	or  %00100000	; BIT 5,A
+	and %00100000	; BIT 5,A: test the unbreakable flag
 	JP NZ,bricks_reset_1	; Если невыбиваемый, то пропускаем
 	ld A,C
 	and %00111111	; RES 7,(HL) / RES 6,(HL)  Сбрасываем бит пустоты
@@ -7953,26 +6051,23 @@ ctrl_btns_pressed_copy:
 game_start:
 ;TODO	LD (iy_storage),IY
 
-	LD HL,$1510
+	LD HL,$F010 ; HUD digits at Y=-16.
 	CALL scr_buff_addr_calc
 	LD (score_1up_in_game),HL	; Адрес в буфере по координатам
 
-	LD HL,$15C0
+	LD HL,$F0C0
 	CALL scr_buff_addr_calc
 	LD (score_2up_in_game),HL	; Адрес в буфере по координатам
 
-	LD HL,$1568
+	LD HL,$F068
 	CALL scr_buff_addr_calc
 	LD (hi_score_in_game),HL	; Адрес в буфере по координатам
 
-; Переносим свойства 11 спрайтов в буфер по адресу 6000
-	ld DE,objects_buff_2
-	ld HL,object_ball_1
-	ld BC,11*$0016		; 242
-	call LDIR8080B		; LDIR
+; A fresh start restores the original snapshot, including after warm reset.
+	CALL InitialObjectsRestore
 
 	xor a
-	ld (objs_width_sum),A
+	; Shadow width sum removed.
 
 ; Used by the routine at LBC10.
 ; Повторный запуск главного меню (после проигрыша), минуя некоторые инициализации
@@ -7985,6 +6080,8 @@ game_restart:
 
 ;----------------------------------
 	CALL disp_main_menu_and_wait_keys
+	XOR A
+	LD (UiActive),A
 ;----------------------------------
 
 ; Непосредственный запуск игры
@@ -8024,23 +6121,28 @@ game_restart:
 ; Есть второй игрок
 	LD (lives_2up),A	; = 0
 LB9E8_0:
-	;CALL clear_screen_attrib
-	CALL clear_screen_pix
+	; LB9E8_1 performs the full reset for a new game.
 
 ; This entry point is used by the routines at LBBFB and LBC10.
 ; Сюда возвращаемся когда потеряли жизнь
 LB9E8_1:
+	XOR A
+	LD (UiActive),A
+	CALL SetPaletteLevel
 	CALL level_addr_calc
+	CALL planes_reset
 	CALL game_screen_draw_to_buffer
 	CALL all_var_init
 	;CALL clear_screen_attrib
 	;CALL print_kinnock
-	CALL buff_to_screen_pixs
 	;CALL buff_to_screen_attrib
 	;CALL return		; Заглушка, пустая подпрограмма
 	CALL show_window_round_number
+	; Three-channel Vector fanfare accompanies the round announcement.
+	CALL MusicStart
 	LD B,$04
 	CALL pause_long		; Пауза 1,2 сек. (4*0.3)
+	CALL MusicStop
 	CALL all_metal_briks_animation_snd
 ; Восстанавливаем из буфера пиксели над окном с надписью о номере раунда
 	LD HL,$8158		; Координаты
@@ -8088,8 +6190,6 @@ LB9E8_2:
 LB9E8_3:
 	LD HL,handling_object
 	CALL call_hl_for_all_obj
-	LD HL,ix_buf_addr_calc
-	CALL call_hl_for_all_obj
 	CALL fill_briks_data
 LBAEB:
 	;JR LBAED_0		;WARN: Параметр JR изменяемый! но почему-то задаётся только в одном месте
@@ -8105,59 +6205,33 @@ LBAED_0:
 	LD A,(briks_quantity_1up)
 	AND A
 	JP Z,LBC10
-	CALL save_objs_to_buff
-	LD HL,print_obj_to_buff
-	CALL call_hl_for_all_obj
 	CALL play_sounds_queue
-	JP NZ,LBAED_4
-	LD A,(save_objs_buff)
-	CP $04
-	JP Z,LBAED_1
-	JP C,LBAED_3
-	LD A,(objs_width_sum)
-	CP $23
-	JP NC,LBAED_4
-	JP LBAED_3
+; The old object-count heuristic led to the same redraw path in every case.
 LBAED_1:
-	LD A,(object_bat_1+$0C)	; Ширина каретки в пикселях
-	CP $1C
-	JP NZ,LBAED_2
-	LD A,(object_bonus)
-	AND A
-	JP NZ,LBAED_3
 LBAED_2:
-	LD A,(counter_2)
-	CP $03
-	JP C,LBAED_4
 LBAED_3:
-
-  ; Общая скорость геймплея
-  ; Вместо halt необходимо ставить паузу
-  ; EI
-  ; HALT
-  ; DI
-
-	ld d,$05		; Константа выставлена на глаз $10
-	call pause_short
-
 LBAED_4:
+LBAED_5:
+ call WaitVideoFrame
+ call RCBegin
+ CALL planes_begin
+ CALL DrawMovingObjects
+ call RCFlush
 	LD HL,object_bat_1+2
 	CALL running_dot
 	LD A,(game_mode)
 	CP $02
-	JP NZ,LBAED_5
+	JP NZ,direct_dots_done
 	CALL running_dot_frame_swap
 	LD HL,object_bat_2+2
 	CALL running_dot
 	CALL running_dot_frame_swap
 
-LBAED_5:
-	LD HL,print_obj_from_buf_to_scr
-	CALL call_hl_for_all_obj
+direct_dots_done:
+	CALL restore_objs_and_magnet
 	LD A,(wins_counter)
 	AND A
-	CALL NZ,wins_recovery	; В том числе восстанавливается фон под выбитым кирпичом
-	CALL restore_objs_and_magnet
+	CALL NZ,wins_recovery
 	CALL pause_game
 	JP LB9E8_2
 
@@ -8200,11 +6274,6 @@ LBB97:
 	CALL fill_briks_data
 ; This entry point is used by the routine at LBAED.
 LBB97_0:
-	LD HL,ix_buf_addr_calc
-	CALL call_hl_for_all_obj
-	CALL save_objs_to_buff
-	LD HL,print_obj_to_buff
-	CALL call_hl_for_all_obj
 ;TODO	LD IY,(iy_storage)
 
   ; Непонятно на что влияющая задержка
@@ -8217,12 +6286,13 @@ LBB97_0:
   ; call pause_short
 
 	CALL play_sounds_queue
+	CALL WaitVideoFrame
+	CALL planes_begin
 	LD HL,print_obj_from_buf_to_scr
 	CALL call_hl_for_all_obj
 	LD A,(wins_counter)
 	AND A
 	CALL NZ,wins_recovery
-	CALL restore_objs
 	CALL pause_game
 	LD A,(object_rocket)
 	AND A
@@ -8300,8 +6370,8 @@ LBC10_2:
 	POP AF
 
 	LD (object_rocket),A
-	LD HL,print_obj_to_buff
-	CALL call_hl_for_all_obj
+	CALL WaitVideoFrame
+	CALL planes_begin
 	LD HL,print_obj_from_buf_to_scr
 	CALL call_hl_for_all_obj
 	LD A,(wins_counter)
@@ -8398,23 +6468,15 @@ LBC10_5:
 	LD HL,handling_object
 	CALL call_hl_for_all_obj
 	CALL fill_briks_data
-	LD HL,ix_buf_addr_calc
-	CALL call_hl_for_all_obj
-	CALL save_objs_to_buff
 
-	LD HL,print_obj_to_buff
-	LD A,(object_ball_2)
-	RLA
-	CALL NC,call_hl_for_all_obj
 
 	CALL play_sounds_queue
-	LD HL,print_obj_from_buf_to_scr
-	CALL call_hl_for_all_obj
+	CALL WaitVideoFrame
+	CALL SparksRender
 	LD A,(wins_counter)
 	AND A
 	CALL NZ,wins_recovery
 
-	CALL restore_objs
 	CALL pause_game
 
 	LD A,(object_ball_2)
@@ -8429,9 +6491,23 @@ live_dec:
 	LD (lives_1up),A
 	JP Z,LBC10_6
 	LD A,(game_mode)
-	DEC A
-	CALL Z,current_level_2up_copier
+	CP $01
+	JP NZ,ResumeLife
+	LD A,(lives_2up)
+	OR A
+	JP Z,ResumeLife
+	CALL current_level_2up_copier
 	JP LB9E8_1
+
+; Same player/level: preserve texture, border, brick state and magnets.
+ResumeLife:
+	CALL planes_begin ; retire the final death-particle footprints
+	CALL all_var_init
+	LD DE,$e018 ; all 32 columns, lives HUD at Y=200, height=6
+	LD BC,$2006
+	CALL plane_erase_dual
+	CALL DrawLifeIcons
+	JP LB9E8_2
 
 ; Жизней не осталось
 LBC10_6:
@@ -8486,52 +6562,7 @@ print_txt_players_1_and_2:
 ;--------------------------------------------------
 ; Перенос данных (пикселей) вместе с цветом из буфера на экран
 buff_to_screen_pixs:
-	ld hl,zx_scr
-	ld de,scr_buff
-	ld a,32
-buff_to_screen_pixs_1:
-	ld (buff_to_screen_pixs_4+1),a ; save A
-	push de
-	push hl
-	ld c,24
-buff_to_screen_pixs_2:
-; Вывод одного знакоместа
-	; Установка цвета для знакоместа
-;	push de
-;	ld a,e
-;	rra
-;	rra
-;	rra
-;	or %11000000
-;	ld e,a
-;	ld a,(de)
-;	ld (color_port),a	; Устанавливаем цвет точек
-;	pop de
-	;--------------------------------
-	ld b,$08
-buff_to_screen_pixs_3:
-	ld a,(de)
-	ld (hl),a
-	inc e
-	dec l		; поправка направления для Вектора
-	dec B
-	jp nz,buff_to_screen_pixs_3
-	dec c
-	jp nz,buff_to_screen_pixs_2
-	pop hl
-	pop de
-	inc h
-	inc d
-buff_to_screen_pixs_4:
-	ld a,$00		; restore A
-	dec a
-	jp nz,buff_to_screen_pixs_1
-	ret
-
-; Used by the routine at game_restart.
-; Перенос всех атрибутов из буфера на экран
-;buff_to_screen_attrib:
-;	RET
+ ret ; Background pixels are already in their native video planes.
 
 ; Used by the routines at add_points_to_score and current_level_2up_copier.
 ; Обмен содержимым ячеек адресуемых парами HL и DE
@@ -8649,29 +6680,12 @@ game_screen_draw_to_buffer:
 	LD A,(current_level_number_1up)
 	AND $03
 	CALL hl_add_2a
-	ld A,(HL)
+ call NativeReadHL
 	inc HL
 	ld H,(HL)
 	ld L,A
-	ld (current_texture+1),HL	; Помещаем указатель на текстуру уровня
 
-;-----------------------------------
-; Заполняем буфер текстурой
-	LD HL,$0F00			; Координата в экранном буфере
-current_texture:
-	LD DE,spr_level_texture_1	; Текстура первого уровня
-	CALL print_sprite_pix
-	CALL print_sprite_attrib
-	LD A,$10
-	ADD A,L
-	LD L,A
-	JP NZ,current_texture
-	LD L,$00
-	LD A,H
-	ADD A,$10
-	LD H,A
-	CP $CF
-	JP NZ,current_texture
+	CALL NativeFillTexture
 
 ;-----------------------------------
 ; Рисуем обрамление игрового поля. Всего 7 полос, чередуются широкая/узкая
@@ -8747,9 +6761,9 @@ LBE8B_2:
 	LD B,$1C
 	PUSH HL
 LBE8B_3:
-	ld A,(HL)
+ call NativeReadHL
 	and %01111111	; RES 7,(HL)	; Слева
-	ld (HL),A
+ call NativeWriteHL
 	inc l
 	dec B
 	jp nz,LBE8B_3
@@ -8760,9 +6774,9 @@ LBE8B_3:
 	LD H,A
 	LD B,$1C
 LBE8B_4:
-	ld A,(HL)
+ call NativeReadHL
 	and %11111110	; RES 0,(HL)	; Справа
-	ld (HL),A
+ call NativeWriteHL
 	inc l
 	dec B
 	jp nz,LBE8B_4
@@ -8814,9 +6828,9 @@ LBE8B_6:
 	LD DE,border_horizontal_addon
 	LD B,$1E
 LBE8B_7:
-	LD A,(DE)
-	AND (HL)
-	LD (HL),A
+ call NativeReadDE
+ call NativeAndHL
+ call NativeWriteHL
 	INC H
 	INC DE
 	dec B
@@ -8824,27 +6838,7 @@ LBE8B_7:
 
 ;-----------------------------------------
 ; Рисуем индикаторы количества жизней
-	LD A,$08		; Координата X для указателя первой жизни
-	LD (object_lives_indicator+$02),A
-	LD A,(lives_1up)
-	DEC A
-	JP Z,LBE8B_10		; Если жизнь только одна, то не рисуем
-	LD B,A
-	ld HL,object_lives_indicator
-	ld (IXobj),HL
-LBE8B_8:
-	PUSH BC
-	CALL ix_buf_addr_calc
-	CALL print_obj_to_buff
-	LD A,(object_lives_indicator+$02)	; Координата X
-	ADD A,$10		; на 16 правее
-	CP $E9			; Если жизни не помещаются на экран, то не рисуем
-	JP NC,LBE8B_9
-	LD (object_lives_indicator+$02),A
-LBE8B_9:
-	POP BC
-	dec B
-	jp nz,LBE8B_8
+	CALL DrawLifeIcons
 
 ;---------------------------------
 ; Рисуем разделитель игроков, если соответствующий режим игры
@@ -8863,23 +6857,35 @@ LBE8B_11:
 	LD HL,object_score_indicator
 	ld (IXobj),HL
 	inc HL
-	LD (HL),$01		; (IX+$01) = $01: spr_1up
+ push af
+ ld a,$01
+ call NativeWriteHL ; (IX+$01) = $01: spr_1up
+ pop af
 	inc HL
-	LD (HL),$1C		; (IX+$02) = $1C
+ push af
+ ld a,$1c
+ call NativeWriteHL ; (IX+$02) = $1C
+ pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
 	ld HL,(IXobj)
 	inc HL
 	INC (HL)		; INC (IX+$01): spr_2up
 	inc HL
-	LD (HL),$CC		; (IX+$02) = $CC
+ push af
+ ld a,$cc
+ call NativeWriteHL ; (IX+$02) = $CC
+ pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
 	ld HL,(IXobj)
 	inc HL
 	INC (HL)		; INC (IX+$01): spr_hi
 	inc HL
-	LD (HL),$78		; (IX+$02) = $78
+ push af
+ ld a,$78
+ call NativeWriteHL ; (IX+$02) = $78
+ pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
 
@@ -9050,8 +7056,7 @@ metal_brik_slot_ptr:
 	DEFW $0000
 
 ; Счётчик строк для byte_put_width_shift_*, заменяет EX AF,AF' (альтернативный AF)
-blit_row_count:
-	DEFB $00
+; Obsolete shadow-renderer row counter removed.
 
 ; Переменная для обхода briks_data (LAFFC_34-37), заменяет регистр IX локально
 briks_walk_ptr:
@@ -9062,8 +7067,7 @@ frames:
 	DEFB $00
 
 ; Сумма ширин (с некоторым коэффициентом) всех объектов на экране
-objs_width_sum:
-	DEFB $00
+; Shadow width sum removed.
 
 ; Количество шариков на поле
 balls_quantity:
@@ -9082,8 +7086,60 @@ scr_score_need_upd:
 	DEFB $00
 
 ;--------------------------------------------
+ INCLUDE "./routines/ui_colors.asm"
+ INCLUDE "./routines/planes.asm"
+ INCLUDE "./routines/native_background.asm"
+; A dedicated background color follows the original four-level cycle.
+SetPaletteLevel:
+ ld a,5 ; Field row 37: complete composition spans rows 13..242.
+ ld (ScreenScroll),a
+ ld a,(current_level_number_1up)
+ and 3
+ ld e,a
+ ld d,0
+ ld hl,LevelThemeColors
+ add hl,de
+ ld a,(hl)
+ ld (PaletteGame+2),a
+ ld hl,LevelEnemyColors
+ add hl,de
+ ld a,(hl)
+ ld (PaletteGame+8),a
+ ld (PaletteGame+10),a
+ ld (PaletteGame+12),a
+ ld (PaletteGame+14),a
+ jp SetPaletteGame
+ INCLUDE "routines/sparks_render.asm"
+DrawLifeIcons:
+; Рисуем индикаторы количества жизней
+	LD A,$08		; Координата X для указателя первой жизни
+	LD (object_lives_indicator+$02),A
+	LD A,(lives_1up)
+	DEC A
+	RET Z		; One remaining life has no spare-life icon
+	LD B,A
+	ld HL,object_lives_indicator
+	ld (IXobj),HL
+LBE8B_8:
+	PUSH BC
+	CALL ix_buf_addr_calc
+	CALL print_obj_to_buff
+	LD A,(object_lives_indicator+$02)	; Координата X
+	ADD A,$10		; на 16 правее
+	CP $E9			; Если жизни не помещаются на экран, то не рисуем
+	JP NC,LBE8B_9
+	LD (object_lives_indicator+$02),A
+LBE8B_9:
+	POP BC
+	dec B
+	jp nz,LBE8B_8
+
+	RET
+
+ INCLUDE "routines/initial_objects.asm"
+
 BATTYCODE_END:
-	ASSERT BATTYCODE_END <= $6d00
+	ASSERT BATTYCODE_END <= $6b00
 
 ; Буфер на $100 Сюда копируются 180 ($B4) байт кирпичей из текущего уровня
 current_level_copy EQU $6d00
@@ -9100,7 +7156,7 @@ current_level_copy EQU $6d00
 ; Буферу и стеку хватает $200 байт
 save_objs_buff EQU $6e00
 ; Верхушка стека
-stack EQU save_objs_buff + $200
+stack EQU $6c00
 
 ; Буфер на $2100 теневого экрана 256*256 точек = 256*(256/8) = $2000
 ; В конце нужно ещё 256 байт, которые портятся из-за тени от искры
@@ -9108,10 +7164,65 @@ scr_buff EQU $7000
 attr_buff EQU scr_buff+$c0
 
 ; Буфер на $100 для $0B объектов по $16 байт = $DC
-objects_buff_2 EQU $9100
+; Packed InitialObjectsData at $6c00 replaces the unpacked snapshot.
 
 ; Буфер размером $e00 ($1000 - $200) Адрес генерируемой таблицы сдвигов байтов
-table_shifts EQU $9200
+table_shifts EQU $7200
 
 ;=================================
+
+; Reclaim the lower stack area for code/cache tags; keep 96 stack bytes.
+; Natural death traces use 44 bytes including interrupt execution.
+; Game, death and transition tests guard StackFloor on every instruction.
+ IF $ < $6b00
+ DS $6b00-$,0
+ ENDIF
+ ORG $6b00
+ INCLUDE "routines/sparks_separate.asm"
+ ASSERT $ <= $6b60
+ DS $6b60-$,0
+SpriteCacheMeta: ds 32,0
+RCBoundary:
+ ld a,(RCActive)
+ or a
+ ret nz
+ ld hl,RCPrevious
+ call rcb_erase
+ ld hl,RCPrevious+4
+ClearShapeFlags:
+ ret
+LevelThemeColors: db $3f,$38,$f8,$ff
+LevelEnemyColors: db $07,$c7,$3f,$c0
+FastEraseOld:
+ jp plane_erase_dual
+ ASSERT $ <= $6ba0
+StackFloor EQU $6ba0
+; Exactly 180 level bytes are copied/swapped; the remaining 76 bytes are code.
+ DS $6c00-$,0
+ ORG $6c00
+ INCLUDE "routines/initial_objects_data.asm"
+SpriteBonusCache7 EQU $6c80
+ ASSERT SpriteBonusCache7+128 <= current_level_copy
+ DS $6db4-$,0
+ ORG $6db4
+ INCLUDE "routines/sparks_local.asm"
+SpriteRotateTable: dw scr0,scr1,scr2,scr3,scr4,scr5,scr6,scr7
+RCReset:
+ ld hl,RCCurrent
+ ld b,28
+ xor a
+rcr_zero:
+ ld (hl),a
+ inc hl
+ dec b
+ jp nz,rcr_zero
+ ret
+
+ ASSERT $ <= $6e00
+
+; Reclaimed table RAM: code followed by six bonus and seven enemy masks.
+ DS $7200-$,0
+ ORG $7200
+ INCLUDE "routines/fast_objects.asm"
+ ASSERT FastObjectCodeEnd <= $7970
 end_bin:

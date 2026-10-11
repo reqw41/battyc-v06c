@@ -37,15 +37,18 @@ disp_main_menu_and_wait_keys:
 	LD DE,spr_pointer_2
 	CALL print_sprite
 
+	LD HL,300
+	LD (counter_misc),HL
 L93F8_0:
+	CALL WaitVideoFrame
 	LD HL,(counter_misc)
-	INC HL
+	DEC HL
 	LD (counter_misc),HL
 
 	LD A,H
-	AND %01000000 ; BIT 6,H
+	OR L
 
-	JP NZ,disp_hs_table_and_wait_keys		; Переход на отображение таблицы рекордов
+	JP Z,disp_hs_table_and_wait_keys		; Переход на отображение таблицы рекордов
 
 ;	call cheat ;DEBUG
 
@@ -148,7 +151,7 @@ L93F8_6:
 	LD HL,(coord_ctrl_1up)
 	LD DE,spr_pointer_1
 	CALL print_sprite
-	LD A,$FF
+	LD A,10
 	LD (back_counters),A
 	CALL play_sound_choose_ctrl
 L93F8_7:
@@ -184,7 +187,7 @@ L93F8_9:
 	LD HL,(coord_ctrl_2up)
 	LD DE,spr_pointer_2
 	CALL print_sprite
-	LD A,$FF
+	LD A,10
 	LD (back_counters+1),A
 	CALL play_sound_choose_ctrl
 

@@ -20,6 +20,8 @@ print_magnets:
   LD (IXobj),HL
 L8D4C_0:
   PUSH AF
+  xor a
+  call NativeMagnetSetOverlay
   LD HL,(IXobj)
   INC HL		; +$01
   LD (HL),$06		; IX+$01
@@ -57,12 +59,15 @@ L8D4C_0:
   ADD A,$05
   LD (HL),A		; IX+$04
   CALL random_generate
+MagnetInitialLayerChoice:
   LD A,(random_number)
   RRA
   JP C,L8D4C_1
   LD HL,(IXobj)
   INC HL		; +$01
   LD (HL),$07		; IX+$01
+  ld a,1
+  call NativeMagnetSetOverlay
   CALL print_obj_to_buff
 L8D4C_1:
   LD HL,(IXobj)
@@ -180,6 +185,8 @@ L8E72_1:
   CALL hl_add_a
   LD (current_magnet_prop),HL
   LD (IXobj),HL ;NOTE: нужен для print_obj_to_buff
+  ld a,1
+  call NativeMagnetSetOverlay
   inc HL
   LD A,(HL)		; IX+$01
   XOR $01
@@ -194,5 +201,4 @@ L8E72_1:
   pop HL
   POP AF
   LD (HL),A		; IX+$02
-  JP play_sound_magnet
-  ;RET
+  RET ; Magnet animation itself is silent.

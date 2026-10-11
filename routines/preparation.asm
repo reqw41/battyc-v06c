@@ -5,41 +5,7 @@
 	;LD A,c00  ; Чёрный
 	;CALL cls ;DEBUG
 
-; -----------------
-; Генерируется таблица table_shifts размером 7 * 2 * $100 = $E00 байт
-; По этой таблице сдвигаются спрайты по горизонтали, кроме шарика и всех видов кареток.
-	LD HL,table_shifts
-	LD B,$01	; 1..7
-table_gen_0:
-	LD C,$00	; $00..$FF
-table_gen_1:
-	LD D,C
-	push BC
-	ld E,$00
-table_gen_2:
-	ld A,D
-	or A
-	rra		; SRL D
-	ld D,A
-	ld A,E
-	rra		; RR E
-	ld E,A
-	DEC B
-	JP NZ,table_gen_2
-	INC H
-	LD (HL),E
-	DEC H
-	LD (HL),D
-	INC HL
-	pop BC
-	INC C
-	JP NZ,table_gen_1
-	INC H
-	INC B
-	ld A,B
-	cp 8		; BIT 3,B
-	jp nz,table_gen_0
-
+; Dynamic masks are shifted lazily in the sprite cache.
 	CALL spr_shift_gen	; Генерация сдвинутых спрайтов шарика и всех видов кареток
 
 ; Инвертируется некоторая графика
@@ -76,6 +42,10 @@ gfx_inverse_3:
 L6800_6:
 	LD A,$0C		; Устанавливается высота спрайта ракеты в 12 пикселей (отсекается пламя)
 	LD (spr_bonus_rocket_1+1),A
+	LD A,$c3
+	LD (start_bin),A
+	LD HL,WarmStart
+	LD (start_bin+1),HL
 	ei
 	JP game_start		; Запуск игры
 
@@ -231,3 +201,8 @@ L68D7:
   DEFW spr_bat_gun_shift	; Куда помещать сдвинутый спрайт
 
   DEFW $0000 ; Маркер конца
+
+; Two 128-byte bonus caches reuse startup code after its entry is patched.
+ IF $ < start_bin+3+256
+ DS start_bin+3+256-$,0
+ ENDIF

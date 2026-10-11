@@ -5,30 +5,33 @@
 ; На выходе в DE адрес спрайта
 
 sprite_search:
-; Вход: HL = адрес объекта (устанавливается вызывающей стороной через (IXobj))
-	ld (sprite_search_1+1),HL
-	inc HL
-	ld (sprite_search_2+1),HL
-	LD HL,gfx_pack-$02
-sprite_search_1:
-	LD A,($0000)		; IX+$00
-	add A,A		; SLA E
-	ld E,A
-	LD D,$00
-	ADD HL,DE
-	LD A,(HL)
-	INC HL
-	LD H,(HL)
-	LD L,A
-sprite_search_2:
-	LD A,($0001)		; IX+$01
-	add A,A		; SLA E
-	ld E,A
-	ADD HL,DE
-	LD E,(HL)
-	INC HL
-	LD D,(HL)
-	RET
+; HL = object pointer. BC is preserved; DE = selected sprite.
+; Walk the object through DE while indexing the two pointer tables in HL.
+ ex de,hl
+ ld a,(de)
+ add a,a
+ ld hl,gfx_pack-$02
+ add a,l
+ ld l,a
+ jp nc,sprite_search_pack
+ inc h
+sprite_search_pack:
+ ld a,(hl)
+ inc hl
+ ld h,(hl)
+ ld l,a
+ inc de
+ ld a,(de)
+ add a,a
+ add a,l
+ ld l,a
+ jp nc,sprite_search_frame
+ inc h
+sprite_search_frame:
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ ret
 
 ; Таблица указателей на наборы спрайтов
 gfx_pack:

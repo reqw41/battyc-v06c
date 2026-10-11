@@ -21,7 +21,7 @@ running_dot:
   ld A,(HL)		; ширина объекта
   ld (running_dot_batw),A
 
-  LD DE,scr_buff+$b3 ; $F060 - адрес строки в буфере, где бегают точки по каретке
+  LD DE,$e02d ; $F060 - адрес строки в буфере, где бегают точки по каретке
   LD A,(running_dot_frame_1up)
   AND $7F
   LD B,A
@@ -50,9 +50,7 @@ LB8E6_0:
   AND $07
   LD HL,running_dot_mask
   CALL hl_add_a
-  LD A,(DE)
-  AND (HL)
-  LD (DE),A		; Запись первой точки
+  CALL running_dot_black	; Запись первой точки
 
   LD A,(running_dot_batx)	; Координата X для печати
   ld d,a
@@ -65,19 +63,17 @@ LB8E6_0:
   RRA
   RRA
   AND $1F
-  add a,scr_buff/256	; Вычисление положения второй точки
+  add a,$e0	; Вычисление положения второй точки
   ld d,a
   LD A,C
   AND $07
   LD HL,running_dot_mask
   CALL hl_add_a
-  LD A,(DE)
-  AND (HL)
-  LD (DE),A		; Запись второй точки
+  CALL running_dot_black	; Запись второй точки
 
   LD A,(running_dot_frame_1up)
-  or A			; BIT 7,A
-  JP Z,LB8E6_1
+  or A			; BIT 7,A: direction is the sign bit
+  JP P,LB8E6_1
   and %01111111		; RES 7,A
   DEC A
   CP $09
@@ -121,3 +117,21 @@ running_dot_frame_1up:
 ; Кадр рисования точек на каретке для второго игрока
 running_dot_frame_2up:
   DEFB $0E
+
+; Keep the E coverage and set F where the dot touches that silhouette.
+; E+F is black; clearing E alone exposed the colored background.
+; Preserve B (animation phase). Each point rebuilds D before writing.
+running_dot_black:
+  ld a,(hl)
+  cpl
+  ld c,a
+  ld a,(de)
+  and c
+  ld c,a
+  ld a,d
+  sub $60
+  ld d,a
+  ld a,(de)
+  or c
+  ld (de),a
+  ret

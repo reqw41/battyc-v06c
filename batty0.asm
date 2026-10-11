@@ -1,11 +1,25 @@
 ;----------------------------------------------------------------------------
 
+	EXPORT SetPaletteGame
+	EXPORT SetPaletteMenu
+	EXPORT IntCount
+	EXPORT MusicStart
+	EXPORT MusicStop
+	EXPORT MusicActive
+	EXPORT MusicWait
+	EXPORT MusicPointer
+	EXPORT SfxTone
+	EXPORT SfxWait
+	EXPORT PaletteGame
+	EXPORT MusicTick
+	EXPORT MusicScore
 	EXPORT KeyLine0
 	EXPORT KeyLine2
 	EXPORT KeyLine4
 	EXPORT KeyLine7
 	EXPORT JoystickP
 	EXPORT BorderColor
+	EXPORT ScreenScroll
 	;EXPORT LDIR8080
 	EXPORT LDIR8080B
 	;EXPORT LDDR8080
@@ -46,6 +60,7 @@ Init_2:
 
 RestartInt:
 	ld sp,100h
+	call MusicInit
 	ld a,88h
 	out (4),a		; initialize R-Sound 2
 ; Joystick init
@@ -61,6 +76,12 @@ RestartInt:
 	jp	BATTY0_END
 
 ; Set game palette
+SetPaletteMenu:
+	ld a,$ff
+	ld (ScreenScroll),a
+	ld hl,PaletteMenu+15
+	jp SetPalette
+
 SetPaletteGame:
 	ld hl,PaletteGame+15
 ; Programming the Palette
@@ -124,7 +145,7 @@ KEYINT_J:
 	out (0),A
 	ld A,2
 	out (1),A
-	ld A,0FFh
+	ld A,(ScreenScroll)
 	out (3),A		; scrolling
 	ld A,(BorderColor)
 	and 0Fh
@@ -134,11 +155,16 @@ KEYINT_J:
 	inc a
 	ld (IntCount),A
 ;
+	call MusicTick
+	call SfxTick
 	pop af
 	ei
 	ret
 
-IntCount .EQU 0E000h
+	INCLUDE "routines/music_vi53.asm"
+ INCLUDE "routines/sfx_vi53.asm"
+
+IntCount: db 0 ; keep interrupt counter outside the sprite plane
 
 KeyLineEx:	db 11111111b
 KeyLine0:	db 11111111b
@@ -148,6 +174,7 @@ KeyLine7:	db 11111111b	;  SPC  ^   ]   \   [   Z   Y   X
 JoystickP:	db 11111111b
 
 BorderColor:	db 0		; border color number 0..15
+ScreenScroll: db $ff
 
 ;----------------------------------------------------------------------------
 
@@ -156,11 +183,13 @@ ColorGame equ 11011011b    ; Color for $E000-$FFFF - yellow
 ColorText equ 10111111b    ; Color for $C000-$DFFF - blue
 ColorBoth equ 00000111b    ; Color for both planes - red
 ; Palette colors, game
-PaletteGame:		; Palette
-	db	ColorNone, ColorGame, ColorText, ColorBoth	; 0..3
-	db	ColorNone, ColorGame, ColorText, ColorBoth	; 4..7
-	db	ColorNone, ColorGame, ColorText, ColorBoth	; 8..11
-	db	ColorNone, ColorGame, ColorText, ColorBoth	; 12..15
+PaletteMenu:
+ db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
+ db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
+PaletteGame:
+ ; index: A000 bit2, C000 bit1, E000 bit0. Bit0 overrides background.
+ db $00,$ff,$db,$ff,$bf,$ff,$07,$ff
+ db $07,$00,$07,$00,$07,$00,$07,$00
 
 ;----------------------------------------------------------------------------
 

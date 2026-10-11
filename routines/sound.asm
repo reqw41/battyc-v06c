@@ -136,81 +136,29 @@ play_sound_ball_start:
   LD C,$09
   LD E,$14
   CALL play_sound_LC122
+sound_event_done:
   LD HL,(snd_slot_ptr)
   LD (HL),$00	; IX+$00
   RET
 
 ; Used by the routines at play_sound_ball_start, play_sound_confirm_letter and play_sound_shot.
 play_sound_LC122:
-  LD A,C
-  XOR E
-  ADD A,A
-  LD B,A
-  AND $0F
-  LD D,A
-  LD A,B
-  AND $0C
-  ADD A,$08
-  LD B,A
-  CALL sound_beep2
-  DEC C
-  JP NZ,play_sound_LC122
-  RET
-
-; Used by the routines at play_sound_LC122, play_sound_choose_ctrl and play_sound_choose_letter.
-sound_beep2:	; Specialist ready
-  ld a,$0b
-  ;ld (sound_port),a
-sound_beep2_0:
-  DEC B
-  JP NZ,sound_beep2_0
-  dec a
-  ;ld (sound_port),a
-  LD B,D
-sound_beep2_1:
-  DEC B
-  JP NZ,sound_beep2_1
-  RET
-
-; Used by the routine at disp_main_menu_and_wait_keys.
+ ld d,1
+ jp SfxTone
+sound_beep2:
+ jp SfxTone
 play_sound_choose_ctrl:
-  LD E,$40		;$20 $25	$40
-  LD D,$80		;$40 $49	$80
-play_sound_choose_ctrl_0:
-  LD B,C
-  CALL sound_beep2
-  INC D
-  INC C
-  DEC E
-  JP NZ,play_sound_choose_ctrl_0
-  RET
-
-; Used by the routine at print_one_magnet.
+ ld de,$0240
+ jp SfxTone
 play_sound_magnet:
-  LD E,$18
-  LD C,$18
-  LD D,$40
-  JP play_sound_choose_ctrl_0
-
-; Used by the routine at input_new_record_name.
+ ld de,$0118
+ jp SfxTone
 play_sound_choose_letter:
-  LD E,$E0
-  LD C,E
-  LD D,$60
-play_sound_choose_letter_0:
-  LD B,C
-  CALL sound_beep2
-  DEC D
-  INC C
-  DEC E
-  JP NZ,play_sound_choose_letter_0
-  RET
-
-; Used by the routine at input_new_record_name.
+ ld de,$01e0
+ jp SfxTone
 play_sound_confirm_letter:
-  LD C,$FF
-  LD E,$3F
-  JP play_sound_LC122
+ ld de,$033f
+ jp SfxTone
 
 play_sound_bat_beat:
   LD DE,$0466
@@ -220,19 +168,9 @@ play_sound_bat_beat:
   RET
 
 play_sound_05:
-  LD HL,(snd_slot_ptr)
-  INC HL
-  INC HL		; +$02
-  LD E,(HL)		; IX+$02
-  LD D,$01
+  LD DE,$0118
   CALL sound_beep_cont_d
-  LD HL,(snd_slot_ptr)
-  INC HL
-  INC HL		; +$02
-  INC (HL)		; IX+$02
-  INC (HL)		; IX+$02
-  INC (HL)		; IX+$02
-  RET
+  JP sound_event_done
 
 ;-----------------------------
 ; НЕИСПОЛЬЗУЕМЫЙ В ИГРЕ КОД!
@@ -316,20 +254,9 @@ play_sound_07_0:
   RET
 
 play_sound_08:
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
-  LD A,(HL)		; IX+$01
-  RRA
-  RRA
-  AND $3F
-  ADD A,$20
-  LD E,A
-  LD D,$02
-  CALL sound_beep_cont_de
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
-  INC (HL)		; IX+$01
-  RET
+  LD DE,$012f
+  CALL sound_beep_cont_d
+  JP sound_event_done
 
 play_sound_bat_resize_1:
   LD A,(bonus_flag)
@@ -386,34 +313,7 @@ play_sound_bat_resize_2:
 
 ; Used by the routines at sound_beep_cont_d and sound_beep_cont_de.
 sound_beep:
-  LD B,E
-  ld a,$0b
-;   ld (sound_port),a
-sound_beep_0:
-  dec b
-  jp nz,sound_beep_0
-  LD B,E
-  ld a,$0a
-;   ld (sound_port),a
-sound_beep_1:
-  dec b
-  jp nz,sound_beep_1
-  RET
-
-; Used by the routines at L9F64, play_sound_normall_brik, play_sound_metal_brik, play_sound_bat_beat, play_sound_05, play_sound_06, play_sound_live_add,
-; play_sound_bat_resize_1 and play_sound_triple_ball.
 sound_beep_cont_d:
-  CALL sound_beep
-  DEC D
-  JP NZ,sound_beep_cont_d
-  RET
-
-; Used by the routines at play_sound_08 and play_sound_bat_resize_2.
 sound_beep_cont_de:
-  CALL sound_beep
-  LD A,$F8
-  ADD A,E
-  LD E,A
-  DEC D
-  JP NZ,sound_beep_cont_de
-  RET
+ ld d,1
+ jp SfxTone

@@ -22,7 +22,8 @@ L910C_0:
   dec b
   jp nz,L910C_0
   LD HL,txt_high_score_table+227 ; Текст последней строчки таблицы (указатель строки = "IX")
-  LD D,$0B
+  LD A,$0B
+  LD (hs_rank),A
 L910C_1:
   LD B,$06
   PUSH HL			; сохраняем указатель строки (замена PUSH IX)
@@ -40,27 +41,34 @@ L910C_2:
   jp nz,L910C_2
 L910C_3:
   POP HL
-  LD A,D
+  LD A,(hs_rank)
   CP $0B
   RET Z
   JP L910C_5
 L910C_4:
-  DEC D
+  LD A,(hs_rank)
+  DEC A
+  LD (hs_rank),A
   POP HL
   LD BC,$FFEE
   ADD HL,BC
-  LD A,D
+  LD A,(hs_rank)
   DEC A
   JP NZ,L910C_1
 L910C_5:
   LD (hs_row_ptr),HL	; сохраняем указатель строки перед сдвигом таблицы (HL нужен для LDDR)
   LD A,$0A
-  SUB D
+  LD D,A
+  LD A,(hs_rank)
+  LD E,A
+  LD A,D
+  SUB E
   JP Z,L910C_7
   LD DE,txt_high_scores-1
   LD HL,txt_high_score_table+222 ; Последняя строка таблицы рекордов
 L910C_6:
-  LD BC,$000E
+  PUSH AF
+  LD B,$0E
   call LDDR8080B		; LDDR
   DEC HL
   DEC HL
@@ -70,6 +78,7 @@ L910C_6:
   DEC DE
   DEC DE
   DEC DE
+  POP AF
   DEC A
   JP NZ,L910C_6
 L910C_7:
@@ -118,8 +127,10 @@ L910C_9:
   LD A,(ctrl_btns_pressed)
   AND $13
   JP Z,L910C_9
+  LD D,A
   and %00010000		; BIT 4,A
   JP NZ,L910C_12
+  LD A,D
   CP $03
   JP Z,L910C_9
   POP BC
@@ -186,12 +197,21 @@ text_line_addr:
   DEFW $0000
 
 ; Указатель на текущую строку таблицы рекордов, заменяет регистр IX
+hs_rank: db 0
 hs_row_ptr:
   DEFW $0000
 
 ; Used by the routines at disp_high_score_table_screen and L93F8.
 ; Рисует рамку вокруг экрана
 draw_frame:			; Vector 8080 ready
+	call MusicStop
+	call SetPaletteMenu
+	ld a,1
+	ld (UiActive),a
+	ld a,7
+	ld (UiColor),a
+	ld a,$ff
+	ld (last_color),a
 	ld HL,$0000
 	ld (counter_misc),HL
 	;call clear_screen_attrib
@@ -201,9 +221,12 @@ draw_frame:			; Vector 8080 ready
 	ld DE,zx_scr+$1f00-$bf	; Адрес в экранной области $B7DF
 	ld B,$C0
 draw_frame_0:
-	ld (HL),$C0
+	ld a,$C0
+	call UiPixelWrite
 	ld A,$03
-	ld (DE),A
+	ex de,hl
+	call UiPixelWrite
+	ex de,hl
 	inc E			; поправлено направление для Вектора
 	inc L			; поправлено направление для Вектора
 	dec B
@@ -214,13 +237,17 @@ draw_frame_0:
 	ld B,$20
 	ld A,$FF
 draw_frame_1:
-	ld (HL),A
+	call UiPixelWrite
 	dec L			; поправлено направление для Вектора
-	ld (HL),A
+	call UiPixelWrite
 	inc L
-	ld (DE),A
+	ex de,hl
+	call UiPixelWrite
+	ex de,hl
 	dec E			; поправлено направление для Вектора
-	ld (DE),A
+	ex de,hl
+	call UiPixelWrite
+	ex de,hl
 	inc E
 	inc H
 	inc D
@@ -242,31 +269,18 @@ disp_high_score_table_screen:
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 disp_hs_table_and_wait_keys:
-	CALL disp_high_score_table_screen
-check_0_button:
-	ld A,(KeyLine2)		; Проверка ряда цифр '0'..'7'
-	cpl
-	and %00000001		; '0'?
-	ret nz			; Выход из общей процедуры (запуск игры), если нажат 0
-any_key:
-	ld		a,$82
-;	ld		(kb_port_3),a
-;	ld		a,(kb_port_1)
-	or		$01
-	inc a
-	JP NZ,disp_main_menu_and_wait_keys
-
-  LD A,$49		; Цикл задержки $80
-L927F_1:		; Цикл задержки
-  DEC A			; Цикл задержки
-  JP NZ,L927F_1		; Цикл задержки
-
-  LD HL,(counter_misc)
-  INC HL
-  LD (counter_misc),HL
-
-  LD A,H
-  AND A,%1000000 ; BIT 6,H
-
-  JP NZ,disp_main_menu_and_wait_keys	; Переход на отображение главного меню, если счётчик достиг нужного значения
-  JP check_0_button
+ CALL disp_high_score_table_screen
+ ld hl,300
+hs_wait:
+ push hl
+ call WaitVideoFrame
+ ld a,(KeyLine2)
+ cpl
+ and 1
+ pop hl
+ ret nz
+ dec hl
+ ld a,h
+ or l
+ jp nz,hs_wait
+ jp disp_main_menu_and_wait_keys
