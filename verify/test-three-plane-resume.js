@@ -26,7 +26,7 @@ for(const scene of [{mode:0,other:0,name:'one-player'},{mode:2,other:3,name:'dou
   assert.equal(E.rd(E.L.SUDropped),0,'save-under capacity');
   const source=E.L.spr_lives_indicator,width=E.rd(source),height=E.rd(source+1),expected=Buffer.alloc(192);
   for(let r=0;r<height;r++)for(let c=0;c<width;c++){const m=E.rd(source+2+2*(r*width+c)),black=m&E.rd(source+3+2*(r*width+c));expected[6*(1+c)+r]=m&~black;}
-  for(let p=0;p<3;p++)for(let c=0;c<32;c++)for(let r=0;r<6;r++)assert.equal(E.rd(0xa000+p*8192+256*c+24-r),expected[6*c+r],'life HUD '+scene.name);
+  for(let p=0;p<3;p++)for(let c=0;c<32;c++)for(let r=0;r<6;r++)assert.equal(E.rd(0xa000+p*8192+256*c+24-r),(E.L.SUObjectPlanes===2&&p!==2?0:expected[6*c+r]),'life HUD '+scene.name);
  }else{assert.equal(draws,1);assert.equal(resets,1);assert.equal(resumes,0);assert.equal(E.rd(E.L.player_number),same?0:1);assert.equal(music,1);}
  reports.push({...scene,fullDraws:draws,fullResets:resets,resumes,sameBackground:same&&!legacy?true:null,lifeToNextTickMs:(cycles-lossCycles)/3000,minStackAddress:minSP.toString(16),stackBytes:E.L.stack-minSP,passed:true});
 }

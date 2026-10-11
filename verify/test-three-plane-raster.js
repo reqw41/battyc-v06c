@@ -38,7 +38,7 @@ let captured=false;
 for(const c of scenes){
  current=c;enemyReturn=eraseReturn=0;const source=E.L[bonusTarget?'spr_bonus_size':c.kind===8?'spr_ufo_1':'spr_bird_1'],width=E.rd(source),height=E.rd(source+1),pixels=[];
  for(let r=0;r<height;r++)for(let col=0;col<width;col++){const m=E.rd(source+2+2*(r*width+col)),p=E.rd(source+3+2*(r*width+col)),fg=m&~p;
-  for(let b=0;b<8;b++)if(fg&(128>>b))for(let dx=0;dx<(moving?8:1);dx++)for(let dy=0;dy<(moving?4:1);dy++)pixels.push({x:176+c.shift+8*col+b+dx,y:c.y+r+dy,index:bonusTarget||r<(height>>1)?7:1});}
+  for(let b=0;b<8;b++)if(fg&(128>>b))for(let dx=0;dx<(moving?8:1);dx++)for(let dy=0;dy<(moving?4:1);dy++)pixels.push({x:176+c.shift+8*col+b+dx,y:c.y+r+dy,index:E.L.SUObjectPlanes===2?(bonusTarget||r<(height>>1)?1:3):(bonusTarget||r<(height>>1)?7:1)});}
  for(let f=0;f<76;f++){E.run(1);frame++;if(f<12)continue;let raster=0,memory=0;
   for(const p of pixels){const expected=E.io.Palette[p.index]>>>0,sx=32+2*p.x,sy=16+37+p.y;
    if((E.v06c.bmp[sy*576+sx]>>>0)===expected)raster++;

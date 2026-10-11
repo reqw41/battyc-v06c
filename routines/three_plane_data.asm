@@ -15,3 +15,5 @@ SUPlaneDst: dw 0
 SURestoreLeft: db 0
 SURestoreRecord: dw 0
 SUCopySP: dw 0
+SUWorkPlanes: db 2
+PaceWork: dw 0           ; proven work since last wait, units of 64 Vector cycles

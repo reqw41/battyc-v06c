@@ -1,0 +1,371 @@
+{
+  "romSHA256": "8a5ef93a8b6015d4a90c52a4f2d6f518bf923f67d9a79a679232b0acb7267ecc",
+  "cases": 28,
+  "reports": [
+    {
+      "mode": "normal",
+      "id": 0,
+      "caught": true,
+      "fireObserved": false,
+      "width": 44,
+      "frames": [
+        1,
+        0,
+        2,
+        5
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 1,
+      "caught": true,
+      "fireObserved": true,
+      "width": 28,
+      "frames": [
+        1,
+        6,
+        7,
+        8,
+        9,
+        11
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 2,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 3,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 4,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 5,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 6,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 7,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 8,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "normal",
+      "id": 9,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 1,
+      "caught": true,
+      "fireObserved": true,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1,
+        6,
+        7,
+        8,
+        9,
+        11
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 2,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 3,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 4,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 5,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 6,
+      "caught": true,
+      "fireObserved": false,
+      "width": 44,
+      "frames": [
+        5
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 7,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 8,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "wide",
+      "id": 9,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        5,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 0,
+      "caught": true,
+      "fireObserved": false,
+      "width": 44,
+      "frames": [
+        11,
+        10,
+        12,
+        13,
+        14,
+        15,
+        0,
+        2,
+        5
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 2,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 3,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 4,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 5,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 6,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 7,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 8,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    },
+    {
+      "mode": "gun",
+      "id": 9,
+      "caught": true,
+      "fireObserved": false,
+      "width": 28,
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        1
+      ]
+    }
+  ],
+  "passed": true
+}

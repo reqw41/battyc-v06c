@@ -188,8 +188,8 @@ PaletteMenu:
  db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
 PaletteGame:
  ; A/C/E common screen; 8000 bit ignored, its 8 KB are ordinary RAM.
- db $00,$07,$db,$c7,$bf,$f8,$07,$ff
- db $00,$07,$db,$c7,$bf,$f8,$07,$ff
+ db $00,$ff,$3f,$07,$00,$ff,$36,$07
+ db $00,$ff,$3f,$07,$00,$ff,$36,$07
 
 ;----------------------------------------------------------------------------
 

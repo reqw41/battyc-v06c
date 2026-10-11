@@ -1,0 +1,10 @@
+{
+  "romSHA256": "8a5ef93a8b6015d4a90c52a4f2d6f518bf923f67d9a79a679232b0acb7267ecc",
+  "method": "Completed framebuffer, real boot/level palette and native drawing, injected stationary objects. Does not prove raster stability.",
+  "paths": [
+    "outputs/batty-selective-level-1.png",
+    "outputs/batty-selective-level-2.png",
+    "outputs/batty-selective-level-3.png",
+    "outputs/batty-selective-level-4.png"
+  ]
+}

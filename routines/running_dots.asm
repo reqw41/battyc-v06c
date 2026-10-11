@@ -118,18 +118,11 @@ running_dot_frame_1up:
 running_dot_frame_2up:
   DEFB $0E
 
-; Keep the E coverage and set F where the dot touches that silhouette.
-; E+F is black; clearing E alone exposed the colored background.
+; Black is E=0,C=0 for either A value. Leave the background A untouched.
 ; Preserve B (animation phase). Each point rebuilds D before writing.
 running_dot_black:
  ld a,(hl)
  ld c,a
- ld a,(de)
- and c
- ld (de),a
- ld a,d
- sub $20
- ld d,a
  ld a,(de)
  and c
  ld (de),a

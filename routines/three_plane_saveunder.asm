@@ -2,6 +2,7 @@
 ; Save each object immediately before drawing; restore in REVERSE draw order.
 ; Thus saved pixels may contain earlier objects, and reverse restore removes
 ; all of them correctly even when objects move across each other.
+SUObjectPlanes EQU 2
 SUData EQU $8000
 SUDataEnd EQU $8e00
 SUScratch EQU $8e00       ; 448 B scratch, then 64 B cache tags at 8fc0
@@ -19,10 +20,14 @@ SUReset:
  ld (SUNoRoom),a
  ld (SUDropped),a
  ld (RCActive),a
+ ld a,2
+ ld (SUWorkPlanes),a
  ld hl,SUData
  ld (SUDataNext),hl
  ld hl,SURecords
  ld (SURecordNext),hl
+ ld hl,0
+ ld (PaceWork),hl
  ret
 
 ; Restore all old footprints before a framebuffer background read or change.
@@ -38,13 +43,11 @@ SUInvalidate:
  push de
  push hl
  ld (SURestoreLeft),a
- ld b,a
- ld hl,SURecords-6
- ld de,6
-sui_find_last:
+ ld a,2
+ ld (SUWorkPlanes),a
+ ld hl,(SURecordNext)
+ ld de,-6
  add hl,de
- dec b
- jp nz,sui_find_last
  ld (SURestoreRecord),hl
  xor a
  ld (SUCount),a
@@ -69,6 +72,7 @@ sui_next:
  ex de,hl
  ld (SUWorkData),hl
  ex de,hl
+ call PaceAccountRestore
  call SUCopyRestore
  ld hl,(SURestoreRecord)
  ld de,-6
@@ -92,6 +96,8 @@ sui_empty:
 SUSaveObject:
  xor a
  ld (SUNoRoom),a
+ ld a,2
+ ld (SUWorkPlanes),a
  ld a,(direct_rows)
  inc a
  and $fe               ; even footprint enables pairwise POP throughout
@@ -106,10 +112,7 @@ suso_size:
  add hl,de
  dec b
  jp nz,suso_size
- ld d,h
- ld e,l
- add hl,hl
- add hl,de              ; bytes = 3 * cols * even rows
+ add hl,hl              ; bytes = 2 * cols * even rows
  ex de,hl
  ld hl,(SUDataNext)
  ex de,hl
@@ -168,7 +171,7 @@ suso_no_room:
  ret
 
 ; Pairwise source-SP copy. SP spans the complete object, never CALL/PUSH
-; while hijacked; restore before EI. Three planes, column-major, bottom-up.
+; while hijacked; restore before EI. C/E planes, column-major, bottom-up.
 SUCopySave:
  ld hl,0
  add hl,sp
@@ -192,7 +195,7 @@ SUCopySave:
  sbc a,0
  ld h,a
  ld (sus_dispatch+1),hl
- ld a,3
+ ld a,(SUWorkPlanes)
  ld (SUPlane),a
  di
 sus_plane:

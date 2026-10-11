@@ -1,5 +1,5 @@
 ; Native source pair: E=~coverage, D=lit pixels. SP/POP source,
-; common A/C/E framebuffer; white rows use all planes, coloured use E only.
+; A/C/E framebuffer: only C/E change. A is ignored by all sprite colours.
 PreparedDraw:
  ld hl,(direct_source)
  ld (PreparedSource),hl
@@ -73,17 +73,9 @@ prepared_white_0:
  ld h,a
  ld a,(hl)
  and e
- or d
  ld (hl),a
  ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- and e
- or d
- ld (hl),a
- ld a,h
- add a,$40
+ add a,$20
  ld h,a
  dec l
 prepared_white_1:
@@ -97,17 +89,9 @@ prepared_white_1:
  ld h,a
  ld a,(hl)
  and e
- or d
  ld (hl),a
  ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- and e
- or d
- ld (hl),a
- ld a,h
- add a,$40
+ add a,$20
  ld h,a
  dec l
 prepared_white_2:
@@ -121,17 +105,9 @@ prepared_white_2:
  ld h,a
  ld a,(hl)
  and e
- or d
  ld (hl),a
  ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- and e
- or d
- ld (hl),a
- ld a,h
- add a,$40
+ add a,$20
  ld h,a
  dec l
 prepared_white_3:
@@ -145,17 +121,9 @@ prepared_white_3:
  ld h,a
  ld a,(hl)
  and e
- or d
  ld (hl),a
  ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- and e
- or d
- ld (hl),a
- ld a,h
- add a,$40
+ add a,$20
  ld h,a
  dec l
  dec c
@@ -177,15 +145,10 @@ prepared_color_row:
  ld h,a
  ld a,(hl)
  and e
+ or d
  ld (hl),a
  ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- and e
- ld (hl),a
- ld a,h
- add a,$40
+ add a,$20
  ld h,a
  dec l
  dec c

@@ -22,7 +22,7 @@ function profile(base, motion='reference') {
   const control = E.memory.control_write.bind(E.memory);
   E.memory.control_write = v => { assert.equal(v, 0, 'RAM disk mapping'); control(v); };
   const entries = new Map(watched.filter(n => n in E.L).map(n => [E.L[n], n]));
-  let cycles = 0, tick = 0, template, frame, stack = [], frames = [], maxStack = 0;
+  let cycles = 0, tick = 0, template, frame, stack = [], frames = [], maxStack = 0, lastWorkStart = null, paceProofs = 0;
   const checkInterrupt=E.v06c.checkInterrupt.bind(E.v06c);
   E.v06c.checkInterrupt=function() {
     const accepted=this.irq && E.cpu.iff;
@@ -73,7 +73,7 @@ function profile(base, motion='reference') {
       const stat = frame.routines[call.name];
       stat.inclusive += cycles - call.start;
       if(call.detail) call.detail.ms=(cycles-call.start)/3000;
-      if (call.name === 'WaitVideoFrame') frame.phase = 'prepare';
+      if (call.name === 'WaitVideoFrame') { frame.phase = 'prepare'; lastWorkStart=cycles; }
       if (call.name === 'RCFlush' || (call.name === 'DrawMovingObjects' && !E.L.RCFlush)) frame.phase='dots';
     }
   }
@@ -85,6 +85,11 @@ function profile(base, motion='reference') {
       maxStack=Math.max(maxStack,E.L.stack-this.sp);
     }
     if (frame) closeCalls(pc, this.sp);
+    if(pc===E.L.WaitVideoFrame && frame && E.L.PaceWork && lastWorkStart!==null) {
+      const bound=(E.rd(E.L.PaceWork)+256*E.rd(E.L.PaceWork+1))*64;
+      assert(bound<=cycles-lastWorkStart,'pacing bound exceeds actual preceding work');
+      frame.precedingWorkBound=bound;frame.skipRasterWait=bound>=E.FRAME;paceProofs++;
+    }
     if (pc === E.L.LB9E8_2) {
       tick++;
       if (tick===21) E.key(32,1);
@@ -215,7 +220,7 @@ function profile(base, motion='reference') {
   const hot=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,30).map(([p,c])=>({address:'0x'+(+p).toString(16),nearestLabel:labels.findLast(([,a])=>a<=+p)?.[0],msPerStep:c/3000/warm.length}));
   const worst=frames.reduce((a,b)=>a.total>b.total?a:b);
   return {base,motion,romSHA256:crypto.createHash('sha256').update(fs.readFileSync(base+'/batty.rom')).digest('hex'),
-    maxNormalStackBytes:maxStack,warm:aggregate(warm),all:aggregate(frames),worst:aggregate([worst]),worstTick:worst.tick,
+    maxNormalStackBytes:maxStack,paceProofs,warm:aggregate(warm),all:aggregate(frames),worst:aggregate([worst]),worstTick:worst.tick,
     shifts:Array.from({length:8},(_,shift)=>({shift,...aggregate(warm.filter(f=>f.shift===shift))})),hotInstructions:hot,
     frames:frames.map(({pc,start,phase,...f})=>f)};
 }

@@ -19,7 +19,7 @@ SUCopyRestore:
  sbc a,0
  ld h,a
  ld (sur_dispatch+1),hl
- ld a,3
+ ld a,(SUWorkPlanes)
  ld (SUPlane),a
  ld hl,(SUWorkData)
  di
@@ -59,6 +59,9 @@ sur_words_end:
  ret
 
 SUWindowSetup:
+ ; Cold overlay saves all three planes, including coloured menu text.
+ ld a,3
+ ld (SUWorkPlanes),a
  ld hl,$8158
  call screen_addr_calc
  ld a,h

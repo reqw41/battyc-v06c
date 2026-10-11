@@ -1,0 +1,198 @@
+{
+  "romSHA256": "8a5ef93a8b6015d4a90c52a4f2d6f518bf923f67d9a79a679232b0acb7267ecc",
+  "baselineSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "cpu": "Vector-06C i8080 3 MHz; strict 64 KB; no RAM disk",
+  "branch": "experimental/three-plane-selective-saveunder-js",
+  "visiblePlanes": 3,
+  "spritePlanes": 2,
+  "backgroundColours": 3,
+  "sceneTable": [
+    {
+      "scene": "one_ball",
+      "beforeCPU": 45826,
+      "afterCPU": 39588,
+      "beforeFull": 59869,
+      "afterFull": 59875,
+      "warmStepsPerSecond": 50.10466307397673
+    },
+    {
+      "scene": "ball_bonus",
+      "beforeCPU": 70002,
+      "afterCPU": 59238,
+      "beforeFull": 89732,
+      "afterFull": 59830,
+      "warmStepsPerSecond": 50.14195745287769
+    },
+    {
+      "scene": "ball_ufo",
+      "beforeCPU": 77555,
+      "afterCPU": 66497,
+      "beforeFull": 111786,
+      "afterFull": 73832,
+      "warmStepsPerSecond": 40.632592275112145
+    },
+    {
+      "scene": "ball_bird",
+      "beforeCPU": 74853,
+      "afterCPU": 64588,
+      "beforeFull": 103316,
+      "afterFull": 74577,
+      "warmStepsPerSecond": 40.22708337554694
+    },
+    {
+      "scene": "three_balls",
+      "beforeCPU": 76679,
+      "afterCPU": 67753,
+      "beforeFull": 97112,
+      "afterFull": 81528,
+      "warmStepsPerSecond": 36.79717397703857
+    },
+    {
+      "scene": "three_balls_bonus_enemy",
+      "beforeCPU": 133686,
+      "afterCPU": 114702,
+      "beforeFull": 138610,
+      "afterFull": 114838,
+      "warmStepsPerSecond": 26.123807496565206
+    }
+  ],
+  "phaseTable": [
+    {
+      "name": "logic",
+      "before": 22270,
+      "after": 22196
+    },
+    {
+      "name": "wait",
+      "before": 4924,
+      "after": 136
+    },
+    {
+      "name": "prepare",
+      "before": 60,
+      "after": 60
+    },
+    {
+      "name": "erase",
+      "before": 23267,
+      "after": 18967
+    },
+    {
+      "name": "draw",
+      "before": 86879,
+      "after": 72358
+    },
+    {
+      "name": "compose",
+      "before": 12,
+      "after": 12
+    },
+    {
+      "name": "dots",
+      "before": 985,
+      "after": 897
+    },
+    {
+      "name": "tail",
+      "before": 212,
+      "after": 212
+    }
+  ],
+  "routines": [
+    {
+      "name": "SUSaveObject",
+      "before": 29302,
+      "after": 21767
+    },
+    {
+      "name": "SUInvalidate",
+      "before": 23175,
+      "after": 18875
+    },
+    {
+      "name": "SUCopySave",
+      "before": 24727,
+      "after": 17186
+    },
+    {
+      "name": "SUCopyRestore",
+      "before": 20659,
+      "after": 14436
+    },
+    {
+      "name": "PreparedDraw",
+      "before": 40602,
+      "after": 31526
+    }
+  ],
+  "warmLimits": [
+    {
+      "motion": "reference",
+      "steps": 45,
+      "meanCPU": 114702,
+      "meanFull": 114838,
+      "meanFullWithIRQ": 114855,
+      "maxFullWithIRQ": 118768,
+      "pacingProofs": 64
+    },
+    {
+      "motion": "smooth",
+      "steps": 45,
+      "meanCPU": 114502,
+      "meanFull": 114638,
+      "meanFullWithIRQ": 114654,
+      "maxFullWithIRQ": 118572,
+      "pacingProofs": 64
+    }
+  ],
+  "enemyShot": [
+    {
+      "motion": "fixed",
+      "meanCPU": 107181,
+      "meanFull": 107317,
+      "maxFull": 113508
+    },
+    {
+      "motion": "phases",
+      "meanCPU": 106678,
+      "meanFull": 106814,
+      "maxFull": 112852
+    }
+  ],
+  "coldWorstTicks": 212084,
+  "raster": {
+    "before": {
+      "samples": 1536,
+      "blank": 631,
+      "partial": 1115
+    },
+    "after": {
+      "samples": 1536,
+      "blank": 1069,
+      "partial": 1340
+    },
+    "limitation": "Global reverse restore still erases objects before drawing; the controlled raster test regresses. This variant is experimental, not an accepted flicker fix."
+  },
+  "verifiedReports": [
+    "saveunder-oracles",
+    "render",
+    "bricks",
+    "resume",
+    "sparks",
+    "bonus",
+    "audio",
+    "warm-start",
+    "previews",
+    "enemy-raster",
+    "bonus-raster",
+    "enemy-shot"
+  ],
+  "naturalGameplay": {
+    "frames": 12000,
+    "ticks": 8081,
+    "bonuses": 16,
+    "catches": 14,
+    "bombs": 8,
+    "resets": 0
+  }
+}

@@ -1,5 +1,5 @@
 ; Virtual legacy pointers are coordinates only: 7000+256*column+row.
-; Background uses A/C with E=0; moving sprites share all three. No banked RAM.
+; Background uses A/C with E=0; moving sprites use C/E and preserve A.
 NativeAttrs EQU $6e00
 NativeAttrBytes EQU 768
 OverlayActive: db 0
@@ -445,12 +445,7 @@ NativeDigitRow:
  ld a,d
  sub $20
  ld d,a
- ld a,b
- ld (de),a
- ld a,d
- sub $20
- ld d,a
- ld a,b
+ xor a
  ld (de),a
  inc l
  ld (NativeDest),hl

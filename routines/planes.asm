@@ -1,6 +1,6 @@
 ; Three shared video planes A/C/E; 8000 is hidden save-under/cache RAM.
 ; No shadow bitmap and no expanded RAM.
-; Static shadow is retained; dynamic sprites do not write to it.
+; A selects the darker background shade; dynamic sprites leave it untouched.
 planes_reset:
  xor a
  ld (BorderColor),a
@@ -152,9 +152,9 @@ bw_a:
  ret
 background_color: db 0
 background_pixel: db 0
-background_colors: db 3,3,2,3,3,3,2,3,2,2,2,2,2,1,2,2
+background_colors: db 3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,3
 
-; Clear ordinary footprints. Enemy/bonus rectangles are replaced by RCFlush.
+; Restore ordinary footprints in reverse order before drawing the new step.
 planes_begin:
  call SUInvalidate
  ld hl,plane_old
@@ -179,12 +179,7 @@ fec_row:
  xor a
  ld (hl),a
  ld a,h
- sub $20
- ld h,a
- xor a
- ld (hl),a
- ld a,h
- add a,$40
+ add a,$20
  ld h,a
  dec l
  dec c

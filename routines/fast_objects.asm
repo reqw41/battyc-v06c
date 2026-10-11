@@ -1,6 +1,13 @@
 ; Compact shifted masks and short-column composition in ordinary 64K RAM.
 WaitVideoFrame:
- ; Keep the 50 Hz ceiling, but do not wait an extra frame after a slow step.
+ ; SP blits can mask the raster IRQ. Skip HALT only when a conservative
+ ; instruction-cost bound proves the preceding work took >= one frame.
+ ld hl,(PaceWork)
+ ld de,-936             ; 936*64 = 59904 Vector cycles, one raster frame
+ add hl,de
+ ld hl,0
+ ld (PaceWork),hl
+ jp c,wvf_slow
  ei
  ld a,(IntCount)
 WaitVideoFrameLast:
@@ -8,9 +15,58 @@ WaitVideoFrameLast:
  jp nz,wvf_ready
  halt
  ld a,(IntCount)
+ jp wvf_ready
+wvf_slow:
+ ei
+ ld a,(IntCount)
 wvf_ready:
  ld (WaitVideoFrameLast+1),a
  ret
+
+; Lower bounds, generated/checked in JS against actual i8080 execution.
+; Draw includes the preceding successful SUSaveObject, whose fixed setup
+; plus sprite geometry/cache selection exceeds 2048 cycles. No game logic,
+; IRQ or accounting cost is counted. Saturate so long cold/background paths
+; cannot wrap the bound.
+PaceAccountDraw:
+ ld a,(direct_rows)
+ ld hl,PaceDrawCols
+ call hl_add_a
+ ld e,(hl)
+ ld d,0
+ ld a,(direct_columns)
+ ld b,a
+ ld hl,49               ; floor((680+456+2048)/64)
+ jp pace_multiply
+PaceAccountRestore:
+ ld a,(SUWorkRows)
+ or a
+ rra
+ ld hl,PaceRestoreCols
+ call hl_add_a
+ ld e,(hl)
+ ld d,0
+ ld a,(SUWorkCols)
+ ld b,a
+ ld hl,9                ; floor(628/64)
+pace_multiply:
+ add hl,de
+ dec b
+ jp nz,pace_multiply
+ ex de,hl
+ ld hl,(PaceWork)
+ add hl,de
+ jp nc,pace_store
+ ld hl,$ffff
+pace_store:
+ ld (PaceWork),hl
+ ret
+PaceDrawCols:
+ db 0,13,15,18,20,23,25,28,30,33,35,38,40,43,45,48,50
+ db 53,55,58,60,63,65,68,70,74,75,78,80,84,85,88,90
+PaceRestoreCols:
+ db 0,3,4,6,7,8,10,11,13,14,15,17,18,19,21,22,24
+ db 25,26,28,29,30,32,33,35,36,37,39,40,41,43,44,46
 SpriteShiftMasks: db $ff,$7f,$3f,$1f,$0f,$07,$03,$01
 NativeRotateByte:
  push hl

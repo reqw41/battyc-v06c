@@ -33,28 +33,18 @@ UiPixelWrite:
  push bc
  push de
  ld c,a
+ ; White = E1/C0, independently of A. Keep neighbouring glyphs.
+ ld d,(hl)
+ ld a,c
+ cpl
+ and d
+ ld (hl),a
  ld a,h
  add a,$20
  ld h,a
- ; Foreground is white. Union neighbouring outlines without covering glyphs.
  ld a,(hl)
  or c
  ld (hl),a
- ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- or c
- ld (hl),a
- ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- or c
- ld (hl),a
- ld a,h
- add a,$40
- ld h,a
  ld a,c
  or a
  rra
@@ -94,29 +84,18 @@ UiPixelWrite:
  ret
 ; HL E-plane. B outline coverage; exclude existing white pixels.
 UiOutlineByte:
- ; Exclude already drawn white strokes from this black outline.
+ ; Exclude white strokes E & ~C; black E0/C0 ignores untouched A.
  ld d,(hl)
  ld a,h
  sub $20
  ld h,a
  ld a,(hl)
- and d
- ld d,a
- ld a,h
- sub $20
- ld h,a
- ld a,(hl)
+ cpl
  and d
  cpl
  and b
  cpl
  ld d,a
- ld a,(hl)
- and d
- ld (hl),a
- ld a,h
- add a,$20
- ld h,a
  ld a,(hl)
  and d
  ld (hl),a

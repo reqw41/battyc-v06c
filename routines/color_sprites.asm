@@ -1,5 +1,4 @@
-; Common A/C/E framebuffer. Index 0 black, 1 enemy, 7 white.
-; Prepared E/F pairs are a source encoding only, never separate video layers.
+; Common A/C/E framebuffer. A-independent C/E: 0 black, 1 white, 3 enemy.
 plane_object:
  xor a
  ld (PreparedFlag),a
@@ -27,6 +26,7 @@ tp_kind_ready:
  ld a,(SUNoRoom)
  or a
  ret nz
+ call PaceAccountDraw
  jp PreparedDraw
 color_valid: db 0
 color_enemy: db 0

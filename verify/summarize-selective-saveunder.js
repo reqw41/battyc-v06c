@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('fs'),assert=require('assert'),crypto=require('crypto');
+const read=n=>JSON.parse(fs.readFileSync('outputs/batty-selective-'+n+'.json'));
+const sha=crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex');
+const before=read('before-speed'),after=read('speed'),budget=read('budget');
+const checks=['saveunder-oracles','render','bricks','resume','sparks','bonus','audio','warm-start','previews','enemy-raster','bonus-raster','enemy-shot'];
+for(const n of checks)assert.equal(read(n).romSHA256,sha,n+' ROM mismatch');assert.equal(after.romSHA256,sha);
+for(const r of budget.reports)assert.equal(r.romSHA256,sha);
+const natural=read('natural');assert.equal(natural.romSHA256,sha,'natural gameplay ROM mismatch');
+const ticks=v=>Math.round(v*3000),sceneTable=after.reports.map(a=>{const b=before.reports.find(b=>b.name===a.name);return{scene:a.name,beforeCPU:ticks(b.warmActiveMs),afterCPU:ticks(a.warmActiveMs),beforeFull:ticks(b.warmMeanMs),afterFull:ticks(a.warmMeanMs),warmStepsPerSecond:1000/a.warmMeanMs};});
+const warmLimits=budget.reports.map(r=>{const f=r.frames.slice(20);assert(f.every(f=>f.total+f.irqEntryCycles<=119808),'warm deadline '+r.motion);return{motion:r.motion,steps:f.length,meanCPU:ticks(r.warm.activeMs),meanFull:ticks(r.warm.totalMs),meanFullWithIRQ:ticks(r.warm.modeledTotalMs),maxFullWithIRQ:Math.max(...f.map(f=>f.total+f.irqEntryCycles)),pacingProofs:r.paceProofs};});
+const b=read('before-budget').reports[0].warm,a=budget.reports[0].warm;
+const phaseTable=Object.keys(b.phases).map(name=>({name,before:ticks(b.phases[name]),after:ticks(a.phases[name])}));
+const routines=['SUSaveObject','SUInvalidate','SUCopySave','SUCopyRestore','PreparedDraw'].map(name=>({name,before:ticks(b.routines[name].inclusiveMs),after:ticks(a.routines[name].inclusiveMs)}));
+const shot=read('enemy-shot').reports.filter(r=>r.balls===3&&r.bomb).map(r=>({motion:r.motion,meanCPU:Math.round(r.activeTicks),meanFull:Math.round(r.totalTicks),maxFull:Math.max(...r.frames.slice(20).map(f=>f.total))}));
+const rasterSummary=r=>({samples:r.reports.reduce((s,r)=>s+r.samples,0),blank:r.reports.reduce((s,r)=>s+r.blankFrames,0),partial:r.reports.reduce((s,r)=>s+r.partialFrames,0)});
+const result={romSHA256:sha,baselineSHA256:before.romSHA256,cpu:'Vector-06C i8080 3 MHz; strict 64 KB; no RAM disk',branch:'experimental/three-plane-selective-saveunder-js',visiblePlanes:3,spritePlanes:2,backgroundColours:3,sceneTable,phaseTable,routines,warmLimits,enemyShot:shot,coldWorstTicks:ticks(budget.reports[0].worst.modeledTotalMs),raster:{before:rasterSummary(read('before-enemy-raster')),after:rasterSummary(read('enemy-raster')),limitation:'Global reverse restore still erases objects before drawing; the controlled raster test regresses. This variant is experimental, not an accepted flicker fix.'},verifiedReports:checks,naturalGameplay:{frames:natural.frames,ticks:natural.ticks,bonuses:natural.naturalBonuses.length,catches:natural.pickedBonuses.length,bombs:natural.bombsSeen,resets:natural.unexpectedResets}};
+fs.writeFileSync('outputs/batty-selective-comparison.json',JSON.stringify(result,null,2));console.log(result);

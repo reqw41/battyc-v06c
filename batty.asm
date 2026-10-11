@@ -7096,11 +7096,18 @@ SetPaletteLevel:
  ld a,(hl)
  ld (PaletteGame+2),a
  ld (PaletteGame+10),a
+ ld hl,LevelBackgroundShadeColors
+ add hl,de
+ ld a,(hl)
+ ld (PaletteGame+6),a
+ ld (PaletteGame+14),a
  ld hl,LevelEnemyColors
  add hl,de
  ld a,(hl)
- ld (PaletteGame+1),a
- ld (PaletteGame+9),a
+ ld (PaletteGame+3),a
+ ld (PaletteGame+7),a
+ ld (PaletteGame+11),a
+ ld (PaletteGame+15),a
  jp SetPaletteGame
  INCLUDE "routines/sparks_render.asm"
 DrawLifeIcons:
@@ -7184,6 +7191,7 @@ ClearShapeFlags:
  ret
 LevelThemeColors: db $3f,$38,$f8,$ff
 LevelEnemyColors: db $07,$c7,$3f,$c0
+LevelBackgroundShadeColors: db $36,$30,$b0,$b6
 FastEraseOld:
  jp plane_erase_dual
  ASSERT $ <= $6ba0
