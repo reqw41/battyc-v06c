@@ -1,3 +1,7 @@
+; This experimental cache layout is proved for assets without shadows.
+ IFNDEF NO_SPRITE_SHADOWS
+ ASSERT 0
+ ENDIF
 ; BATTY
 ; (C)1987 HIT-PAK
 ; (С)2020 Юдин С.А. - Адаптация для ПК Специалист
@@ -7141,6 +7145,8 @@ LBE8B_9:
  INCLUDE "routines/three_plane_restore.asm"
  INCLUDE "routines/three_plane_data.asm"
 
+ INCLUDE "routines/group_compositor_helpers.asm"
+
 BATTYCODE_END:
 	ASSERT BATTYCODE_END <= $6b00
 
@@ -7181,7 +7187,7 @@ table_shifts EQU $7200
  DS $6b00-$,0
  ENDIF
  ORG $6b00
- INCLUDE "routines/sparks_separate.asm"
+ INCLUDE "routines/group_compositor_horizontal.asm"
  ASSERT $ <= $6b60
  DS $6b60-$,0
 SpriteCacheMeta EQU $8fc0
@@ -7204,7 +7210,7 @@ SpriteBonusCache7 EQU $6c80
  ASSERT SpriteBonusCache7+128 <= current_level_copy
  DS $6db4-$,0
  ORG $6db4
- INCLUDE "routines/sparks_local.asm"
+ INCLUDE "routines/group_compositor_outside_span.asm"
 SpriteRotateTable: dw scr0,scr1,scr2,scr3,scr4,scr5,scr6,scr7
 RCReset:
  jp SUReset
@@ -7216,4 +7222,17 @@ RCReset:
  ORG $7200
  INCLUDE "routines/fast_objects.asm"
  ASSERT FastObjectCodeEnd <= $7970
+ DS $8c40-$,0
+ ORG $8c40
+CGCodeBegin:
+ INCLUDE "routines/group_compositor_prepare.asm"
+CGCode1End:
+ ASSERT $ <= $8fc0
+ DS $98a0-$,0
+ ORG $98a0
+CGCode2Begin:
+ INCLUDE "routines/group_compositor.asm"
+ INCLUDE "routines/group_compositor_isolated.asm"
+CGCodeEnd:
+ ASSERT $ <= $a000
 end_bin:

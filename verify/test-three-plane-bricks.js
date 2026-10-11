@@ -33,4 +33,4 @@ for(let level=0;level<4;level++){
  if(level===0){E.memory.bytes.set(state);w(0xf0,0xc3);w(0xf1,0xf0);w(0xf2,0);E.cpu.pc=0xf0;E.cpu.iff=false;E.run(2);E.png('outputs/batty-three-plane-background.png');}
 }
 const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync(root+'/batty.rom')).digest('hex'),physicalRAM:65536,individualCases:cases,saveUnderRetiredBeforeWrite:true,sequentialCases:sequential,compared:'All three A/C/E planes across all 30 playfield columns, Y=29..135, against a fresh draw of the same level and magnet state',reports,destructionMeanMs:duration.reduce((a,b)=>a+b,0)/duration.length,destructionMinMs:Math.min(...duration),destructionMaxMs:Math.max(...duration),passed:true};
-fs.writeFileSync('outputs/batty-three-plane-bricks.json',JSON.stringify(result,null,2));console.log(result);
+fs.writeFileSync(process.env.BATTY_TEST_OUT||'outputs/batty-three-plane-bricks.json',JSON.stringify(result,null,2));console.log(result);

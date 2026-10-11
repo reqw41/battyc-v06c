@@ -1,4 +1,4 @@
-; Three shared video planes A/C/E; 8000 is hidden save-under/cache RAM.
+; Three shared video planes A/C/E; 8000 is hidden code/save-under/cache RAM.
 ; No shadow bitmap and no expanded RAM.
 ; A selects the darker background shade; dynamic sprites leave it untouched.
 planes_reset:
@@ -11,18 +11,6 @@ planes_reset:
  di
  xor a
  out ($10),a
- ld hl,$a000
- ld sp,hl
- ld b,0
- ld c,4
-pr_f:
- DUP 4
- push de
- EDUP
- dec b
- jp nz,pr_f
- dec c
- jp nz,pr_f
  ld hl,$c000
  ld sp,hl
  ld b,0
@@ -154,9 +142,11 @@ background_color: db 0
 background_pixel: db 0
 background_colors: db 3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,3
 
-; Restore ordinary footprints in reverse order before drawing the new step.
+; Defer old-footprint removal: CGRender composes final pixels in local groups.
+; Compatibility plane_object calls consume the pending flag through CGEnsureOrdinary.
 planes_begin:
- call SUInvalidate
+ ld hl,CGPending
+ ld (hl),1
  ld hl,plane_old
  ld (plane_slot),hl
  ret
@@ -193,7 +183,7 @@ fec_row:
  INCLUDE "./routines/direct_sprites.asm"
  INCLUDE "./routines/color_sprites.asm"
 
-; Persistent life icons use the original sprite mask in E/F. Do not register
+; Persistent life icons use the original sprite mask in C/E. Do not register
 ; their footprints in the moving-object erase list.
 plane_static_object:
  ld a,1

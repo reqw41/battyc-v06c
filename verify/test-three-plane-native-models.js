@@ -29,8 +29,8 @@ for(let height=1;height<=64;height++)for(let rows=1;rows<=height;rows++)for(cons
 // Execute the real cache builder with all mask/raw-black byte combinations.
 const {make}=require('./vector_harness'),crypto=require('crypto');
 const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);
-const src=0x6a00,dst=E.L.SUScratch;
-assert(src>E.L.BATTYCODE_END && src+4<E.L.StackFloor);
+const src=0x8a80,dst=E.L.SUScratch;
+assert(src>=E.L.SUScratch && src+4<E.L.CGDesc);
 const w=(a,v)=>E.memory.write(a,v),ptr=(a,v)=>{w(a,v&255);w(a+1,v>>8);};
 let nativePairs=0;
 for(let mask=0;mask<256;mask++)for(let black=0;black<256;black++){
@@ -44,4 +44,4 @@ for(let mask=0;mask<256;mask++)for(let black=0;black<256;black++){
  assert.equal(E.rd(dst+2),mask^255);assert.equal(E.rd(dst+3),mask&~black);nativePairs++;
 }
 const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),bytePlaneCases:cases,rowCases,nativeCachePairs:nativePairs,cacheBytesPerCell:2,extraRAMBytes:0,passed:true};
-fs.writeFileSync('outputs/batty-three-native-render-models.json',JSON.stringify(result,null,2));console.log(result);
+fs.writeFileSync(process.env.BATTY_TEST_OUT||'outputs/batty-three-native-render-models.json',JSON.stringify(result,null,2));console.log(result);

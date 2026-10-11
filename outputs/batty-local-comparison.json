@@ -1,0 +1,534 @@
+{
+  "beforeROM": "8a5ef93a8b6015d4a90c52a4f2d6f518bf923f67d9a79a679232b0acb7267ecc",
+  "afterROM": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+  "physicalRAM": 65536,
+  "expansionRAM": 0,
+  "visiblePlanes": 3,
+  "spritePlanes": 2,
+  "heavy": {
+    "beforeMeanTicks": 114855,
+    "afterMeanTicks": 160912,
+    "beforePeakTicks": 118768,
+    "afterPeakTicks": 200060,
+    "beforeColdPeakTicks": 212084,
+    "afterColdPeakTicks": 257140,
+    "budget25Hz": 119808
+  },
+  "phases": [
+    {
+      "phase": "logic",
+      "beforeTicks": 22196,
+      "afterTicks": 22196
+    },
+    {
+      "phase": "wait",
+      "beforeTicks": 136,
+      "afterTicks": 966
+    },
+    {
+      "phase": "prepare",
+      "beforeTicks": 60,
+      "afterTicks": 60
+    },
+    {
+      "phase": "erase",
+      "beforeTicks": 18967,
+      "afterTicks": 92
+    },
+    {
+      "phase": "draw",
+      "beforeTicks": 72358,
+      "afterTicks": 136430
+    },
+    {
+      "phase": "compose",
+      "beforeTicks": 12,
+      "afterTicks": 12
+    },
+    {
+      "phase": "dots",
+      "beforeTicks": 897,
+      "afterTicks": 912
+    },
+    {
+      "phase": "tail",
+      "beforeTicks": 212,
+      "afterTicks": 212
+    }
+  ],
+  "speed": [
+    {
+      "scene": "one_ball",
+      "beforeTicks": 59875,
+      "afterTicks": 66652,
+      "beforeActiveTicks": 39588,
+      "afterActiveTicks": 64066,
+      "changePercent": 11.319793939933742,
+      "afterHz": 45.009662074125245
+    },
+    {
+      "scene": "ball_bonus",
+      "beforeTicks": 59830,
+      "afterTicks": 99053,
+      "beforeActiveTicks": 59238,
+      "afterActiveTicks": 92005,
+      "changePercent": 65.55730371466477,
+      "afterHz": 30.28676858575597
+    },
+    {
+      "scene": "ball_ufo",
+      "beforeTicks": 73832,
+      "afterTicks": 104868,
+      "beforeActiveTicks": 66497,
+      "afterActiveTicks": 94095,
+      "changePercent": 42.03480798541801,
+      "afterHz": 28.607489143987635
+    },
+    {
+      "scene": "ball_bird",
+      "beforeTicks": 74577,
+      "afterTicks": 112464,
+      "beforeActiveTicks": 64588,
+      "afterActiveTicks": 92011,
+      "changePercent": 50.8029325841759,
+      "afterHz": 26.675265982041033
+    },
+    {
+      "scene": "three_balls",
+      "beforeTicks": 81528,
+      "afterTicks": 105781,
+      "beforeActiveTicks": 67753,
+      "afterActiveTicks": 98019,
+      "changePercent": 29.74825281566529,
+      "afterHz": 28.360438910354116
+    },
+    {
+      "scene": "three_balls_bonus_enemy",
+      "beforeTicks": 114838,
+      "afterTicks": 160880,
+      "beforeActiveTicks": 114702,
+      "afterActiveTicks": 159914,
+      "changePercent": 40.09334907212108,
+      "afterHz": 18.647428782016256
+    }
+  ],
+  "raster": [
+    {
+      "target": "enemy",
+      "before": {
+        "samples": 1536,
+        "blank": 1069,
+        "partial": 1340
+      },
+      "after": {
+        "samples": 1536,
+        "blank": 0,
+        "partial": 0
+      }
+    },
+    {
+      "target": "bonus",
+      "before": {
+        "samples": 768,
+        "blank": 40,
+        "partial": 66
+      },
+      "after": {
+        "samples": 768,
+        "blank": 0,
+        "partial": 0
+      }
+    },
+    {
+      "target": "overlap",
+      "before": {
+        "samples": 1536,
+        "blank": 942,
+        "partial": 1313
+      },
+      "after": {
+        "samples": 1536,
+        "blank": 6,
+        "partial": 7
+      }
+    }
+  ],
+  "movingRaster": {
+    "samples": 1536,
+    "blank": 0,
+    "partial": 1536
+  },
+  "memory": {
+    "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+    "ROMBytes": 40660,
+    "physicalRAM": 65536,
+    "expansionRAM": 0,
+    "scratchBytes": 64,
+    "backgroundBytes": 2496,
+    "regions": [
+      [
+        "background bank 0",
+        32768,
+        34048
+      ],
+      [
+        "background bank 1",
+        34048,
+        35328
+      ],
+      [
+        "uncached mask",
+        35328,
+        35584
+      ],
+      [
+        "metadata",
+        35584,
+        35904
+      ],
+      [
+        "compositor code 1",
+        35904,
+        36787
+      ],
+      [
+        "cache tags",
+        36800,
+        36864
+      ],
+      [
+        "bat phases",
+        36864,
+        38272
+      ],
+      [
+        "ball phases",
+        38272,
+        38784
+      ],
+      [
+        "scratch C",
+        38784,
+        38816
+      ],
+      [
+        "scratch E",
+        39040,
+        39072
+      ],
+      [
+        "compositor code 2",
+        39072,
+        40916
+      ]
+    ],
+    "slots": [
+      {
+        "owner": 0,
+        "start": 32768,
+        "capacity": 128,
+        "secondBank": 34048
+      },
+      {
+        "owner": 1,
+        "start": 32896,
+        "capacity": 64,
+        "secondBank": 34176
+      },
+      {
+        "owner": 2,
+        "start": 32960,
+        "capacity": 64,
+        "secondBank": 34240
+      },
+      {
+        "owner": 3,
+        "start": 33024,
+        "capacity": 64,
+        "secondBank": 34304
+      },
+      {
+        "owner": 4,
+        "start": 33088,
+        "capacity": 32,
+        "secondBank": 34368
+      },
+      {
+        "owner": 5,
+        "start": 33120,
+        "capacity": 32,
+        "secondBank": 34400
+      },
+      {
+        "owner": 6,
+        "start": 33152,
+        "capacity": 160,
+        "secondBank": 34432
+      },
+      {
+        "owner": 7,
+        "start": 33312,
+        "capacity": 160,
+        "secondBank": 34592
+      },
+      {
+        "owner": 8,
+        "start": 33472,
+        "capacity": 160,
+        "secondBank": 34752
+      },
+      {
+        "owner": 9,
+        "start": 33632,
+        "capacity": 160,
+        "secondBank": 34912
+      },
+      {
+        "owner": 10,
+        "start": 33792,
+        "capacity": 224,
+        "secondBank": 35072
+      }
+    ],
+    "assets": [
+      {
+        "kind": 1,
+        "frames": 20,
+        "maxBackground": 160,
+        "maxPrepared": 162,
+        "preparedCapacity": 176
+      },
+      {
+        "kind": 2,
+        "frames": 9,
+        "maxBackground": 60,
+        "maxPrepared": 56,
+        "preparedCapacity": 64
+      },
+      {
+        "kind": 4,
+        "frames": 11,
+        "maxBackground": 128,
+        "maxPrepared": 122,
+        "preparedCapacity": 128
+      },
+      {
+        "kind": 5,
+        "frames": 6,
+        "maxBackground": 32,
+        "maxPrepared": 34,
+        "preparedCapacity": 256
+      },
+      {
+        "kind": 6,
+        "frames": 3,
+        "maxBackground": 224,
+        "maxPrepared": 226,
+        "preparedCapacity": 256
+      },
+      {
+        "kind": 7,
+        "frames": 5,
+        "maxBackground": 32,
+        "maxPrepared": 30,
+        "preparedCapacity": 256
+      },
+      {
+        "kind": 8,
+        "frames": 6,
+        "maxBackground": 160,
+        "maxPrepared": 154,
+        "preparedCapacity": 160
+      },
+      {
+        "kind": 9,
+        "frames": 11,
+        "maxBackground": 128,
+        "maxPrepared": 122,
+        "preparedCapacity": 160
+      },
+      {
+        "kind": 10,
+        "frames": 10,
+        "maxBackground": 120,
+        "maxPrepared": 116,
+        "preparedCapacity": 160
+      },
+      {
+        "kind": 11,
+        "frames": 1,
+        "maxBackground": 80,
+        "maxPrepared": 82,
+        "preparedCapacity": 256
+      }
+    ],
+    "passed": true
+  },
+  "model": {
+    "frames": 2500,
+    "groups": 7280,
+    "isolated": 4401,
+    "stable": 1757,
+    "tiles": 358071,
+    "videoBytes": 21436458,
+    "maxScratch": 64,
+    "passed": true
+  },
+  "render": {
+    "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+    "scenes": 1977,
+    "planeComparisons": 5931,
+    "reverseRestore": true,
+    "roundWindowRestored": true,
+    "backgroundEventRestored": true,
+    "maxStack": 26,
+    "routes": {
+      "isolated": 464,
+      "stable": 404,
+      "tiles": 60243,
+      "fallback": 1152
+    },
+    "strict64K": true,
+    "passed": true
+  },
+  "checks": [
+    {
+      "name": "render",
+      "passed": true
+    },
+    {
+      "name": "memory",
+      "passed": true
+    },
+    {
+      "name": "natural",
+      "passed": true
+    },
+    {
+      "name": "bricks",
+      "passed": true
+    },
+    {
+      "name": "resume",
+      "passed": true
+    },
+    {
+      "name": "sparks",
+      "passed": true
+    },
+    {
+      "name": "bonus",
+      "passed": true
+    },
+    {
+      "name": "audio",
+      "passed": true
+    },
+    {
+      "name": "warm-start",
+      "passed": true
+    },
+    {
+      "name": "native-models",
+      "passed": true
+    },
+    {
+      "name": "compatibility",
+      "passed": true
+    }
+  ],
+  "enemyShot": [
+    {
+      "balls": 1,
+      "bomb": false,
+      "motion": "fixed",
+      "beforeTicks": 81330,
+      "afterTicks": 104704,
+      "afterPeakActiveTicks": 118532
+    },
+    {
+      "balls": 1,
+      "bomb": false,
+      "motion": "phases",
+      "beforeTicks": 81330,
+      "afterTicks": 104704,
+      "afterPeakActiveTicks": 118532
+    },
+    {
+      "balls": 1,
+      "bomb": true,
+      "motion": "fixed",
+      "beforeTicks": 90443,
+      "afterTicks": 117492,
+      "afterPeakActiveTicks": 143268
+    },
+    {
+      "balls": 1,
+      "bomb": true,
+      "motion": "phases",
+      "beforeTicks": 113066,
+      "afterTicks": 117296,
+      "afterPeakActiveTicks": 137732
+    },
+    {
+      "balls": 3,
+      "bomb": false,
+      "motion": "fixed",
+      "beforeTicks": 96825,
+      "afterTicks": 129435,
+      "afterPeakActiveTicks": 162536
+    },
+    {
+      "balls": 3,
+      "bomb": false,
+      "motion": "phases",
+      "beforeTicks": 96825,
+      "afterTicks": 129435,
+      "afterPeakActiveTicks": 162536
+    },
+    {
+      "balls": 3,
+      "bomb": true,
+      "motion": "fixed",
+      "beforeTicks": 107317,
+      "afterTicks": 173190,
+      "afterPeakActiveTicks": 242456
+    },
+    {
+      "balls": 3,
+      "bomb": true,
+      "motion": "phases",
+      "beforeTicks": 106814,
+      "afterTicks": 172261,
+      "afterPeakActiveTicks": 237284
+    }
+  ],
+  "sparks": [
+    {
+      "scene": "centre",
+      "meanTicks": 225193,
+      "maxTicks": 460488
+    },
+    {
+      "scene": "left",
+      "meanTicks": 237740,
+      "maxTicks": 546356
+    },
+    {
+      "scene": "right",
+      "meanTicks": 257119,
+      "maxTicks": 927956
+    },
+    {
+      "scene": "double-wide",
+      "meanTicks": 227433,
+      "maxTicks": 918244
+    },
+    {
+      "scene": "double-close",
+      "meanTicks": 227649,
+      "maxTicks": 457016
+    }
+  ],
+  "reached25Hz": false
+}

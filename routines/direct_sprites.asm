@@ -203,6 +203,8 @@ direct_bitmap: db 0
 ; and drawing it last could put its entire lifetime behind the raster beam.
 ; Temporarily remove it from the ordinary loop to keep one draw/erase slot.
 DrawMovingObjects:
+ jp CGRender
+DrawMovingObjectsLegacy:
  ld hl,object_bonus
  ld a,(hl)
  add a,a

@@ -1,5 +1,6 @@
 ; Common A/C/E framebuffer. A-independent C/E: 0 black, 1 white, 3 enemy.
 plane_object:
+ call CGEnsureOrdinary
  xor a
  ld (PreparedFlag),a
  ld (color_valid),a

@@ -2,11 +2,13 @@
 ; A/C/E framebuffer: only C/E change. A is ignored by all sprite colours.
 PreparedDraw:
  ld hl,(direct_source)
- ld (PreparedSource),hl
  dec hl
  ld a,(hl)
  add a,a
  ld (pd_stride+1),a
+PreparedDrawKnownStride:
+ ld hl,(direct_source)
+ ld (PreparedSource),hl
  ld a,(direct_rows)
  ld b,a
  ld a,(color_enemy)
@@ -69,13 +71,15 @@ prepared_white_0:
  or d
  ld (hl),a
  ld a,h
- sub $20
+pd_step_0:
+ sub 32
  ld h,a
  ld a,(hl)
  and e
  ld (hl),a
  ld a,h
- add a,$20
+pd_step_5:
+ add a,32
  ld h,a
  dec l
 prepared_white_1:
@@ -85,13 +89,15 @@ prepared_white_1:
  or d
  ld (hl),a
  ld a,h
- sub $20
+pd_step_1:
+ sub 32
  ld h,a
  ld a,(hl)
  and e
  ld (hl),a
  ld a,h
- add a,$20
+pd_step_6:
+ add a,32
  ld h,a
  dec l
 prepared_white_2:
@@ -101,13 +107,15 @@ prepared_white_2:
  or d
  ld (hl),a
  ld a,h
- sub $20
+pd_step_2:
+ sub 32
  ld h,a
  ld a,(hl)
  and e
  ld (hl),a
  ld a,h
- add a,$20
+pd_step_7:
+ add a,32
  ld h,a
  dec l
 prepared_white_3:
@@ -117,13 +125,15 @@ prepared_white_3:
  or d
  ld (hl),a
  ld a,h
- sub $20
+pd_step_3:
+ sub 32
  ld h,a
  ld a,(hl)
  and e
  ld (hl),a
  ld a,h
- add a,$20
+pd_step_8:
+ add a,32
  ld h,a
  dec l
  dec c
@@ -141,14 +151,16 @@ prepared_color_row:
  or d
  ld (hl),a
  ld a,h
- sub $20
+pd_step_4:
+ sub 32
  ld h,a
  ld a,(hl)
  and e
  or d
  ld (hl),a
  ld a,h
- add a,$20
+pd_step_9:
+ add a,32
  ld h,a
  dec l
  dec c

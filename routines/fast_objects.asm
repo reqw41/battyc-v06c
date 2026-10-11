@@ -387,10 +387,10 @@ SpriteCacheAddresses:
  dw SpriteEnemyCache0,SpriteEnemyPixels,SpriteEnemyPixels+160,SpriteEnemyPixels+320
  dw SpriteEnemyPixels+480,SpriteEnemyPixels+640,SpriteEnemyPixels+800,SpriteEnemyPixels+960
  DUP 8,phase
- dw $9000+phase*224
+ dw $9000+phase*176
  EDUP
  DUP 8,phase
- dw $9700+phase*128
+ dw $9580+phase*64
  EDUP
 SpriteCacheReset:
  ld hl,SpriteCacheMeta

@@ -2,7 +2,7 @@
 // Instruction-cycle budget; no game code or ROM patching. Matches measure-object-speed.js.
 const fs = require('fs'), assert = require('assert'), crypto = require('crypto');
 const { make } = require('./vector_harness');
-const watched = `SUInvalidate SUSaveObject SUCopySave SUCopyRestore WaitVideoFrame RCBegin planes_begin FastEraseOld FastErasePlain DrawMovingObjects RCFlush RCCompose
+const watched = `CGRender CGPrepare CGGroups CGPointers CGIncludeRect CGIntersect CGLoad CGIsolated CGOutside CGOutsideSpan CGCopyPacked CGRestoreVideo CGShadeSaved CGSnapshot CGRestoreSpan CGSaveSpan CGDrawSpan CGCommit CGRestoreWhole SUInvalidate SUSaveObject SUCopySave SUCopyRestore WaitVideoFrame RCBegin planes_begin FastEraseOld FastErasePlain DrawMovingObjects RCFlush RCCompose
  handling_bat handling_ball handling_bonus handling_ufo handling_object call_hl_for_all_obj
  enemy_prepare random_generate get_left_player_ctrl_state fill_briks_data play_sounds_queue
  print_obj_from_buf_to_scr plane_object plane_object_fast SpriteCachePrepare SpriteCacheBuild
@@ -192,7 +192,7 @@ function profile(base, motion='reference') {
   const measured=warm.reduce((s,f)=>s+f.total/3000/warm.length,0);
   if(motion==='reference')assert(Math.abs(measured-expected.warmMeanMs)<1e-8,'profile perturbed reference timing');
   if(E.L.RCCompose)for(const f of frames)assert.equal(Object.values(f.compose).reduce((s,c)=>s+c,0),f.routines.RCCompose.inclusive,'compositor split sum');
-  for(const f of frames)assert.equal(Object.values(f.drawBreakdown).reduce((s,c)=>s+c,0),f.routines.plane_object.inclusive,'direct output split sum');
+  for(const f of frames)if(!E.L.CGRender)assert.equal(Object.values(f.drawBreakdown).reduce((s,c)=>s+c,0),f.routines.plane_object.inclusive,'direct output split sum');
   function aggregate(list) {
     const result={steps:list.length,totalMs:0,activeMs:0,irqEntryMs:0,irqEntryActiveMs:0,phases:{},routines:{},compose:{},drawBreakdown:{},objects:{},cacheBuilds:0};
     for(const f of list) {

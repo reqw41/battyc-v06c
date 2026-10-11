@@ -1,0 +1,18 @@
+{
+  "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+  "paletteCases": 96,
+  "byteCases": 1048576,
+  "scenes": 4500,
+  "totalSaved": 3176160,
+  "nativeCopies": 1024,
+  "paceCases": 10880,
+  "nativeObjectBounds": 2624,
+  "prefixMin": 2508,
+  "pacingSaturation": true,
+  "runningDotCases": 2048,
+  "maxStack": 10,
+  "physicalRAM": 65536,
+  "visibleVideoPlanes": 3,
+  "movingSpritePlanes": 2,
+  "passed": true
+}

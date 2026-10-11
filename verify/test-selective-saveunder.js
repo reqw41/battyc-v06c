@@ -100,4 +100,4 @@ for(let a=0;a<256;a++)for(let bit=0;bit<8;bit++) {
  assert.equal(E.cpu.b(),0x34);runningDotCases++;
 }
 const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),paletteCases,byteCases,scenes,totalSaved,nativeCopies,paceCases,nativeObjectBounds,prefixMin,pacingSaturation:true,runningDotCases,maxStack,physicalRAM:65536,visibleVideoPlanes:3,movingSpritePlanes:2,passed:true};
-fs.writeFileSync('outputs/batty-selective-saveunder-oracles.json',JSON.stringify(result,null,2));console.log(result);
+fs.writeFileSync(process.env.BATTY_TEST_OUT||'outputs/batty-selective-saveunder-oracles.json',JSON.stringify(result,null,2));console.log(result);

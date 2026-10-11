@@ -6,7 +6,7 @@ const old=ready(baseline),now=ready('.');
 function w(E,a,v){E.memory.write(a,v);}
 function ptr(E,a,v){w(E,a,v&255);w(E,a+1,v>>8);}
 function word(E,a){return E.rd(a)+256*E.rd(a+1);}
-function call(E,name){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;ptr(E,E.cpu.sp,256);let c=0,n=0;while(E.cpu.pc!==256){assert(++n<200000,'hang '+name);assert(E.cpu.pc<0x8000);if(E.cpu.sp>=0x6900&&E.cpu.sp<=E.L.stack)assert(E.cpu.sp>=E.L.StackFloor);E.cpu.instruction();E.io.commit();c+=E.cpu.vcycles;}return c;}
+function call(E,name){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;ptr(E,E.cpu.sp,256);let c=0,n=0;while(E.cpu.pc!==256){assert(++n<200000,'hang '+name);assert(E.cpu.pc<0x8000||(E.L.CGCodeBegin&&E.cpu.pc>=E.L.CGCodeBegin&&E.cpu.pc<E.L.CGCode1End)||(E.L.CGCode2Begin&&E.cpu.pc>=E.L.CGCode2Begin&&E.cpu.pc<E.L.CGCodeEnd));if(E.cpu.sp>=0x6900&&E.cpu.sp<=E.L.stack)assert(E.cpu.sp>=E.L.StackFloor);E.cpu.instruction();E.io.commit();c+=E.cpu.vcycles;}return c;}
 function bytes(E,a,n){return Array.from({length:n},(_,i)=>E.rd(a+i));}
 const vars=['balls_quantity','briks_quantity_1up','briks_quantity_2up','flag_2','need_change_player','wins_counter','scr_score_need_upd','bonus_flag','counter_2','lives_1up','lives_2up','magnets_quantity'];
 const ranges=[['sounds_queue',35],['current_score_1up',3],['current_score_2up',3],['NativeAttrs',768]];

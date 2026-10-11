@@ -1,0 +1,206 @@
+{
+  "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+  "ROMBytes": 40660,
+  "physicalRAM": 65536,
+  "expansionRAM": 0,
+  "scratchBytes": 64,
+  "backgroundBytes": 2496,
+  "regions": [
+    [
+      "background bank 0",
+      32768,
+      34048
+    ],
+    [
+      "background bank 1",
+      34048,
+      35328
+    ],
+    [
+      "uncached mask",
+      35328,
+      35584
+    ],
+    [
+      "metadata",
+      35584,
+      35904
+    ],
+    [
+      "compositor code 1",
+      35904,
+      36787
+    ],
+    [
+      "cache tags",
+      36800,
+      36864
+    ],
+    [
+      "bat phases",
+      36864,
+      38272
+    ],
+    [
+      "ball phases",
+      38272,
+      38784
+    ],
+    [
+      "scratch C",
+      38784,
+      38816
+    ],
+    [
+      "scratch E",
+      39040,
+      39072
+    ],
+    [
+      "compositor code 2",
+      39072,
+      40916
+    ]
+  ],
+  "slots": [
+    {
+      "owner": 0,
+      "start": 32768,
+      "capacity": 128,
+      "secondBank": 34048
+    },
+    {
+      "owner": 1,
+      "start": 32896,
+      "capacity": 64,
+      "secondBank": 34176
+    },
+    {
+      "owner": 2,
+      "start": 32960,
+      "capacity": 64,
+      "secondBank": 34240
+    },
+    {
+      "owner": 3,
+      "start": 33024,
+      "capacity": 64,
+      "secondBank": 34304
+    },
+    {
+      "owner": 4,
+      "start": 33088,
+      "capacity": 32,
+      "secondBank": 34368
+    },
+    {
+      "owner": 5,
+      "start": 33120,
+      "capacity": 32,
+      "secondBank": 34400
+    },
+    {
+      "owner": 6,
+      "start": 33152,
+      "capacity": 160,
+      "secondBank": 34432
+    },
+    {
+      "owner": 7,
+      "start": 33312,
+      "capacity": 160,
+      "secondBank": 34592
+    },
+    {
+      "owner": 8,
+      "start": 33472,
+      "capacity": 160,
+      "secondBank": 34752
+    },
+    {
+      "owner": 9,
+      "start": 33632,
+      "capacity": 160,
+      "secondBank": 34912
+    },
+    {
+      "owner": 10,
+      "start": 33792,
+      "capacity": 224,
+      "secondBank": 35072
+    }
+  ],
+  "assets": [
+    {
+      "kind": 1,
+      "frames": 20,
+      "maxBackground": 160,
+      "maxPrepared": 162,
+      "preparedCapacity": 176
+    },
+    {
+      "kind": 2,
+      "frames": 9,
+      "maxBackground": 60,
+      "maxPrepared": 56,
+      "preparedCapacity": 64
+    },
+    {
+      "kind": 4,
+      "frames": 11,
+      "maxBackground": 128,
+      "maxPrepared": 122,
+      "preparedCapacity": 128
+    },
+    {
+      "kind": 5,
+      "frames": 6,
+      "maxBackground": 32,
+      "maxPrepared": 34,
+      "preparedCapacity": 256
+    },
+    {
+      "kind": 6,
+      "frames": 3,
+      "maxBackground": 224,
+      "maxPrepared": 226,
+      "preparedCapacity": 256
+    },
+    {
+      "kind": 7,
+      "frames": 5,
+      "maxBackground": 32,
+      "maxPrepared": 30,
+      "preparedCapacity": 256
+    },
+    {
+      "kind": 8,
+      "frames": 6,
+      "maxBackground": 160,
+      "maxPrepared": 154,
+      "preparedCapacity": 160
+    },
+    {
+      "kind": 9,
+      "frames": 11,
+      "maxBackground": 128,
+      "maxPrepared": 122,
+      "preparedCapacity": 160
+    },
+    {
+      "kind": 10,
+      "frames": 10,
+      "maxBackground": 120,
+      "maxPrepared": 116,
+      "preparedCapacity": 160
+    },
+    {
+      "kind": 11,
+      "frames": 1,
+      "maxBackground": 80,
+      "maxPrepared": 82,
+      "preparedCapacity": 256
+    }
+  ],
+  "passed": true
+}

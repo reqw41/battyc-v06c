@@ -6,7 +6,7 @@ const before=env(base),after=env(root),reports=[];
 function w(E,a,v){E.memory.write(a,v);}
 function ptr(E,a,v){w(E,a,v&255);w(E,a+1,v>>8);}
 function word(E,a){return E.rd(a)+256*E.rd(a+1);}
-function call(E,name,stop){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;ptr(E,E.cpu.sp,256);let cycles=0,n=0;while(E.cpu.pc!==256&&E.cpu.pc!==stop){assert(++n<200000,'hang '+name);assert(E.cpu.pc<0x8000,'escaped '+name);E.cpu.instruction();E.io.commit();cycles+=E.cpu.vcycles;}return cycles;}
+function call(E,name,stop){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;ptr(E,E.cpu.sp,256);let cycles=0,n=0;while(E.cpu.pc!==256&&E.cpu.pc!==stop){assert(++n<200000,'hang '+name);assert(E.cpu.pc<0x8000||(E.L.CGCodeBegin&&E.cpu.pc>=E.L.CGCodeBegin&&E.cpu.pc<E.L.CGCode1End)||(E.L.CGCode2Begin&&E.cpu.pc>=E.L.CGCode2Begin&&E.cpu.pc<E.L.CGCodeEnd),'escaped '+name);E.cpu.instruction();E.io.commit();cycles+=E.cpu.vcycles;}return cycles;}
 function oldRow(y,h){if(y>=128||((y+h)&255)<32)return null;for(let i=0;i<12;i++){const r=32+8*i;let d=(r-y)&255;if(r<y){if(d+8>255)return i;}else if(d<h)return i;}return null;}
 function newRow(y,h){const end=(y+h)&255;if(y>=128||end<32)return null;if(y<=32)return end===32?null:0;return (y-33)>>3;}
 let oldTicks=0,newTicks=0,selected=0;

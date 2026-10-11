@@ -4,9 +4,9 @@
 ; all of them correctly even when objects move across each other.
 SUObjectPlanes EQU 2
 SUData EQU $8000
-SUDataEnd EQU $8e00
-SUScratch EQU $8e00       ; 448 B scratch, then 64 B cache tags at 8fc0
-SUWindowData EQU $9b00   ; 1280 B, fixed 10-column x 40-row x 3-plane window
+SUDataEnd EQU $8a00
+SUScratch EQU $8a00       ; 256 B uncached masks; cache tags remain at 8fc0
+SUWindowData EQU $8000   ; cold window aliases idle owner bank 0 (1200 B)
 RCBegin:
  ret
 RCFlush:
@@ -14,6 +14,8 @@ RCFlush:
 RCActive EQU $71b8
 SUReset:
  xor a
+ ld (CGFormat),a
+ ld (CGPending),a
  ld (SUCount),a
  ld (SUStatic),a
  ld (SUWindowValid),a
@@ -73,7 +75,14 @@ sui_next:
  ld (SUWorkData),hl
  ex de,hl
  call PaceAccountRestore
+ ld a,(CGFormat)
+ or a
+ jp z,sui_legacy
+ call CGRestoreWhole
+ jp sui_restored
+sui_legacy:
  call SUCopyRestore
+sui_restored:
  ld hl,(SURestoreRecord)
  ld de,-6
  add hl,de
@@ -90,6 +99,9 @@ sui_next:
  pop de
  pop bc
 sui_empty:
+ xor a
+ ld (CGFormat),a
+ ld (CGPending),a
  pop af
  ret
 

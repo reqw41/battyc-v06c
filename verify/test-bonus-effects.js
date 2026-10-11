@@ -2,7 +2,7 @@ const {make}=require('./vector_harness'),assert=require('assert'),fs=require('fs
 const w=(a,v)=>E.memory.write(a,v),ptr=(a,v)=>{w(a,v&255);w(a+1,v>>8)},inst=E.cpu.instruction.bind(E.cpu);
 E.cpu.instruction=function(){if(this.pc===E.L.LB9E8_2)throw 'ready';inst();};try{for(let f=0;f<800;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='ready')throw e;}
 E.cpu.instruction=inst;E.cpu.iff=false;const snap=E.memory.bytes.slice(),bat=E.L.object_bat_1,bonus=E.L.object_bonus;
-function call(n){E.cpu.pc=E.L[n];E.cpu.sp=E.L.stack-2;ptr(E.cpu.sp,256);let k=0;while(E.cpu.pc!==256&&k++<200000){if(E.cpu.pc>=0x8000)throw Error('escaped');inst();E.io.commit();}if(k>=200000)throw Error('hang '+n);}
+function call(n){E.cpu.pc=E.L[n];E.cpu.sp=E.L.stack-2;ptr(E.cpu.sp,256);let k=0;while(E.cpu.pc!==256&&k++<200000){if(!(E.cpu.pc<0x8000||(E.L.CGCodeBegin&&E.cpu.pc>=E.L.CGCodeBegin&&E.cpu.pc<E.L.CGCode1End)||(E.L.CGCode2Begin&&E.cpu.pc>=E.L.CGCode2Begin&&E.cpu.pc<E.L.CGCodeEnd)))throw Error('escaped');inst();E.io.commit();}if(k>=200000)throw Error('hang '+n);}
 let reports=[]; for(const mode of ['normal','wide','gun'])for(let id=0;id<10;id++){
  if((mode==='wide'&&id===0)||(mode==='gun'&&id===1))continue;
  E.memory.bytes.set(snap);w(bat+20,255);w(bat+2,116);w(bat+21,128);w(E.L.object_ball_1+7,3);

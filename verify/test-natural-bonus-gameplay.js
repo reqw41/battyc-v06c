@@ -6,7 +6,7 @@ E.memory.bytes=E.memory.bytes.slice(0,65536);
 const w=(a,v)=>E.memory.bytes[E.memory.tobank(a&65535)]=v,inst=E.cpu.instruction.bind(E.cpu);
 let ticks=0,frame=0,launchTick=0,lastBonus=0,enemySeen=false,bombsSeen=0,created=[],caught=[],started=false;
 E.cpu.instruction=function(){if(E.L.StackFloor&&this.sp>=0x6900&&this.sp<=E.L.stack)assert(this.sp>=E.L.StackFloor,'stack reaches classifier code');
- if(started){assert(this.pc<0x8000,'execution escaped into video RAM');assert(this.pc!==0&&this.pc!==256&&this.pc!==E.L.start_bin,'unexpected CPU restart');}
+ if(started){assert(this.pc<0x8000||(E.L.CGCodeBegin&&this.pc>=E.L.CGCodeBegin&&this.pc<E.L.CGCode1End)||(E.L.CGCode2Begin&&this.pc>=E.L.CGCode2Begin&&this.pc<E.L.CGCodeEnd),'execution escaped into video RAM');assert(this.pc!==0&&this.pc!==256&&this.pc!==E.L.start_bin,'unexpected CPU restart');}
  if(this.pc===E.L.LB9E8_2){
   ticks++;started=true;
   for(const o of [E.L.object_ball_1,E.L.object_ball_2,E.L.object_ball_3])assert([0,2,128,130].includes(E.rd(o)),'ball type corrupted');

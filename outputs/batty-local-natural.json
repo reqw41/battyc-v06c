@@ -1,0 +1,104 @@
+{
+  "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+  "frames": 12000,
+  "ticks": 4500,
+  "naturalBonuses": [
+    {
+      "frame": 358,
+      "id": 2
+    },
+    {
+      "frame": 810,
+      "id": 9
+    },
+    {
+      "frame": 1090,
+      "id": 3
+    },
+    {
+      "frame": 1806,
+      "id": 0
+    },
+    {
+      "frame": 2594,
+      "id": 1
+    },
+    {
+      "frame": 2970,
+      "id": 0
+    },
+    {
+      "frame": 3643,
+      "id": 4
+    },
+    {
+      "frame": 4072,
+      "id": 5
+    },
+    {
+      "frame": 4476,
+      "id": 0
+    },
+    {
+      "frame": 4821,
+      "id": 3
+    },
+    {
+      "frame": 5437,
+      "id": 4
+    }
+  ],
+  "pickedBonuses": [
+    {
+      "frame": 518,
+      "id": 2
+    },
+    {
+      "frame": 979,
+      "id": 9
+    },
+    {
+      "frame": 1242,
+      "id": 3
+    },
+    {
+      "frame": 2019,
+      "id": 0
+    },
+    {
+      "frame": 2767,
+      "id": 1
+    },
+    {
+      "frame": 3131,
+      "id": 0
+    },
+    {
+      "frame": 3828,
+      "id": 4
+    },
+    {
+      "frame": 4236,
+      "id": 5
+    },
+    {
+      "frame": 4645,
+      "id": 0
+    },
+    {
+      "frame": 5015,
+      "id": 3
+    },
+    {
+      "frame": 5675,
+      "id": 4
+    }
+  ],
+  "enemySeen": true,
+  "bombsSeen": 17,
+  "unexpectedResets": 0,
+  "physicalRAM": 65536,
+  "naturalSmashObserved": false,
+  "requiredNaturalSmash": false,
+  "passed": true
+}
