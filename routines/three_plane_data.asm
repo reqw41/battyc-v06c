@@ -15,4 +15,3 @@ SUPlaneDst: dw 0
 SURestoreLeft: db 0
 SURestoreRecord: dw 0
 SUCopySP: dw 0
-
