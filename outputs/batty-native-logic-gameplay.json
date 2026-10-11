@@ -1,0 +1,42 @@
+{
+  "romSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "strict64K": true,
+  "reports": [
+    {
+      "name": "LAFFC",
+      "cases": 640,
+      "oldTicks": 1858396,
+      "newTicks": 1280096,
+      "passed": true
+    },
+    {
+      "name": "handling_ball",
+      "cases": 640,
+      "oldTicks": 3807388,
+      "newTicks": 3164548,
+      "passed": true
+    },
+    {
+      "name": "handling_ufo",
+      "cases": 640,
+      "oldTicks": 3637936,
+      "newTicks": 2979084,
+      "passed": true
+    },
+    {
+      "name": "handling_bird",
+      "cases": 640,
+      "oldTicks": 3761636,
+      "newTicks": 3100676,
+      "passed": true
+    },
+    {
+      "name": "handling_spark",
+      "cases": 640,
+      "oldTicks": 1345204,
+      "newTicks": 1288884,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

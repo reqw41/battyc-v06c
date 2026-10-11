@@ -58,7 +58,11 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
   INCLUDE "./routines/sprites_search.asm"
 
 ; Спрайты с масками
+ IFDEF NO_SPRITE_SHADOWS
+  INCLUDE "./gfx/sprites_no_shadows_2.asm"
+ ELSE
   INCLUDE "./gfx/sprites_with_masks_2.asm"
+ ENDIF
 
 ; Двухбайтовый счётчик, используемый, например, в мигалке главного меню
 counter_misc:
@@ -129,41 +133,48 @@ ctrl_btns_pressed:
 ; Расшифровываем биты клавиатуры и джойстика Вектора
 ; результат помещается в ctrl_btns_pressed
 read_keyboard:
-  ld hl,read_keyboard_map	; Point HL at the keyboard list
-  ld b,$0C
-  ld de,KeyLine0
-  call read_keyboard_0
-  ld de,KeyLine7
-  call read_keyboard_0
-  ld de,JoystickP
-  call read_keyboard_0
+  ; Decode active-low fire/right/left, retaining the legacy bits 2/3.
+  ld b,$0c
+  ld a,(KeyLine0)
+  cpl
+  ld c,a
+  and $ac
+  jp z,nk_right
+  ld b,$1c
+nk_right:
+  ld a,c
+  and $42
+  jp z,nk_left
+  inc b
+nk_left:
+  ld a,c
+  and $11
+  jp z,nk_space
   ld a,b
-  LD (ctrl_btns_pressed),A	; save result
-  ret
-read_keyboard_0:
-  ld a,(de)			; get bits for keys
-  ld c,8			; number of keys in a row
-read_keyboard_1:
-  rla				; shift A left; bit 0 sets carry bit
-  jp c,read_keyboard_2		; if the bit is 0, we've found our key
-  ld e,a	; save A
-  ld a,(hl)
-  or b
+  or 2
   ld b,a
-  ld a,e	; restore A
-read_keyboard_2:
-  inc hl
-  dec c
-  jp nz,read_keyboard_1		; continue the loop by bits
+nk_space:
+  ld a,(KeyLine7)
+  rla
+  jp c,nk_joystick
+  ld a,b
+  or $10
+  ld b,a
+nk_joystick:
+  ld a,(JoystickP)
+  cpl
+  ld c,a
+  and $c0
+  jp z,nk_joy_left
+  ld a,b
+  or $10
+  ld b,a
+nk_joy_left:
+  ld a,c
+  and 3
+  or b
+  ld (ctrl_btns_pressed),a
   ret
-read_keyboard_map:                    ; 7   6   5   4   3   2   1   0
-  ; KeyLine0
-  DB $10,$01,$10,$02,$10,$10,$01,$02  ; Dn  Rt  Up  Lt  ZB  VK  PS  Tab
-  ; KeyLine7
-  DB $10,$00,$00,$00,$00,$00,$00,$00  ; Spc  ^   ]   \   [   Z   Y   X
-  ; JoystickP
-  DB $10,$10,$00,$00,$00,$00,$02,$01  ; Fr  Fr  --  --  Dn  Up  Lt  Rt
-
 
 ; Used by the routines at clear_hl_buff16, all_var_init and game_start.
 ; Очищает буфер адресуемый HL размером, заданным в B
@@ -2156,38 +2167,38 @@ LA27E_24:
 	CALL LAFFC
 	CALL kill_enemy_by_bat
 LA27E_25:
-	LD HL,(IXobj)
-	LD DE,$0015
-	ADD HL,DE
-	LD A,(HL)
-	OR $80
-	LD (HL),A		; замена SET 7,(HL) (IX+$15)
-	LD HL,(IXobj)
-	INC HL
-	INC HL		; +$02
-	LD A,(HL)		; IX+$02
-	AND $07
-	LD HL,(IXobj)
-	INC HL		; +$01
-	LD (HL),A		; IX+$01
-	LD HL,(IXobj)
-	LD DE,$0004
-	ADD HL,DE
-	LD A,(HL)		; IX+$04
-	CP $C0
-	RET C
-	LD HL,(LA27C)
-	LD (HL),$00
-	INC HL
-	LD (HL),$00
-	LD HL,(IXobj)
-	LD A,(HL)
-	OR $80
-	LD (HL),A		; замена SET 7,(HL) (IX+$00)
-	LD A,(balls_quantity)
-	DEC A
-	LD (balls_quantity),A
-	RET
+  ; Keep the coordinate pointer while setting the phase and checking Y.
+  LD HL,(IXobj)
+  LD DE,$0015
+  ADD HL,DE
+  LD A,(HL)
+  OR $80
+  LD (HL),A
+  LD HL,(IXobj)
+  INC HL
+  INC HL
+  LD A,(HL)
+  AND $07
+  DEC HL
+  LD (HL),A
+  INC HL
+  INC HL
+  INC HL
+  LD A,(HL)
+  CP $C0
+  RET C
+  LD HL,(LA27C)
+  LD (HL),$00
+  INC HL
+  LD (HL),$00
+  LD HL,(IXobj)
+  LD A,(HL)
+  OR $80
+  LD (HL),A
+  LD A,(balls_quantity)
+  DEC A
+  LD (balls_quantity),A
+  RET
 
 ; Used by the routines at handling_bat and handling_ball.
 ; Проверка и убивание врага кареткой, если условия соблюдены
@@ -4079,43 +4090,42 @@ direction_table:
 
 ; Used by the routines at handling_ball, handling_spark, handling_ufo and handling_bird.
 LAD69:
+ ; Returns HL=object+5, DE=new Y, carry clear; A/BC are scratch.
  CALL hl_bc_calc_direction
  PUSH HL
  CALL LAD13
- ; Keep the coordinate pointer on the stack instead of loading IXobj twice.
- PUSH HL
+ ; Coordinates are big-endian fixed-point pairs: add low, then ADC high.
+ EX DE,HL
  LD HL,(IXobj)
  INC HL
  INC HL
- LD D,(HL)
  INC HL
- LD E,(HL)
- EX (SP),HL
- ADD HL,DE
- EX DE,HL
- POP HL
- LD (HL),E
+ LD A,(HL)
+ ADD A,E
+ LD (HL),A
+ LD E,A
  DEC HL
- LD (HL),D
+ LD A,(HL)
+ ADC A,D
+ LD (HL),A
+ LD D,A
  INC HL
  POP BC
  CALL LAD13
- PUSH HL
- LD HL,(IXobj)
- LD DE,$0004
- ADD HL,DE
- LD D,(HL)
- INC HL
- LD E,(HL)
- EX (SP),HL
- ADD HL,DE
  EX DE,HL
- POP HL
- LD (HL),E
+ LD HL,(IXobj)
+ LD BC,$0005
+ ADD HL,BC
+ LD A,(HL)
+ ADD A,E
+ LD (HL),A
+ LD E,A
  DEC HL
- LD (HL),D
+ LD A,(HL)
+ ADC A,D
+ LD (HL),A
+ LD D,A
  INC HL
- ; The old final IXobj+4 address calculation cleared carry for RAM objects.
  SCF
  CCF
  RET
@@ -4469,46 +4479,55 @@ LAFFC:
   LD HL,(IXobj)
   LD DE,$000D
   ADD HL,DE
-  PUSH AF
-  LD A,(HL)
-  LD (laffc_row_height+1),A
-  POP AF
   ADD A,(HL)		; IX+$0D
   POP HL
   CP $20
   RET C
-  LD HL,(current_level_addr)
-  LD (cur_level_ptr),HL
-  LD DE,$000F
-  LD H,D
-  LD B,$0C
-  LD C,$20
-LAFFC_0:
-  LD A,C
-  ; Position and height cannot change while searching brick rows.
+  ; First intersecting row = max(0, (Y-33)/8), inclusive bottom edge.
+  ; Entry tests already reject Y>=128 and wrapped end<32.
+  ld b,a
+  ld a,(laffc_row_y+1)
+  cp $21
+  jp c,native_row_top
+  sub $21
+  rrca
+  rrca
+  rrca
+  and $0f
+  jp native_row_index
+native_row_top:
+  ld a,b
+  cp $21
+  jp c,native_row_miss
+  xor a
+native_row_index:
+  ld e,a
+  rlca
+  rlca
+  rlca
+  rlca
+  sub e
+  ld hl,(current_level_addr)
+  call hl_add_a
+  ld (cur_level_ptr),hl
+  ld h,e
+  ld a,e
+  rlca
+  rlca
+  rlca
+  add a,$20
+  ld c,a
+  jp LAFFC_3
+native_row_miss:
+  ld hl,(current_level_addr)
+  ld a,$b4
+  call hl_add_a
+  ld (cur_level_ptr),hl
+  ld b,0
+  ret
+; Cached operands are also read by the native selector.
 laffc_row_y:
-  SUB $00
-  JP C,LAFFC_1
-laffc_row_height:
-  SUB $00
-  JP C,LAFFC_3
-  JP LAFFC_2
-LAFFC_1:
-  ADD A,$08
-  JP C,LAFFC_3
-LAFFC_2:
-  PUSH HL
-  LD HL,(cur_level_ptr)
-  ADD HL,DE		; DE = $000F (шаг)
-  LD (cur_level_ptr),HL
-  POP HL
-  LD A,C
-  ADD A,$08
-  LD C,A
-  INC H
-  dec B
-  jp nz,LAFFC_0
-  RET
+  sub $00
 
 LAFFC_3:
   LD A,H
@@ -4532,26 +4551,31 @@ LAFFC_3:
   INC HL		; +$02
   LD A,(HL)		; IX+$02
   POP HL
-  LD BC,$1008
-  SUB C
-LAFFC_4:
-  SUB B
-  JP C,LAFFC_5
-  PUSH HL
-  LD HL,(cur_level_ptr)
-  INC HL
-  LD (cur_level_ptr),HL
-  POP HL
-  LD E,A
-  LD A,C
-  ADD A,B
-  LD C,A
-  LD A,E
-  JP LAFFC_4
-LAFFC_5:
-  LD (LB069+$01),A
-  LD L,C
+  ; Compute the column and signed overlap from (X-8), modulo 256.
+  sub 8
+  ld l,a
+  rrca
+  rrca
+  rrca
+  rrca
+  and $0f
+  ld e,a
+  ld a,l
+  and $0f
+  or $f0
+  ld (LB069+1),a
+  ld a,l
+  and $f0
+  add a,8
+  ld l,a
+  push hl
+  ld hl,(cur_level_ptr)
+  ld a,e
+  call hl_add_a
+  ld (cur_level_ptr),hl
+  pop hl
 
+native_column_ready:
   LD D,$0F
 
   PUSH HL

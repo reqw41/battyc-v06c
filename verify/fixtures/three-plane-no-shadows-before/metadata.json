@@ -1,0 +1,6 @@
+{
+  "romSHA256": "9ce94a50f613d0ba7a75e1c97fe90737d11091dce9b5da2ea6ffa2e53f8aa358",
+  "sourceCommit": "a610662",
+  "changes": "Only offline no-shadow assets and optional build switch; original three-plane rendering and original logic",
+  "CPU": "i8080 3 MHz, 64 KB, no RAM disk"
+}

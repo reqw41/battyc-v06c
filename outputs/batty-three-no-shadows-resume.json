@@ -1,0 +1,59 @@
+{
+  "romSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "strict64K": true,
+  "reports": [
+    {
+      "mode": 0,
+      "other": 0,
+      "name": "one-player",
+      "fullDraws": 0,
+      "fullResets": 0,
+      "resumes": 1,
+      "sameBackground": true,
+      "lifeToNextTickMs": 24.494666666666667,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "passed": true
+    },
+    {
+      "mode": 2,
+      "other": 3,
+      "name": "double-play",
+      "fullDraws": 0,
+      "fullResets": 0,
+      "resumes": 1,
+      "sameBackground": true,
+      "lifeToNextTickMs": 24.562666666666665,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "passed": true
+    },
+    {
+      "mode": 1,
+      "other": 0,
+      "name": "second-player-out",
+      "fullDraws": 0,
+      "fullResets": 0,
+      "resumes": 1,
+      "sameBackground": true,
+      "lifeToNextTickMs": 24.505333333333333,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "passed": true
+    },
+    {
+      "mode": 1,
+      "other": 3,
+      "name": "player-change",
+      "fullDraws": 1,
+      "fullResets": 1,
+      "resumes": 0,
+      "sameBackground": null,
+      "lifeToNextTickMs": 4029.04,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

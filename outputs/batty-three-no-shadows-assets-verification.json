@@ -1,0 +1,11 @@
+{
+  "romSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "assets": 34,
+  "litChecks": 6712,
+  "outlineChecks": 1639,
+  "phaseChecks": 2184,
+  "untouchedEffectAndBonusAssets": 26,
+  "collisionSizesUnchanged": true,
+  "strict64K": true,
+  "passed": true
+}

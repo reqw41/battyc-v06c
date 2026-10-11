@@ -6,7 +6,14 @@
 	;CALL cls ;DEBUG
 
 ; Dynamic masks are shifted lazily in the sprite cache.
+ IFDEF NO_SPRITE_SHADOWS
+ ; Compact phases are generated offline into fixed reservations.
+ nop
+ nop
+ nop
+ ELSE
 	CALL spr_shift_gen	; Генерация сдвинутых спрайтов шарика и всех видов кареток
+ ENDIF
 
 ; Инвертируется некоторая графика
 	LD HL,gfx_bat

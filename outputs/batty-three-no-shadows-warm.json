@@ -1,0 +1,11 @@
+{
+  "romSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "strict64K": true,
+  "vectorsUntouched": true,
+  "startupCodeReused": true,
+  "phase7Tested": true,
+  "warmResetRunsMenu": true,
+  "shiftGeneratorNotRepeated": true,
+  "stackBytes": 28,
+  "passed": true
+}

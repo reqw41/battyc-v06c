@@ -1,0 +1,383 @@
+{
+  "method": "Lit pixels + 1px black outline + enclosed dark interiors; remove exterior black-only pixels; trim right/bottom bounds; keep original allocations and collision boxes; shifted ball/paddle phases generated offline",
+  "stats": [
+    {
+      "name": "spr_bomb",
+      "removed": 34,
+      "before": [
+        2,
+        16
+      ],
+      "after": [
+        1,
+        11
+      ]
+    },
+    {
+      "name": "spr_big_ball",
+      "removed": 34,
+      "before": [
+        2,
+        12
+      ],
+      "after": [
+        2,
+        9
+      ]
+    },
+    {
+      "name": "spr_ball_normal",
+      "removed": 21,
+      "before": [
+        2,
+        12
+      ],
+      "after": [
+        1,
+        7
+      ]
+    },
+    {
+      "name": "spr_bullet_1",
+      "removed": 3,
+      "before": [
+        1,
+        8
+      ],
+      "after": [
+        1,
+        5
+      ]
+    },
+    {
+      "name": "spr_bullet_2",
+      "removed": 3,
+      "before": [
+        1,
+        8
+      ],
+      "after": [
+        1,
+        5
+      ]
+    },
+    {
+      "name": "spr_bat_normal",
+      "removed": 50,
+      "before": [
+        4,
+        13
+      ],
+      "after": [
+        4,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_right_part",
+      "removed": 45,
+      "before": [
+        3,
+        13
+      ],
+      "after": [
+        3,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_left_part",
+      "removed": 29,
+      "before": [
+        3,
+        13
+      ],
+      "after": [
+        3,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_big",
+      "removed": 74,
+      "before": [
+        6,
+        13
+      ],
+      "after": [
+        6,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_gun_1",
+      "removed": 51,
+      "before": [
+        4,
+        13
+      ],
+      "after": [
+        4,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_gun_2",
+      "removed": 50,
+      "before": [
+        4,
+        13
+      ],
+      "after": [
+        4,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_gun_3",
+      "removed": 52,
+      "before": [
+        4,
+        13
+      ],
+      "after": [
+        4,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_gun_4",
+      "removed": 50,
+      "before": [
+        4,
+        13
+      ],
+      "after": [
+        4,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_gun",
+      "removed": 46,
+      "before": [
+        4,
+        13
+      ],
+      "after": [
+        4,
+        11
+      ]
+    },
+    {
+      "name": "spr_spark_1",
+      "removed": 9,
+      "before": [
+        2,
+        11
+      ],
+      "after": [
+        1,
+        7
+      ]
+    },
+    {
+      "name": "spr_spark_2",
+      "removed": 7,
+      "before": [
+        1,
+        10
+      ],
+      "after": [
+        1,
+        7
+      ]
+    },
+    {
+      "name": "spr_spark_3",
+      "removed": 5,
+      "before": [
+        1,
+        8
+      ],
+      "after": [
+        1,
+        5
+      ]
+    },
+    {
+      "name": "spr_spark_4",
+      "removed": 2,
+      "before": [
+        1,
+        6
+      ],
+      "after": [
+        1,
+        4
+      ]
+    },
+    {
+      "name": "spr_spark_5",
+      "removed": 1,
+      "before": [
+        1,
+        4
+      ],
+      "after": [
+        1,
+        3
+      ]
+    },
+    {
+      "name": "spr_bird_1",
+      "removed": 29,
+      "before": [
+        3,
+        15
+      ],
+      "after": [
+        3,
+        11
+      ]
+    },
+    {
+      "name": "spr_bird_2",
+      "removed": 31,
+      "before": [
+        3,
+        15
+      ],
+      "after": [
+        3,
+        11
+      ]
+    },
+    {
+      "name": "spr_bird_3",
+      "removed": 29,
+      "before": [
+        3,
+        15
+      ],
+      "after": [
+        3,
+        11
+      ]
+    },
+    {
+      "name": "spr_bird_4",
+      "removed": 31,
+      "before": [
+        3,
+        15
+      ],
+      "after": [
+        3,
+        11
+      ]
+    },
+    {
+      "name": "spr_bird_5",
+      "removed": 35,
+      "before": [
+        3,
+        18
+      ],
+      "after": [
+        3,
+        15
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_1",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 1,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_2",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 2,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_3",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 3,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_4",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 4,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_5",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 5,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_6",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 6,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_ball_normal_shift_7",
+      "generatedFrom": "spr_ball_normal",
+      "phase": 7,
+      "after": [
+        2,
+        7
+      ]
+    },
+    {
+      "name": "spr_bat_normal_shift",
+      "generatedFrom": "spr_bat_normal",
+      "phase": 4,
+      "after": [
+        5,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_big_shift",
+      "generatedFrom": "spr_bat_big",
+      "phase": 4,
+      "after": [
+        7,
+        10
+      ]
+    },
+    {
+      "name": "spr_bat_gun_shift",
+      "generatedFrom": "spr_bat_gun",
+      "phase": 4,
+      "after": [
+        5,
+        11
+      ]
+    }
+  ]
+}

@@ -173,23 +173,6 @@ scb_width:
  inc hl
  ld (PreparedRow),hl
  push hl
- ld hl,scb_white
- ld (scb_store+1),hl
- ld a,(color_enemy)
- or a
- ld a,0
- jp z,scb_set_boundary
- ld a,(SpriteCacheHeight)
- ld b,a
- or a
- rra
- ld c,a
- ld a,b
- sub c
-scb_set_boundary:
- ld (scb_boundary+1),a
- pop hl
- push hl
  ld hl,(SpriteCacheOriginal)
  inc hl
  inc hl
@@ -241,29 +224,21 @@ scb_next_row:
  dec a
  ld (SpriteCacheRows),a
  ret z
-scb_boundary:
- cp 0
- jp nz,scb_row
- ld hl,scb_enemy
- ld (scb_store+1),hl
  jp scb_row
 scb_pair:
+ ; Native pair = complement of cover, then lit pixels. Both white and
+ ; enemy-coloured rows share this encoding; draw selects destination planes.
  ld b,a
  ld a,(PreparedCover)
  and b
  ld b,a
  ld a,(PreparedCover)
-scb_store:
- jp scb_white
-scb_enemy:
- ld (hl),b
- inc hl
- ld (hl),a
- jp scb_step
-scb_white:
+ cpl
  ld (hl),a
  inc hl
- ld (hl),b
+ cpl
+ xor b
+ ld (hl),a
 scb_step:
 scb_column_step:
  ld a,0
@@ -339,95 +314,28 @@ PreparationCache5 EQU start_bin+3
  ASSERT PreparationCache5+256 <= spr_1up
 SpriteCacheChoose:
  ld a,(SpriteCacheIndex)
- cp 24
- jp nc,scc_ball
- cp 16
- jp nc,scc_bat
- cp 8
- jp nc,scc_enemy
- or a
- ld hl,SpriteBonusCache0
- jp z,scc_ready
- cp 4
- jp z,scc_low
- cp 5
- jp z,scc_prep5
- cp 6
- jp z,scc_prep6
- cp 7
- ld hl,SpriteBonusCache7
- jp z,scc_ready
- ld a,(SpriteCacheIndex)
- dec a
- ld l,a
- ld h,0
- DUP 7
- add hl,hl
- EDUP
- ld de,SpriteBonusPixels
- jp scc_add
-scc_enemy:
- and 7
- ld hl,SpriteEnemyCache0
- jp z,scc_ready
- dec a
- ld l,a
- ld h,0
- DUP 5
- add hl,hl
- EDUP
- ld d,h
- ld e,l
- add hl,hl
- add hl,hl
- add hl,de
- ld de,SpriteEnemyPixels
- jp scc_add
-scc_bat:
- and 7
- ld l,a
- ld h,0
- DUP 5
- add hl,hl
- EDUP
- ld d,h
- ld e,l
- add hl,hl
- add hl,hl
- add hl,hl
- ; phase*256 - phase*32 = phase*224.
- ld a,l
- sub e
- ld l,a
- ld a,h
- sbc a,d
- ld h,a
- ld de,$9000
- jp scc_add
-scc_ball:
- and 7
- ld l,a
- ld h,0
- DUP 7
- add hl,hl
- EDUP
- ld de,$9700
-scc_add:
- add hl,de
- jp scc_ready
-scc_prep6:
- ld hl,PreparationCache5+128
- jp scc_ready
-scc_prep5:
- ld hl,PreparationCache5
- jp scc_ready
-scc_low:
- ld hl,$0040
-scc_ready:
+ add a,a
+ ld hl,SpriteCacheAddresses
+ call hl_add_a
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ ex de,hl
  ld (SpriteCacheBuffer),hl
  ret
 SpriteCacheAddress:
  jp SpriteCacheChoose
+SpriteCacheAddresses:
+ dw SpriteBonusCache0,SpriteBonusPixels,SpriteBonusPixels+128,SpriteBonusPixels+256
+ dw $0040,PreparationCache5,PreparationCache5+128,SpriteBonusCache7
+ dw SpriteEnemyCache0,SpriteEnemyPixels,SpriteEnemyPixels+160,SpriteEnemyPixels+320
+ dw SpriteEnemyPixels+480,SpriteEnemyPixels+640,SpriteEnemyPixels+800,SpriteEnemyPixels+960
+ DUP 8,phase
+ dw $9000+phase*224
+ EDUP
+ DUP 8,phase
+ dw $9700+phase*128
+ EDUP
 SpriteCacheReset:
  ld hl,SpriteCacheMeta
  ld b,64

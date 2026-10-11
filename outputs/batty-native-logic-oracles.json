@@ -1,0 +1,44 @@
+{
+  "beforeSHA256": "9ce94a50f613d0ba7a75e1c97fe90737d11091dce9b5da2ea6ffa2e53f8aa358",
+  "romSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "strict64K": true,
+  "reports": [
+    {
+      "name": "brick_row_selection",
+      "cases": 65536,
+      "selected": 28639,
+      "oldTicks": 38270940,
+      "newTicks": 19484996,
+      "passed": true
+    },
+    {
+      "name": "keyboard",
+      "cases": 17920,
+      "oldTicks": 30673016,
+      "newTicks": 5344592,
+      "passed": true
+    },
+    {
+      "name": "ball_finalizer",
+      "cases": 3072,
+      "oldTicks": 856064,
+      "newTicks": 733184,
+      "passed": true
+    },
+    {
+      "name": "brick_column_selection",
+      "cases": 1024,
+      "oldTicks": 2545664,
+      "newTicks": 1015808,
+      "passed": true
+    },
+    {
+      "name": "fixed_point_motion",
+      "cases": 16384,
+      "oldTicks": 43898880,
+      "newTicks": 42457088,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

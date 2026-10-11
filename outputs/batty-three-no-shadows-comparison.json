@@ -1,0 +1,69 @@
+{
+  "cpu": "i8080, 3 MHz, strict 64 KB, no RAM disk",
+  "method": "65 matched controlled steps, last 45 warm, instruction cycles; IRQ entry outside instruction() excluded; no brick/paddle collisions forced",
+  "beforeSHA256": "9ce94a50f613d0ba7a75e1c97fe90737d11091dce9b5da2ea6ffa2e53f8aa358",
+  "romSHA256": "b299b1746eb246d4c5c364ba7c2b7ebb81ae98e0109080669d3541f8a601908b",
+  "twoPlusTwoSHA256": "8fe04e11c60cc906a172db87d3361a9ffb2c0b2f04060a1fbe2b31ad8542567e",
+  "reports": [
+    {
+      "name": "one_ball",
+      "beforeActiveTicks": 50839.377777777794,
+      "activeTicks": 45825.777777777796,
+      "totalTicks": 59869.06666666667,
+      "savedPercent": 9.861647052241207,
+      "warmStepsPerSecond": 50.10934973653617,
+      "twoPlusTwoActiveTicks": 28981.244444444448,
+      "twoPlusTwoTotalTicks": 59879.28888888892
+    },
+    {
+      "name": "ball_bonus",
+      "beforeActiveTicks": 77821.0666666667,
+      "activeTicks": 70001.68888888888,
+      "totalTicks": 89731.55555555559,
+      "savedPercent": 10.04789334393319,
+      "warmStepsPerSecond": 33.433054641993884,
+      "twoPlusTwoActiveTicks": 55001.24444444446,
+      "twoPlusTwoTotalTicks": 59653.51111111111
+    },
+    {
+      "name": "ball_ufo",
+      "beforeActiveTicks": 89072.62222222223,
+      "activeTicks": 77555.2888888889,
+      "totalTicks": 111785.86666666665,
+      "savedPercent": 12.930273125449677,
+      "warmStepsPerSecond": 26.837024119924525,
+      "twoPlusTwoActiveTicks": 58265.77777777777,
+      "twoPlusTwoTotalTicks": 60043.377777777794
+    },
+    {
+      "name": "ball_bird",
+      "beforeActiveTicks": 85352.97777777779,
+      "activeTicks": 74852.71111111112,
+      "totalTicks": 103316.2666666667,
+      "savedPercent": 12.302167938422526,
+      "warmStepsPerSecond": 29.0370538617991,
+      "twoPlusTwoActiveTicks": 57151.91111111111,
+      "twoPlusTwoTotalTicks": 59931.11111111113
+    },
+    {
+      "name": "three_balls",
+      "beforeActiveTicks": 83448.62222222223,
+      "activeTicks": 76679.37777777776,
+      "totalTicks": 97111.82222222221,
+      "savedPercent": 8.111870830435153,
+      "warmStepsPerSecond": 30.892222299516344,
+      "twoPlusTwoActiveTicks": 49625.599999999984,
+      "twoPlusTwoTotalTicks": 59871.28888888892
+    },
+    {
+      "name": "three_balls_bonus_enemy",
+      "beforeActiveTicks": 149928.0,
+      "activeTicks": 133685.95555555553,
+      "totalTicks": 138609.77777777784,
+      "savedPercent": 10.833229579827952,
+      "warmStepsPerSecond": 21.643494767083922,
+      "twoPlusTwoActiveTicks": 106162.6666666667,
+      "twoPlusTwoTotalTicks": 114466.22222222225
+    }
+  ]
+}
