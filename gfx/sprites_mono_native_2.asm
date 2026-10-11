@@ -2,7 +2,9 @@
 spr_bomb:
  DEFB $01,$0b,$83,$00,$01,$5c,$83,$38,$c7,$00,$83,$38
  DEFB $01,$5c,$01,$5c,$01,$5c,$01,$5c,$83,$38,$c7,$00
- DS 42,0
+ INCLUDE "routines/mono_pace_start.asm"
+ ASSERT $ <= spr_bomb+66
+ DS spr_bomb+66-$,0
 spr_magnet_circle_off:
  DEFB $03,$17,$00,$00,$ff,$ff,$80,$80,$07,$07,$ff,$80
  DEFB $f0,$f0,$1f,$1c,$ff,$3e,$fc,$1c,$3f,$31,$ff,$e3
@@ -68,12 +70,16 @@ spr_lives_indicator:
 spr_ball_normal:
  DEFB $01,$07,$c7,$00,$83,$38,$01,$4c,$01,$5c,$01,$7c
  DEFB $83,$38,$c7,$00
- DS 34,0
+ INCLUDE "routines/mono_pace_white.asm"
+ ASSERT $ <= spr_ball_normal+50
+ DS spr_ball_normal+50-$,0
 spr_ball_normal_shift_1:
  DEFB $02,$07,$e3,$00,$c1,$1c,$80,$26,$80,$2e,$80,$3e
  DEFB $c1,$1c,$e3,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00,$ff,$00,$ff,$00
- DS 44,0
+ INCLUDE "routines/mono_pace_dispatch.asm"
+ ASSERT $ <= spr_ball_normal_shift_1+74
+ DS spr_ball_normal_shift_1+74-$,0
 spr_ball_normal_shift_2:
  DEFB $02,$07,$f1,$00,$e0,$0e,$c0,$13,$c0,$17,$c0,$1f
  DEFB $e0,$0e,$f1,$00,$ff,$00,$ff,$00,$7f,$00,$7f,$00
@@ -141,7 +147,9 @@ spr_bat_normal:
  DEFB $00,$12,$00,$ed,$00,$ed,$00,$ed,$00,$ed,$00,$ed
  DEFB $00,$00,$3f,$00,$1f,$80,$0f,$c0,$0f,$60,$0f,$20
  DEFB $0f,$e0,$0f,$e0,$0f,$c0,$1f,$80,$3f,$00
- DS 24,0
+ INCLUDE "routines/mono_pace_old.asm"
+ ASSERT $ <= spr_bat_normal+106
+ DS spr_bat_normal+106-$,0
 spr_bat_right_part:
  DEFB $03,$0a,$00,$00,$80,$7f,$80,$00,$80,$00,$80,$7f
  DEFB $80,$7f,$80,$7f,$80,$7f,$80,$7f,$00,$00,$00,$00
@@ -170,7 +178,9 @@ spr_bat_big:
  DEFB $00,$ed,$00,$ed,$00,$00,$3f,$00,$1f,$80,$0f,$c0
  DEFB $0f,$60,$0f,$20,$0f,$e0,$0f,$e0,$0f,$c0,$1f,$80
  DEFB $3f,$00
- DS 36,0
+ INCLUDE "routines/mono_pace_bat.asm"
+ ASSERT $ <= spr_bat_big+158
+ DS spr_bat_big+158-$,0
 spr_bat_gun_1:
  DEFB $04,$0a,$e0,$00,$c0,$0d,$80,$1a,$80,$32,$80,$25
  DEFB $80,$3d,$80,$3d,$80,$1d,$c0,$0d,$e0,$00,$00,$00
@@ -228,7 +238,9 @@ spr_bat_gun_shift:
  DEFB $01,$f0,$07,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00,$ff,$00
- DS 40,0
+ INCLUDE "routines/mono_pace_shift.asm"
+ ASSERT $ <= spr_bat_gun_shift+152
+ DS spr_bat_gun_shift+152-$,0
 spr_bat_big_shift:
  DEFB $07,$0a,$fc,$00,$f8,$01,$f0,$03,$f0,$06,$f0,$04
  DEFB $f0,$07,$f0,$07,$f0,$03,$f8,$01,$fc,$00,$00,$00
@@ -246,7 +258,9 @@ spr_bat_big_shift:
 spr_spark_1:
  DEFB $01,$07,$ef,$00,$c7,$10,$83,$10,$01,$7c,$83,$10
  DEFB $c7,$10,$ef,$00
- DS 30,0
+ INCLUDE "routines/mono_pace_wait.asm"
+ ASSERT $ <= spr_spark_1+46
+ DS spr_spark_1+46-$,0
 spr_spark_2:
  DEFB $01,$07,$df,$00,$8f,$20,$8f,$20,$07,$70,$8f,$20
  DEFB $8f,$20,$df,$00
@@ -403,7 +417,9 @@ spr_bonus_rocket_1:
  DEFB $70,$00,$7f,$00,$3f,$80,$1f,$c0,$0f,$e0,$0f,$e0
  DEFB $07,$f0,$07,$f0,$07,$f0,$0f,$00,$07,$f0,$07,$f0
  DEFB $0f,$00
- DS 90,0
+ INCLUDE "routines/mono_pace_draw.asm"
+ ASSERT $ <= spr_bonus_rocket_1+164
+ DS spr_bonus_rocket_1+164-$,0
 spr_bonus_rocket_2:
  DEFB $03,$1c,$f3,$00,$e1,$04,$c0,$16,$80,$27,$80,$27
  DEFB $00,$47,$00,$4f,$00,$4f,$80,$30,$00,$4f,$00,$4f

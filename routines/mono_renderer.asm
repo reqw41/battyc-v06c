@@ -60,12 +60,17 @@ ClearDst EQU $71df
 ClearColumns EQU $71e1
 ClearRows EQU $71e2
 SUWindowValid: db 0
-SUCount: db 0
-SUStatic: db 0
-SUNoRoom: db 0
-SUDropped: db 0
+; Read-only compatibility counters: 3+1 has no sprite save-under.
+; This ordinary RAM gap starts zeroed in the ROM image.
+SUCount EQU $7140
+SUStatic EQU $7141
+SUNoRoom EQU $7142
+SUDropped EQU $7143
+ ASSERT MonoBlack+32 <= SUCount
+ ASSERT SUDropped < SpriteCacheOriginal
 SpriteShiftMasks: db $ff,$7f,$3f,$1f,$0f,$07,$03,$01
-MonoReset:
+MonoReset EQU PaceReset
+MonoResetBody:
  ld hl,MonoDesc
  ld b,77+77+48
  xor a
@@ -224,6 +229,7 @@ mono_next:
  cp 11
  jp nz,mono_prepare
  call MonoFindIsolated
+ call PaceStart
  xor a
  ld (MonoOwner),a
  ld hl,MonoRegions
@@ -266,6 +272,8 @@ mono_draw_all:
  ld h,b
  ld l,c
  ld (MonoDrawSource),hl
+mono_pace_draw_call:
+ call PaceAccountDraw
  call MonoDrawPrepared
 mono_draw_next:
  ld a,(MonoRegionPtr)
@@ -314,6 +322,8 @@ mono_erase_all:
  inc hl
  ld a,(hl)
  ld (MonoOldBat),a
+mono_pace_old_call:
+ call PaceAccountOld
  ld hl,(MonoRegionPtr)
  ld de,4
  add hl,de

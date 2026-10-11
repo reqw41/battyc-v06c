@@ -1,5 +1,5 @@
 {
-  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+  "romSHA256": "b9074cb797e2d003d04575e39931d81066b78337429ba2dd43948bbb222ba719",
   "physicalRAM": 65536,
   "individualCases": 370,
   "saveUnderRetiredBeforeWrite": true,

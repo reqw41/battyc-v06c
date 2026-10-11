@@ -1,8 +1,8 @@
 {
-  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+  "romSHA256": "b9074cb797e2d003d04575e39931d81066b78337429ba2dd43948bbb222ba719",
   "frames": 9000,
   "startFrame": 107,
-  "ticks": 6180,
+  "ticks": 6320,
   "naturalBonuses": [
     {
       "frame": 489,
@@ -13,40 +13,64 @@
       "id": 0
     },
     {
-      "frame": 825,
+      "frame": 826,
       "id": 3
     },
     {
-      "frame": 2737,
+      "frame": 2747,
       "id": 5
     },
     {
-      "frame": 2961,
+      "frame": 2973,
       "id": 4
     },
     {
-      "frame": 3342,
+      "frame": 3353,
       "id": 0
     },
     {
-      "frame": 3690,
+      "frame": 3704,
       "id": 9
     },
     {
-      "frame": 4096,
+      "frame": 4110,
       "id": 1
     },
     {
-      "frame": 4327,
+      "frame": 4342,
       "id": 8
     },
     {
-      "frame": 4495,
+      "frame": 4511,
       "id": 2
     },
     {
-      "frame": 8369,
+      "frame": 6566,
       "id": 6
+    },
+    {
+      "frame": 7653,
+      "id": 0
+    },
+    {
+      "frame": 7933,
+      "id": 1
+    },
+    {
+      "frame": 8121,
+      "id": 7
+    },
+    {
+      "frame": 8297,
+      "id": 0
+    },
+    {
+      "frame": 8611,
+      "id": 3
+    },
+    {
+      "frame": 8790,
+      "id": 0
     }
   ],
   "pickedBonuses": [
@@ -59,43 +83,67 @@
       "id": 0
     },
     {
-      "frame": 911,
+      "frame": 912,
       "id": 3
     },
     {
-      "frame": 2842,
+      "frame": 2854,
       "id": 5
     },
     {
-      "frame": 3051,
+      "frame": 3064,
       "id": 4
     },
     {
-      "frame": 3425,
+      "frame": 3437,
       "id": 0
     },
     {
-      "frame": 3782,
+      "frame": 3796,
       "id": 9
     },
     {
-      "frame": 4187,
+      "frame": 4201,
       "id": 1
     },
     {
-      "frame": 4416,
+      "frame": 4432,
       "id": 8
     },
     {
-      "frame": 4616,
+      "frame": 4633,
       "id": 2
+    },
+    {
+      "frame": 7733,
+      "id": 0
+    },
+    {
+      "frame": 8006,
+      "id": 1
+    },
+    {
+      "frame": 8214,
+      "id": 7
+    },
+    {
+      "frame": 8405,
+      "id": 0
+    },
+    {
+      "frame": 8718,
+      "id": 3
+    },
+    {
+      "frame": 8912,
+      "id": 0
     }
   ],
   "enemySeen": true,
-  "bombsSeen": 17,
+  "bombsSeen": 8,
   "unexpectedResets": 0,
   "physicalRAM": 65536,
-  "naturalSmashObserved": false,
+  "naturalSmashObserved": true,
   "requiredNaturalSmash": false,
   "passed": true
 }

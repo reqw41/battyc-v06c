@@ -1,0 +1,85 @@
+{
+  "romSHA256": "b9074cb797e2d003d04575e39931d81066b78337429ba2dd43948bbb222ba719",
+  "dispatch": [
+    {
+      "owners": 4,
+      "detailed": false
+    },
+    {
+      "owners": 5,
+      "detailed": true
+    },
+    {
+      "owners": 11,
+      "detailed": true
+    },
+    {
+      "owners": 2,
+      "detailed": false
+    }
+  ],
+  "cases": [
+    {
+      "work": 0,
+      "changedIRQ": false,
+      "skipRasterWait": false,
+      "dispatchCycles": 88
+    },
+    {
+      "work": 0,
+      "changedIRQ": true,
+      "skipRasterWait": false,
+      "dispatchCycles": 88
+    },
+    {
+      "work": 935,
+      "changedIRQ": false,
+      "skipRasterWait": false,
+      "dispatchCycles": 88
+    },
+    {
+      "work": 935,
+      "changedIRQ": true,
+      "skipRasterWait": false,
+      "dispatchCycles": 88
+    },
+    {
+      "work": 936,
+      "changedIRQ": false,
+      "skipRasterWait": true,
+      "dispatchCycles": 120
+    },
+    {
+      "work": 936,
+      "changedIRQ": true,
+      "skipRasterWait": true,
+      "dispatchCycles": 120
+    },
+    {
+      "work": 937,
+      "changedIRQ": false,
+      "skipRasterWait": true,
+      "dispatchCycles": 120
+    },
+    {
+      "work": 937,
+      "changedIRQ": true,
+      "skipRasterWait": true,
+      "dispatchCycles": 120
+    },
+    {
+      "work": 65535,
+      "changedIRQ": false,
+      "skipRasterWait": true,
+      "dispatchCycles": 120
+    },
+    {
+      "work": 65535,
+      "changedIRQ": true,
+      "skipRasterWait": true,
+      "dispatchCycles": 120
+    }
+  ],
+  "strict64KB": true,
+  "passed": true
+}

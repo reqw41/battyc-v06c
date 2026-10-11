@@ -1,5 +1,5 @@
 {
-  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+  "romSHA256": "b9074cb797e2d003d04575e39931d81066b78337429ba2dd43948bbb222ba719",
   "strict64K": true,
   "reports": [
     {
@@ -23,7 +23,7 @@
       "fullResets": 0,
       "resumes": 1,
       "sameBackground": true,
-      "lifeToNextTickMs": 16.294666666666668,
+      "lifeToNextTickMs": 16.072,
       "minStackAddress": "6bd4",
       "stackBytes": 44,
       "passed": true
@@ -49,7 +49,7 @@
       "fullResets": 1,
       "resumes": 0,
       "sameBackground": null,
-      "lifeToNextTickMs": 4296.089333333333,
+      "lifeToNextTickMs": 4296.654666666666,
       "minStackAddress": "6bd4",
       "stackBytes": 44,
       "passed": true

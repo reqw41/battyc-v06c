@@ -3,36 +3,36 @@
     {
       "name": "centre",
       "steps": 50,
-      "meanRenderTicks": 104790,
-      "maxRenderTicks": 300996,
+      "meanRenderTicks": 109604,
+      "maxRenderTicks": 306136,
       "passed": true
     },
     {
       "name": "left",
       "steps": 50,
-      "meanRenderTicks": 112430,
-      "maxRenderTicks": 289440,
+      "meanRenderTicks": 117091,
+      "maxRenderTicks": 295216,
       "passed": true
     },
     {
       "name": "right",
       "steps": 50,
-      "meanRenderTicks": 119631,
-      "maxRenderTicks": 289808,
+      "meanRenderTicks": 124342,
+      "maxRenderTicks": 295652,
       "passed": true
     },
     {
       "name": "double-wide",
       "steps": 50,
-      "meanRenderTicks": 93703,
-      "maxRenderTicks": 219240,
+      "meanRenderTicks": 98478,
+      "maxRenderTicks": 223748,
       "passed": true
     },
     {
       "name": "double-close",
       "steps": 50,
-      "meanRenderTicks": 98040,
-      "maxRenderTicks": 233020,
+      "meanRenderTicks": 102836,
+      "maxRenderTicks": 237412,
       "passed": true
     }
   ],

@@ -6210,7 +6210,9 @@ LBAED_2:
 LBAED_3:
 LBAED_4:
 LBAED_5:
- call WaitVideoFrame
+GameplayLogicDone:
+ call WaitGameplayFrame
+GameplayDrawBegin:
  call RCBegin
  CALL planes_begin
  CALL DrawMovingObjects

@@ -2,7 +2,7 @@
 // Exact instruction-cycle profiling. No ROM mutations; same controlled scene as measure-object-speed.js.
 const fs=require('fs'),assert=require('assert'),crypto=require('crypto');
 const {make}=require('./vector_harness');
-const watched=`CGRender CGPrepare CGGroups CGPointers CGIncludeRect CGIntersect CGLoad CGIsolated CGOutside CGOutsideSpan CGCopyPacked CGRestoreVideo CGShadeSaved CGSnapshot CGRestoreSpan CGSaveSpan CGDrawSpan CGCommit CGRestoreWhole SUInvalidate SUSaveObject SUCopySave SUCopyRestore WaitVideoFrame RCBegin planes_begin FastEraseOld FastErasePlain DrawMovingObjects RCFlush RCCompose
+const watched=`CGRender CGPrepare CGGroups CGPointers CGIncludeRect CGIntersect CGLoad CGIsolated CGOutside CGOutsideSpan CGCopyPacked CGRestoreVideo CGShadeSaved CGSnapshot CGRestoreSpan CGSaveSpan CGDrawSpan CGCommit CGRestoreWhole SUInvalidate SUSaveObject SUCopySave SUCopyRestore WaitVideoFrame WaitGameplayFrame PaceStart PaceAccountDraw PaceAccountOld RCBegin planes_begin FastEraseOld FastErasePlain DrawMovingObjects RCFlush RCCompose
  handling_bat handling_ball handling_bonus handling_ufo handling_object call_hl_for_all_obj
  enemy_prepare random_generate get_left_player_ctrl_state fill_briks_data play_sounds_queue
  print_obj_from_buf_to_scr plane_object plane_object_fast SpriteCachePrepare SpriteCacheBuild
@@ -43,6 +43,7 @@ function profile(base,motion='reference') {
  function renderGroup() {
   const has=n=>stack.some(s=>s.name===n);
   if(has('KEYINT'))return 'IRQ';
+  if(has('PaceStart')||has('PaceAccountDraw')||has('PaceAccountOld'))return 'pacing_account';
   if(has('SpriteCacheBuild'))return 'SpriteCacheBuild';
   if(has('MonoCachePrepare'))return 'MonoCachePrepare';
   if(has('plane_object_fast'))return 'plane_object_fast';
@@ -105,22 +106,25 @@ function profile(base,motion='reference') {
   if(frame)while(stack.length&&stack.at(-1).ret===pc&&stack.at(-1).sp+2===this.sp) {
    const call=stack.pop();frame.routines[call.name].inclusive+=cycles-call.start;
    if(call.detail)call.detail.cycles=cycles-call.start;
-   if(call.name==='WaitVideoFrame')frame.phase='setup';
+   if(call.name==='WaitVideoFrame'||call.name==='WaitGameplayFrame')frame.phase='setup';
    if(call.name==='DrawMovingObjects')frame.phase='dots';
   }
+  const anchor=E.L.GameplayDrawBegin||E.L.LB9E8_2;
   if(pc===E.L.LB9E8_2) {
    tick++;if(tick===21)E.key(32,1);if(tick===31)E.key(32,0);
-   if(tick>=40) {
-    if(frame)finish();if(tick===105)throw 'done';
-    inject();stage='setup';
-    frame={tick,shift:tick%8,start:cycles,phase:'logic',phases:{},routines:{},render:{},unattributed:0,cacheBuilds:0,cacheDecisions:{},builds:[],irqEntryCycles:0,
-     videoWrites:{},videoByStage:{},videoStoreCycles:0,writesByGroup:{},drawAddresses:new Set(),repeatWrites:0,selectChecks:0,candidateCounts:[],columns:{},stageCycles:{}};
-   }
+   if(tick>=40)inject();
+   if(frame&&E.L.GameplayDrawBegin)frame.phase='logic';
+  }
+  if(pc===anchor&&tick>=40) {
+   if(frame)finish();if(frames.length===65)throw 'done';
+   stage='setup';
+   frame={tick,shift:tick%8,start:cycles,phase:E.L.GameplayDrawBegin?'setup':'logic',phases:{},routines:{},render:{},unattributed:0,cacheBuilds:0,cacheDecisions:{},builds:[],irqEntryCycles:0,
+    videoWrites:{},videoByStage:{},videoStoreCycles:0,writesByGroup:{},drawAddresses:new Set(),repeatWrites:0,selectChecks:0,candidateCounts:[],columns:{},stageCycles:{}};
   }
   if(frame) {
-   if(pc===E.L.WaitVideoFrame)frame.phase='wait';
+   if(pc===(E.L.WaitGameplayFrame||E.L.WaitVideoFrame))frame.phase='wait';
    if(pc===E.L.planes_begin)frame.phase='render';
-   if(pc===E.L.direct_dots_done)frame.phase='tail';
+   if(pc===E.L.direct_dots_done||pc===E.L.GameplayLogicDone)frame.phase='tail';
    if(pc===E.L.MonoRender)stage='prepare';
    if(pc===E.L.mono_draw_all)stage='draw';
    if(pc===E.L.mono_erase_all)stage='restore';
@@ -187,6 +191,6 @@ function profile(base,motion='reference') {
  return {base,motion,romSHA256:hash,warm:aggregate(warm),warmWorst:aggregate([worst]),worstTick:worst.tick,all:aggregate(frames),frames};
 }
 const reports=['reference','smooth'].flatMap(m=>['.','../vector06c-batty-three-plane'].map(b=>profile(b,m)));
-const result={cpu:'i8080 3 MHz, vanilla 64 KB; Vector machine cycles from cpu.vcycles (bus-synchronized timings), not bare nominal cpu_cycles',method:'Same injection as measure-object-speed.js: 65 steps, 45 warm. Paddle, 3 balls, bonus, UFO. Reference offset=tick%8; smooth offset=0..7..0. No forced impacts. Instruction cycles charged to exactly one main phase and one renderer group. Renderer groups are mutually exclusive; they include helper calls, with separately listed children and IRQ removed. MonoSingleCommit excludes its MonoZeroRange fringe calls. Routine inclusive/exclusive costs are reported separately. IRQ entry (16 cycles) outside instruction() is separate. Frame budget 119808 cycles.',reports};
+const result={cpu:'i8080 3 MHz, vanilla 64 KB; Vector machine cycles from cpu.vcycles (bus-synchronized timings), not bare nominal cpu_cycles',method:'Frame begins at GameplayDrawBegin when present, otherwise LB9E8_2; injection remains at LB9E8_2 before logic. Same injection as measure-object-speed.js: 65 steps, 45 warm. Paddle, 3 balls, bonus, UFO. Reference offset=tick%8; smooth offset=0..7..0. No forced impacts. Instruction cycles charged to exactly one main phase and one renderer group. Renderer groups are mutually exclusive; they include helper calls, with separately listed children and IRQ removed. MonoSingleCommit excludes its MonoZeroRange fringe calls. Routine inclusive/exclusive costs are reported separately. IRQ entry (16 cycles) outside instruction() is separate. Frame budget 119808 cycles.',reports};
 fs.writeFileSync(process.env.BATTY_BUDGET_OUT||'outputs/batty-three-plus-one-budget.json',JSON.stringify(result,null,2));
 for(const r of reports)console.log(JSON.stringify({base:r.base,motion:r.motion,warm:r.warm,worst:r.warmWorst.total},null,2));
