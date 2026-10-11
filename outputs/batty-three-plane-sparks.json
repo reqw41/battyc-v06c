@@ -1,0 +1,72 @@
+{
+  "romSHA256": "94c108c4c08c25d16e8e74e974b295e4dbd570d528d695c6cbaad0cbd99d03a4",
+  "physicalRAM": 65536,
+  "reports": [
+    {
+      "tag": "centre",
+      "steps": 50,
+      "local": 0,
+      "global": 50,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "pixelsCorrect": true,
+      "backgroundUnchanged": true,
+      "reverseSaveUnder": true,
+      "renderMeanMs": 49.23037333333333,
+      "renderMaxMs": 92.052
+    },
+    {
+      "tag": "left",
+      "steps": 50,
+      "local": 0,
+      "global": 50,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "pixelsCorrect": true,
+      "backgroundUnchanged": true,
+      "reverseSaveUnder": true,
+      "renderMeanMs": 49.188,
+      "renderMaxMs": 89.17333333333333
+    },
+    {
+      "tag": "right",
+      "steps": 50,
+      "local": 0,
+      "global": 50,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "pixelsCorrect": true,
+      "backgroundUnchanged": true,
+      "reverseSaveUnder": true,
+      "renderMeanMs": 48.84917333333333,
+      "renderMaxMs": 90.52666666666667
+    },
+    {
+      "tag": "double-wide",
+      "steps": 50,
+      "local": 0,
+      "global": 50,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "pixelsCorrect": true,
+      "backgroundUnchanged": true,
+      "reverseSaveUnder": true,
+      "renderMeanMs": 48.90290666666667,
+      "renderMaxMs": 91.95066666666666
+    },
+    {
+      "tag": "double-close",
+      "steps": 50,
+      "local": 0,
+      "global": 50,
+      "minStackAddress": "6bd4",
+      "stackBytes": 44,
+      "pixelsCorrect": true,
+      "backgroundUnchanged": true,
+      "reverseSaveUnder": true,
+      "renderMeanMs": 49.27693333333333,
+      "renderMaxMs": 90.44266666666667
+    }
+  ],
+  "passed": true
+}

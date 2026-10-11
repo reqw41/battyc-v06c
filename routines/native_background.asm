@@ -1,5 +1,5 @@
 ; Virtual legacy pointers are coordinates only: 7000+256*column+row.
-; Actual background pixels live solely in A000/C000. No banked RAM.
+; Background uses A/C with E=0; moving sprites share all three. No banked RAM.
 NativeAttrs EQU $6e00
 NativeAttrBytes EQU 768
 OverlayActive: db 0
@@ -51,6 +51,7 @@ NativeXorHL:
  pop bc
  ret
 NativeReadHL:
+ call SUInvalidate
  push af
  ld a,h
  cp $70
@@ -167,6 +168,7 @@ NativeAttrAddress:
  add hl,de
  ret
 NativeRecolorCell:
+ call SUInvalidate
  push af
  push bc
  push de
@@ -213,6 +215,13 @@ NativeRecolorMasks:
  ld h,a
  ld b,8
 NativeRecolorRow:
+ push hl
+ ld a,h
+ add $20
+ ld h,a
+ xor a
+ ld (hl),a
+ pop hl
  ld a,(hl)
  ld c,a
  ld a,h
@@ -257,6 +266,7 @@ NativeStaticScoreCheck:
  cp e
  jp z,plane_static_object
 NativeStaticBackground:
+ call SUInvalidate
  ld hl,(IXobj)
  ld a,(hl)
  or a
@@ -431,12 +441,17 @@ NativeDigitRow:
  add a,$20
  ld d,a
  ld a,b
- ld (de),a ; E: white digits on the black HUD strip.
+ ld (de),a
  ld a,d
- sub $60
+ sub $20
  ld d,a
- xor a
- ld (de),a ; F: remove the previous digit's black mask.
+ ld a,b
+ ld (de),a
+ ld a,d
+ sub $20
+ ld d,a
+ ld a,b
+ ld (de),a
  inc l
  ld (NativeDest),hl
  ld a,(NativeHeight)
@@ -452,6 +467,7 @@ NativeDigitRow:
  ret
 
 NativePrintBrick:
+ call SUInvalidate
  ld (NativeBrickDest),hl
  push hl
  ld c,h
@@ -538,6 +554,13 @@ NativeBrickRow:
  ld c,$7f
  jp NativeBrickEdge
 NativeBrickZero:
+ push hl
+ ld a,h
+ add $20
+ ld h,a
+ xor a
+ ld (hl),a
+ pop hl
  xor a
  ld (hl),a
  ld a,h
@@ -572,6 +595,7 @@ NativeBrickDest: dw 0
 
 ; Repeat the two-column texture directly in the C video plane.
 NativeFillTexture:
+ call SUInvalidate
  inc hl
  inc hl
  ld (NativeTextureLeft+1),hl

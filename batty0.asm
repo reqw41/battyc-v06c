@@ -187,9 +187,9 @@ PaletteMenu:
  db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
  db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
 PaletteGame:
- ; index: A000 bit2, C000 bit1, E000 bit0. Bit0 overrides background.
- db $00,$ff,$db,$ff,$bf,$ff,$07,$ff
- db $07,$00,$07,$00,$07,$00,$07,$00
+ ; A/C/E common screen; 8000 bit ignored, its 8 KB are ordinary RAM.
+ db $00,$07,$db,$c7,$bf,$f8,$07,$ff
+ db $00,$07,$db,$c7,$bf,$f8,$07,$ff
 
 ;----------------------------------------------------------------------------
 

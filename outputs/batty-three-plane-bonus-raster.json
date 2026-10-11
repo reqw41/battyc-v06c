@@ -1,0 +1,152 @@
+{
+  "romSHA256": "94c108c4c08c25d16e8e74e974b295e4dbd570d528d695c6cbaad0cbd99d03a4",
+  "cpu": "i8080 3 MHz, strict 64 KB",
+  "moving": false,
+  "method": "Stable object positions, real game pipeline and actual raster; 64 samples per scene after warmup. Foreground checked against native source masks, palette and scroll. Moving mode checks foreground in the union of eight X and four Y positions: zero blank frames proves the object does not completely disappear, without proving a tear-free image.",
+  "reports": [
+    {
+      "heavy": false,
+      "target": "bonus",
+      "shift": 0,
+      "y": 40,
+      "samples": 64,
+      "blankFrames": 0,
+      "partialFrames": 32,
+      "minVisibleFraction": 0.09615384615384616,
+      "meanVisibleFraction": 0.5546875,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": false,
+      "target": "bonus",
+      "shift": 0,
+      "y": 108,
+      "samples": 64,
+      "blankFrames": 0,
+      "partialFrames": 0,
+      "minVisibleFraction": 1,
+      "meanVisibleFraction": 1,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": false,
+      "target": "bonus",
+      "shift": 0,
+      "y": 144,
+      "samples": 64,
+      "blankFrames": 0,
+      "partialFrames": 0,
+      "minVisibleFraction": 1,
+      "meanVisibleFraction": 1,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": false,
+      "target": "bonus",
+      "shift": 3,
+      "y": 40,
+      "samples": 64,
+      "blankFrames": 32,
+      "partialFrames": 32,
+      "minVisibleFraction": 0,
+      "meanVisibleFraction": 0.5,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": false,
+      "target": "bonus",
+      "shift": 3,
+      "y": 108,
+      "samples": 64,
+      "blankFrames": 0,
+      "partialFrames": 0,
+      "minVisibleFraction": 1,
+      "meanVisibleFraction": 1,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": false,
+      "target": "bonus",
+      "shift": 3,
+      "y": 144,
+      "samples": 64,
+      "blankFrames": 0,
+      "partialFrames": 0,
+      "minVisibleFraction": 1,
+      "meanVisibleFraction": 1,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": true,
+      "target": "bonus",
+      "shift": 0,
+      "y": 40,
+      "samples": 64,
+      "blankFrames": 1,
+      "partialFrames": 10,
+      "minVisibleFraction": 0,
+      "meanVisibleFraction": 0.8946814903846154,
+      "memoryBlankFrames": 5
+    },
+    {
+      "heavy": true,
+      "target": "bonus",
+      "shift": 0,
+      "y": 108,
+      "samples": 64,
+      "blankFrames": 6,
+      "partialFrames": 9,
+      "minVisibleFraction": 0,
+      "meanVisibleFraction": 0.8737980769230769,
+      "memoryBlankFrames": 5
+    },
+    {
+      "heavy": true,
+      "target": "bonus",
+      "shift": 0,
+      "y": 144,
+      "samples": 64,
+      "blankFrames": 8,
+      "partialFrames": 10,
+      "minVisibleFraction": 0,
+      "meanVisibleFraction": 0.8565204326923077,
+      "memoryBlankFrames": 6
+    },
+    {
+      "heavy": true,
+      "target": "bonus",
+      "shift": 3,
+      "y": 40,
+      "samples": 64,
+      "blankFrames": 4,
+      "partialFrames": 17,
+      "minVisibleFraction": 0,
+      "meanVisibleFraction": 0.7608173076923077,
+      "memoryBlankFrames": 3
+    },
+    {
+      "heavy": true,
+      "target": "bonus",
+      "shift": 3,
+      "y": 108,
+      "samples": 64,
+      "blankFrames": 21,
+      "partialFrames": 21,
+      "minVisibleFraction": 0,
+      "meanVisibleFraction": 0.671875,
+      "memoryBlankFrames": 0
+    },
+    {
+      "heavy": true,
+      "target": "bonus",
+      "shift": 3,
+      "y": 144,
+      "samples": 64,
+      "blankFrames": 0,
+      "partialFrames": 21,
+      "minVisibleFraction": 0.6346153846153846,
+      "meanVisibleFraction": 0.8801081730769232,
+      "memoryBlankFrames": 0
+    }
+  ]
+}

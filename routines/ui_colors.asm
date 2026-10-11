@@ -41,16 +41,19 @@ UiPixelWrite:
  or c
  ld (hl),a
  ld a,h
- sub $60
+ sub $20
  ld h,a
- ld a,c
- cpl
- ld b,a
  ld a,(hl)
- and b
+ or c
  ld (hl),a
  ld a,h
- add a,$60
+ sub $20
+ ld h,a
+ ld a,(hl)
+ or c
+ ld (hl),a
+ ld a,h
+ add a,$40
  ld h,a
  ld a,c
  or a
@@ -91,24 +94,37 @@ UiPixelWrite:
  ret
 ; HL E-plane. B outline coverage; exclude existing white pixels.
 UiOutlineByte:
+ ; Exclude already drawn white strokes from this black outline.
  ld d,(hl)
  ld a,h
- sub $60
+ sub $20
  ld h,a
  ld a,(hl)
- cpl
  and d
+ ld d,a
+ ld a,h
+ sub $20
+ ld h,a
+ ld a,(hl)
+ and d
+ cpl
+ and b
  cpl
  ld d,a
  ld a,(hl)
- or b
  and d
  ld (hl),a
  ld a,h
- add a,$60
+ add a,$20
  ld h,a
  ld a,(hl)
- or b
+ and d
+ ld (hl),a
+ ld a,h
+ add a,$20
+ ld h,a
+ ld a,(hl)
+ and d
  ld (hl),a
  ret
 UiPixelColor:

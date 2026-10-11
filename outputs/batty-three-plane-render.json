@@ -1,0 +1,11 @@
+{
+  "romSHA256": "94c108c4c08c25d16e8e74e974b295e4dbd570d528d695c6cbaad0cbd99d03a4",
+  "scenes": 1477,
+  "planeComparisons": 4431,
+  "reverseRestore": true,
+  "roundWindowRestored": true,
+  "backgroundEventRestored": true,
+  "maxStack": 24,
+  "strict64K": true,
+  "passed": true
+}

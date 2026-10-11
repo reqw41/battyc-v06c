@@ -1,7 +1,7 @@
+; Source SP reads one E/F pair; video writes E, C, A together for each row.
 PreparedDraw:
  ld hl,(direct_source)
  ld (PreparedSource),hl
-PreparedSetup:
  dec hl
  ld a,(hl)
  add a,a
@@ -16,7 +16,6 @@ pd_column:
  ld (pd_restore+1),hl
  ld hl,(PreparedSource)
  di
-PreparedMask:
  ld sp,hl
  ld hl,(PreparedDst)
  ld a,(direct_rows)
@@ -27,23 +26,37 @@ prepared_mask_row:
  or e
  cpl
  ld b,a
- and (hl)
+ ld a,d
+ xor e
+ ld d,a
+ ld a,(hl)
+ and b
+ or d
+ ld (hl),a
+ ; E=white coverage and F=black/colored coverage in the source.
+ ld a,e
+ and d
+ ld e,a
+ ld a,h
+ sub $20
+ ld h,a
+ ld a,(hl)
+ and b
  or e
  ld (hl),a
  ld a,h
- xor $60
+ sub $20
  ld h,a
- ld a,b
- and (hl)
- or d
+ ld a,(hl)
+ and b
+ or e
  ld (hl),a
  ld a,h
- xor $60
+ add a,$40
  ld h,a
  dec l
  dec c
  jp nz,prepared_mask_row
- jp pd_restore
 pd_restore:
  ld sp,0
  ei

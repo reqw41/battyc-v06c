@@ -35,38 +35,9 @@ nrb_loop:
  pop hl
  ret
 SpriteCachePrepare:
- ld a,(direct_shift)
- or a
- ret z
- ld hl,(IXobj)
- ld a,(hl)
- and $7f
- cp 4
- jp z,scp_eligible
-scp_enemy_kind:
- ; Sparks borrow the enemy cache during the death effect.
- cp 7
- ret c
- cp 11
- ret nc
-scp_eligible:
-scp_kind:
- ld hl,(IXobj)
- ld a,(hl)
- and $7f
- cp 4
- ld bc,$1404
- jp nz,scp_size
- ld bc,$1004
-scp_size:
- ld a,(direct_width)
- cp c
- ret nc
  ld hl,(direct_source)
  dec hl
  ld a,(hl)
- cp b
- ret nc
  ld (SpriteCacheHeight),a
  dec hl
  ld (SpriteCacheOriginal),hl
@@ -76,10 +47,43 @@ scp_size:
  ld hl,(IXobj)
  ld a,(hl)
  and $7f
+ cp 1
+ jp z,scp_bat
+ cp 2
+ jp z,scp_ball
  cp 4
+ jp z,scp_bonus
+ cp 7
+ jp c,scp_scratch
+ cp 11
+ jp nc,scp_scratch
+ ld a,(direct_width)
+ cp 4
+ jp nc,scp_scratch
+ ld a,(SpriteCacheHeight)
+ cp 20
+ jp nc,scp_scratch
  ld a,b
- jp z,scp_phase_index
  or 8
+ jp scp_phase_index
+scp_bonus:
+ ld a,(direct_width)
+ cp 4
+ jp nc,scp_scratch
+ ld a,(SpriteCacheHeight)
+ cp 16
+ jp nc,scp_scratch
+ ld a,b
+ jp scp_phase_index
+scp_bat:
+ ld a,(plane_x)
+ and 7
+ or 16
+ jp scp_phase_index
+scp_ball:
+ ld a,(plane_x)
+ and 7
+ or 24
 scp_phase_index:
  ld (SpriteCacheIndex),a
  add a,a
@@ -109,8 +113,14 @@ scp_miss:
  call SpriteCacheBuild
 scp_hit:
  call SpriteCacheAddress
+ jp scp_result
+scp_scratch:
+ ld hl,SUScratch
+ ld (SpriteCacheBuffer),hl
+ call SpriteCacheBuild
+ ld hl,SUScratch
+scp_result:
  ld a,(hl)
- and 7
  ld (direct_width),a
  inc hl
  inc hl
@@ -146,6 +156,9 @@ scb_source:
  ld e,(hl)
  ld a,e
  ld (SpriteCacheWidth),a
+ ld a,(SpriteCacheShift)
+ or a
+ jp z,scb_width
  inc e
 scb_width:
  ld hl,(SpriteCacheBuffer)
@@ -212,6 +225,9 @@ scb_byte:
  dec a
  ld (SpriteCacheBytes),a
  jp nz,scb_byte
+ ld a,(SpriteCacheShift)
+ or a
+ jp z,scb_next_row
  ld a,(SpriteCacheCarryMask)
  ld (PreparedCover),a
  ld a,(SpriteCacheCarryPixel)
@@ -317,14 +333,21 @@ NativeMagnetSetOverlay:
  ld (hl),a
  pop hl
  ret
- INCLUDE "routines/local_composite.asm"
+ INCLUDE "routines/three_plane_saveunder.asm"
  INCLUDE "routines/prepared_sprites.asm"
-; Startup inversion and shift generator are dead after initial preparation.
-; Entry is patched to WarmStart before these bytes become a cache.
 PreparationCache5 EQU start_bin+3
  ASSERT PreparationCache5+256 <= spr_1up
 SpriteCacheChoose:
  ld a,(SpriteCacheIndex)
+ cp 24
+ jp nc,scc_ball
+ cp 16
+ jp nc,scc_bat
+ cp 8
+ jp nc,scc_enemy
+ or a
+ ld hl,SpriteBonusCache0
+ jp z,scc_ready
  cp 4
  jp z,scc_low
  cp 5
@@ -332,8 +355,65 @@ SpriteCacheChoose:
  cp 6
  jp z,scc_prep6
  cp 7
- jp nz,SpriteCacheAddressBody
  ld hl,SpriteBonusCache7
+ jp z,scc_ready
+ ld a,(SpriteCacheIndex)
+ dec a
+ ld l,a
+ ld h,0
+ DUP 7
+ add hl,hl
+ EDUP
+ ld de,SpriteBonusPixels
+ jp scc_add
+scc_enemy:
+ and 7
+ ld hl,SpriteEnemyCache0
+ jp z,scc_ready
+ dec a
+ ld l,a
+ ld h,0
+ DUP 5
+ add hl,hl
+ EDUP
+ ld d,h
+ ld e,l
+ add hl,hl
+ add hl,hl
+ add hl,de
+ ld de,SpriteEnemyPixels
+ jp scc_add
+scc_bat:
+ and 7
+ ld l,a
+ ld h,0
+ DUP 5
+ add hl,hl
+ EDUP
+ ld d,h
+ ld e,l
+ add hl,hl
+ add hl,hl
+ add hl,hl
+ ; phase*256 - phase*32 = phase*224.
+ ld a,l
+ sub e
+ ld l,a
+ ld a,h
+ sbc a,d
+ ld h,a
+ ld de,$9000
+ jp scc_add
+scc_ball:
+ and 7
+ ld l,a
+ ld h,0
+ DUP 7
+ add hl,hl
+ EDUP
+ ld de,$9700
+scc_add:
+ add hl,de
  jp scc_ready
 scc_prep6:
  ld hl,PreparationCache5+128
@@ -346,49 +426,11 @@ scc_low:
 scc_ready:
  ld (SpriteCacheBuffer),hl
  ret
-FastObjectCodeEnd:
-SpriteCachePixels EQU $7970
-
-; Seven bonus phases: 1..3 here, 4 at 0040, 5..6 in dead startup code,
-; 7 at 6c80 after the packed immutable initial object snapshot.
-; Enemy blocks hold the larger 18/19-row frames.
-SpriteBonusPixels EQU $7970
-SpriteEnemyPixels EQU $7af0
- DS $7f50-$,0
- ORG $7f50
-SpriteCacheAddressBody:
- ld a,(SpriteCacheIndex)
- and 7
- dec a
- ld l,a
- ld h,0
- DUP 4
- add hl,hl
- EDUP
- ld a,(SpriteCacheIndex)
- and 8
- jp z,sca_bonus
- add hl,hl
- ld d,h
- ld e,l
- add hl,hl
- add hl,hl
- add hl,de
- ld de,SpriteEnemyPixels
- jp sca_ready
-sca_bonus:
- add hl,hl
- add hl,hl
- add hl,hl
- ld de,SpriteBonusPixels
-sca_ready:
- add hl,de
- ld (SpriteCacheBuffer),hl
- ret
- INCLUDE "routines/restore_background_tail.asm"
+SpriteCacheAddress:
+ jp SpriteCacheChoose
 SpriteCacheReset:
  ld hl,SpriteCacheMeta
- ld b,32
+ ld b,64
  xor a
 scr_meta:
  ld (hl),a
@@ -396,8 +438,14 @@ scr_meta:
  dec b
  jp nz,scr_meta
  ret
-SpriteCacheAddress:
- jp SpriteCacheChoose
+FastObjectCodeEnd:
+ ASSERT $ <= $7840
+SpriteBonusCache0 EQU $7840
+SpriteEnemyCache0 EQU $78c0
+SpriteBonusPixels EQU $7970
+SpriteEnemyPixels EQU $7af0
+ DS $7f50-$,0
+ ORG $7f50
+ INCLUDE "routines/restore_background_tail.asm"
 FastObjectTailEnd:
  ASSERT FastObjectTailEnd <= $8000
-

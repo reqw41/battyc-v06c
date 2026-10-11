@@ -1,4 +1,4 @@
-; Four video planes: A/C background, E/8000 sprites.
+; Three shared video planes A/C/E; 8000 is hidden save-under/cache RAM.
 ; No shadow bitmap and no expanded RAM.
 ; Static shadow is retained; dynamic sprites do not write to it.
 planes_reset:
@@ -121,6 +121,7 @@ background_select:
  pop hl
  ret
 background_write_selected:
+ call SUInvalidate
  xor a
  out ($10),a
  ld a,(background_color)
@@ -141,7 +142,12 @@ bw_c:
 bw_a:
  ld (de),a
  ld a,d
- add a,$20
+ add a,$40
+ ld d,a
+ xor a
+ ld (de),a
+ ld a,d
+ sub $20
  ld d,a
  ret
 background_color: db 0
@@ -150,97 +156,44 @@ background_colors: db 3,3,2,3,3,3,2,3,2,2,2,2,2,1,2,2
 
 ; Clear ordinary footprints. Enemy/bonus rectangles are replaced by RCFlush.
 planes_begin:
- call RCBoundary
- ld hl,plane_old
- ld (plane_slot),hl
- ld b,11
-pb_loop:
- push bc
- ld hl,(plane_slot)
- ld d,(hl)
- inc hl
- ld e,(hl)
- inc hl
- ld b,(hl)
- ld (hl),0
- inc hl
- ld c,(hl)
- inc hl
- ld (plane_slot),hl
- ld a,b
- or a
- call nz,FastEraseOld
- pop bc
- dec b
- jp nz,pb_loop
+ call SUInvalidate
  ld hl,plane_old
  ld (plane_slot),hl
  ret
 FastErasePlain:
- ld hl,0
- add hl,sp
- ld (fr_restore+1),hl
- ld a,(ClearRows)
- or a
- rra
- ld e,a
- ld a,fr_words_end%256
- sub e
- ld l,a
- ld a,fr_words_end/256
- sbc a,0
- ld h,a
- ld (fr_dispatch+1),hl
- xor a
- ld (ClearPass),a
- ld bc,0
- di
-fr_pass:
+ ; Only persistent HUD clearing uses this compatibility entry.
+ call SUInvalidate
  ld hl,(ClearDst)
- ld a,(ClearPass)
- or a
- jp z,fr_position
- ld a,h
- sub $60
- ld h,a
-fr_position:
  ld a,(ClearColumns)
- ld (fr_columns_left),a
-fr_column:
- ld a,(ClearDst)
- ld l,a
+ ld b,a
+fec_col:
+ push hl
  ld a,(ClearRows)
- or a
- rra
- jp nc,fr_even
+ ld c,a
+fec_row:
  xor a
  ld (hl),a
- jp fr_stack
-fr_even:
- inc l
-fr_stack:
- ld sp,hl
-fr_dispatch:
- jp fr_words_end
- DUP 32
- push bc
- EDUP
-fr_words_end:
+ ld a,h
+ sub $20
+ ld h,a
+ xor a
+ ld (hl),a
+ ld a,h
+ sub $20
+ ld h,a
+ xor a
+ ld (hl),a
+ ld a,h
+ add a,$40
+ ld h,a
+ dec l
+ dec c
+ jp nz,fec_row
+ pop hl
  inc h
- ld a,(fr_columns_left)
- dec a
- ld (fr_columns_left),a
- jp nz,fr_column
- ld a,(ClearPass)
- inc a
- ld (ClearPass),a
- cp 2
- jp c,fr_pass
-fr_restore:
- ld sp,0
- ei
+ dec b
+ jp nz,fec_col
  ret
-fr_columns_left: db 0
 
  INCLUDE "./routines/direct_sprites.asm"
  INCLUDE "./routines/color_sprites.asm"
@@ -248,6 +201,8 @@ fr_columns_left: db 0
 ; Persistent life icons use the original sprite mask in E/F. Do not register
 ; their footprints in the moving-object erase list.
 plane_static_object:
+ ld a,1
+ ld (SUStatic),a
  ld hl,(plane_slot)
  push hl
  ld hl,plane_static_slot
@@ -265,6 +220,8 @@ plane_static_object:
  ld (pd_height_compare+1),a
  pop hl
  ld (plane_slot),hl
+ xor a
+ ld (SUStatic),a
  ret
 plane_static_slot: ds 4,0
 

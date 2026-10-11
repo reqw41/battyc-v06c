@@ -1,3 +1,5 @@
+> Историческое описание четырёхплоскостной базы. Текущая экспериментальная ветка описана в [THREE-PLANE.md](THREE-PLANE.md).
+
 <!-- heavy-plan-current -->
 Текущая композитная сборка: SHA256 `8b95fcdf5465959f965862b4f13d310ac3feb6d78db67f757fc6e86c4b5b8e28`. Актуальная память, SP-пары и замеры — в `HEAVY-FRAME-PLAN.txt` / `batty-heavy-frame-budget.txt`. Разделы ниже описывают предыдущие сборки.
 <!-- /heavy-plan-current -->

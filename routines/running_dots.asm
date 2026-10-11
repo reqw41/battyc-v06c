@@ -122,16 +122,21 @@ running_dot_frame_2up:
 ; E+F is black; clearing E alone exposed the colored background.
 ; Preserve B (animation phase). Each point rebuilds D before writing.
 running_dot_black:
-  ld a,(hl)
-  cpl
-  ld c,a
-  ld a,(de)
-  and c
-  ld c,a
-  ld a,d
-  sub $60
-  ld d,a
-  ld a,(de)
-  or c
-  ld (de),a
-  ret
+ ld a,(hl)
+ ld c,a
+ ld a,(de)
+ and c
+ ld (de),a
+ ld a,d
+ sub $20
+ ld d,a
+ ld a,(de)
+ and c
+ ld (de),a
+ ld a,d
+ sub $20
+ ld d,a
+ ld a,(de)
+ and c
+ ld (de),a
+ ret

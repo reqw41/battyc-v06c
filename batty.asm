@@ -186,25 +186,7 @@ spr_level_textures:
 ; Used by the routine at game_restart.
 ; Вывод окна с номером уровня и игрока перед началом раунда
 show_window_round_number:
-; Рисуем чёрное окно
-	LD HL,$A458		; Координаты на экране
-	CALL screen_addr_calc
-	LD A,H
-	ADD A,$20		; temporary round window belongs to sprite plane
-	LD H,A
-	LD C,$20		; Высота окна а пикселях
-next_win_line:
-	LD B,$0A		; Ширина окна в знакоместах
-	PUSH HL
-next_win_column:
-	LD (HL),$00
-	INC H			; next column
-	dec B
-	jp nz,next_win_column
-	POP HL
-	inc L   	; поправил направление для Вектора
-	DEC C
-	JP NZ,next_win_line
+ call SUWindowSave
 
 ; Вписываем двузначный номер раунда в сообщение в 10-тичной системе
 	LD A,(round_number_1up)
@@ -747,19 +729,7 @@ print_obj_from_buf_to_scr:
 ; Копирует прямоугольный участок из буфера на экран c цветом
 ; Вход: HL - Координаты; BC - Размеры окна
 win_bg_recovery:
- ld a,(OverlayActive)
- or a
- ret z
- xor a
- ld (OverlayActive),a
- push bc
- call screen_addr_calc
- pop bc
- ld a,h
- add a,$20
- ld d,a
- ld e,l
- jp plane_erase_dual
+ jp SUWindowRestore
 
 ; Сюда сохраняется текущий бонус
 current_bonus:
@@ -7101,13 +7071,12 @@ SetPaletteLevel:
  add hl,de
  ld a,(hl)
  ld (PaletteGame+2),a
+ ld (PaletteGame+10),a
  ld hl,LevelEnemyColors
  add hl,de
  ld a,(hl)
- ld (PaletteGame+8),a
- ld (PaletteGame+10),a
- ld (PaletteGame+12),a
- ld (PaletteGame+14),a
+ ld (PaletteGame+1),a
+ ld (PaletteGame+9),a
  jp SetPaletteGame
  INCLUDE "routines/sparks_render.asm"
 DrawLifeIcons:
@@ -7137,6 +7106,9 @@ LBE8B_9:
 	RET
 
  INCLUDE "routines/initial_objects.asm"
+
+ INCLUDE "routines/three_plane_restore.asm"
+ INCLUDE "routines/three_plane_data.asm"
 
 BATTYCODE_END:
 	ASSERT BATTYCODE_END <= $6b00
@@ -7181,14 +7153,9 @@ table_shifts EQU $7200
  INCLUDE "routines/sparks_separate.asm"
  ASSERT $ <= $6b60
  DS $6b60-$,0
-SpriteCacheMeta: ds 32,0
+SpriteCacheMeta EQU $8fc0
+ ds 32,0
 RCBoundary:
- ld a,(RCActive)
- or a
- ret nz
- ld hl,RCPrevious
- call rcb_erase
- ld hl,RCPrevious+4
 ClearShapeFlags:
  ret
 LevelThemeColors: db $3f,$38,$f8,$ff
@@ -7208,15 +7175,7 @@ SpriteBonusCache7 EQU $6c80
  INCLUDE "routines/sparks_local.asm"
 SpriteRotateTable: dw scr0,scr1,scr2,scr3,scr4,scr5,scr6,scr7
 RCReset:
- ld hl,RCCurrent
- ld b,28
- xor a
-rcr_zero:
- ld (hl),a
- inc hl
- dec b
- jp nz,rcr_zero
- ret
+ jp SUReset
 
  ASSERT $ <= $6e00
 

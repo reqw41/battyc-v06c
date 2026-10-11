@@ -1,7 +1,8 @@
 ; Restore empty cells around a destroyed brick from immutable level texture.
 ; Neighbor outlines are derived from the level map, never from video pixels.
-; A/C only; moving objects in E/F and intact brick animation are untouched.
+; Retire save-under first, then restore A/C/E; preserve intact brick animation.
 NativeRestoreBrick:
+ call SUInvalidate
  ld hl,(LB28F+1)
  ld a,l
  sub 16
@@ -258,6 +259,18 @@ NativeRestoreKeepBorder:
 NativeRestoreStorePixel:
  ld c,a
 NativeRestoreClipPixel:
+ ld a,d
+ add $20
+ ld d,a
+ ld a,(NativeRestoreClip+1)
+ cpl
+ ld h,a
+ ld a,(de)
+ and h
+ ld (de),a
+ ld a,d
+ sub $20
+ ld d,a
  ld a,c
 NativeRestoreClip:
  and $ff

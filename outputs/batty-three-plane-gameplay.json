@@ -1,0 +1,88 @@
+{
+  "frames": 12000,
+  "ticks": 4533,
+  "naturalBonuses": [
+    {
+      "frame": 452,
+      "id": 0
+    },
+    {
+      "frame": 760,
+      "id": 9
+    },
+    {
+      "frame": 1161,
+      "id": 1
+    },
+    {
+      "frame": 1704,
+      "id": 4
+    },
+    {
+      "frame": 2144,
+      "id": 6
+    },
+    {
+      "frame": 3498,
+      "id": 2
+    },
+    {
+      "frame": 4193,
+      "id": 8
+    },
+    {
+      "frame": 5171,
+      "id": 4
+    },
+    {
+      "frame": 5436,
+      "id": 8
+    },
+    {
+      "frame": 5937,
+      "id": 6
+    }
+  ],
+  "pickedBonuses": [
+    {
+      "frame": 613,
+      "id": 0
+    },
+    {
+      "frame": 937,
+      "id": 9
+    },
+    {
+      "frame": 1317,
+      "id": 1
+    },
+    {
+      "frame": 1848,
+      "id": 4
+    },
+    {
+      "frame": 3633,
+      "id": 2
+    },
+    {
+      "frame": 4317,
+      "id": 8
+    },
+    {
+      "frame": 5355,
+      "id": 4
+    },
+    {
+      "frame": 5586,
+      "id": 8
+    }
+  ],
+  "enemySeen": true,
+  "bombsSeen": 11,
+  "unexpectedResets": 0,
+  "physicalRAM": 65536,
+  "naturalSmashObserved": false,
+  "requiredNaturalSmash": false,
+  "passed": true,
+  "romSHA256": "94c108c4c08c25d16e8e74e974b295e4dbd570d528d695c6cbaad0cbd99d03a4"
+}

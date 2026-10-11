@@ -1,0 +1,38 @@
+{
+  "romSHA256": "94c108c4c08c25d16e8e74e974b295e4dbd570d528d695c6cbaad0cbd99d03a4",
+  "physicalRAM": 65536,
+  "individualCases": 370,
+  "saveUnderRetiredBeforeWrite": true,
+  "sequentialCases": 370,
+  "compared": "All three A/C/E planes across all 30 playfield columns, Y=29..135, against a fresh draw of the same level and magnet state",
+  "reports": [
+    {
+      "level": 1,
+      "texture": 0,
+      "individualBricks": 78,
+      "sequentialBricks": 78
+    },
+    {
+      "level": 2,
+      "texture": 1,
+      "individualBricks": 92,
+      "sequentialBricks": 92
+    },
+    {
+      "level": 3,
+      "texture": 2,
+      "individualBricks": 72,
+      "sequentialBricks": 72
+    },
+    {
+      "level": 4,
+      "texture": 3,
+      "individualBricks": 128,
+      "sequentialBricks": 128
+    }
+  ],
+  "destructionMeanMs": 22.152693693693664,
+  "destructionMinMs": 13.057333333333334,
+  "destructionMaxMs": 45.288,
+  "passed": true
+}
