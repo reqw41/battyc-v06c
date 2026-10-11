@@ -167,7 +167,7 @@ pd_unclipped:
  ld l,a
  call screen_addr_calc
  ld a,h
- add a,$20
+ sub $40
  ld h,a
  ld (plane_dst),hl
  ex de,hl
@@ -203,7 +203,7 @@ direct_bitmap: db 0
 ; and drawing it last could put its entire lifetime behind the raster beam.
 ; Temporarily remove it from the ordinary loop to keep one draw/erase slot.
 DrawMovingObjects:
- jp CGRender
+ jp MonoRender
 DrawMovingObjectsLegacy:
  ld hl,object_bonus
  ld a,(hl)

@@ -28,83 +28,19 @@ UiPixelWrite:
  or a
  jp nz,UiPixelColor
  pop af
- push af
  push hl
  push bc
- push de
  ld c,a
- ; White = E1/C0, independently of A. Keep neighbouring glyphs.
- ld d,(hl)
- ld a,c
- cpl
- and d
- ld (hl),a
  ld a,h
- add a,$20
+ sub $40
  ld h,a
  ld a,(hl)
  or c
  ld (hl),a
- ld a,c
- or a
- rra
- ld b,a
- ld a,c
- add a,a
- or b
- or c
- ld b,a
- call UiOutlineByte
- ld b,c
- inc l
- call UiOutlineByte
- dec l
- dec l
- call UiOutlineByte
- inc l
- ld a,c
- and $80
- rlca
- ld b,a
- dec h
- call UiOutlineByte
- inc h
- inc h
- ld a,c
- and 1
- rrca
- ld b,a
- call UiOutlineByte
  ld a,1
  ld (OverlayActive),a
- pop de
  pop bc
  pop hl
- pop af
- ret
-; HL E-plane. B outline coverage; exclude existing white pixels.
-UiOutlineByte:
- ; Exclude white strokes E & ~C; black E0/C0 ignores untouched A.
- ld d,(hl)
- ld a,h
- sub $20
- ld h,a
- ld a,(hl)
- cpl
- and d
- cpl
- and b
- cpl
- ld d,a
- ld a,(hl)
- and d
- ld (hl),a
- ld a,h
- add a,$20
- ld h,a
- ld a,(hl)
- and d
- ld (hl),a
  ret
 UiPixelColor:
  pop af

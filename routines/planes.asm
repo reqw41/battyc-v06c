@@ -1,6 +1,4 @@
-; Three shared video planes A/C/E; 8000 is hidden code/save-under/cache RAM.
-; No shadow bitmap and no expanded RAM.
-; A selects the darker background shade; dynamic sprites leave it untouched.
+; A/C/E = eight background colours; 8000 = white overlay.
 planes_reset:
  xor a
  ld (BorderColor),a
@@ -9,76 +7,37 @@ planes_reset:
  ld (pr_restore+1),hl
  ld de,0
  di
- xor a
  out ($10),a
- ld hl,$c000
- ld sp,hl
- ld b,0
- ld c,4
-pr_a:
- DUP 4
- push de
- EDUP
- dec b
- jp nz,pr_a
- dec c
- jp nz,pr_a
- ld hl,$e000
- ld sp,hl
- ld b,0
- ld c,4
-pr_c:
- DUP 4
- push de
- EDUP
- dec b
- jp nz,pr_c
- dec c
- jp nz,pr_c
  ld hl,0
  ld sp,hl
  ld b,0
- ld c,4
-pr_e:
+ ld c,16
+pr_fill:
  DUP 4
  push de
  EDUP
  dec b
- jp nz,pr_e
+ jp nz,pr_fill
  dec c
- jp nz,pr_e
+ jp nz,pr_fill
 pr_restore:
  ld sp,0
  ei
-pr_slots:
  ld hl,NativeAttrs
  ld bc,NativeAttrBytes
- ld a,$d0
 pr_attrs:
+ ld a,$d0
  ld (hl),a
  inc hl
  dec bc
  ld a,b
  or c
- ld a,$d0
  jp nz,pr_attrs
  xor a
  ld (OverlayActive),a
- ld hl,plane_old
- ld b,44
- xor a
-pr_sl:
- ld (hl),a
- inc hl
- dec b
- jp nz,pr_sl
- call RCReset
- jp SpriteCacheReset
-
-; HL shadow source, DE C-plane destination, A bitmap. Preserve pointers/counts.
+ jp MonoReset
 background_write:
  call background_select
- ; caller has stored bitmap in background_pixel
  jp background_write_selected
 background_select:
  push hl
@@ -98,10 +57,8 @@ background_select:
  rrca
  rrca
  and $0f
- ld l,a
- ld h,0
- ld bc,background_colors
- add hl,bc
+ ld hl,background_colors
+ call hl_add_a
  ld a,(hl)
  ld (background_color),a
  pop de
@@ -109,85 +66,91 @@ background_select:
  pop hl
  ret
 background_write_selected:
- call SUInvalidate
- xor a
- out ($10),a
+ push bc
+ push de
+ ld a,(background_pixel)
+ ld c,a
+ ld a,e
+ cp $39
+ jp nc,bw_field
+ ld c,0 ; solid E-only paper under the paddle, logical Y >=168
+bw_field:
  ld a,(background_color)
- and 1
+ and 2
  ld a,0
  jp z,bw_c
- ld a,(background_pixel)
+ ld a,c
 bw_c:
  ld (de),a
  ld a,d
  sub $20
  ld d,a
  ld a,(background_color)
- and 2
+ and 4
  ld a,0
  jp z,bw_a
- ld a,(background_pixel)
+ ld a,c
 bw_a:
  ld (de),a
  ld a,d
  add a,$40
  ld d,a
- xor a
+ ; Paper index 1. Odd ink sets E too; even ink clears it.
+ ld a,(background_color)
+ and 1
+ ld a,$ff
+ jp nz,bw_e
+ ld a,c
+ cpl
+bw_e:
  ld (de),a
- ld a,d
- sub $20
- ld d,a
+ pop de
+ pop bc
  ret
 background_color: db 0
 background_pixel: db 0
-background_colors: db 3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,3
-
-; Defer old-footprint removal: CGRender composes final pixels in local groups.
-; Compatibility plane_object calls consume the pending flag through CGEnsureOrdinary.
+background_colors: db 6,4,5,6,7,4,5,6,7,4,5,6,7,2,6,7
 planes_begin:
- ld hl,CGPending
- ld (hl),1
  ld hl,plane_old
  ld (plane_slot),hl
  ret
 FastErasePlain:
- ; Only persistent HUD clearing uses this compatibility entry.
- call SUInvalidate
  ld hl,(ClearDst)
+ ld a,h
+ cp $e0
+ jp c,fep_ready
+ sub $60
+ ld h,a
+fep_ready:
  ld a,(ClearColumns)
  ld b,a
-fec_col:
+fep_col:
  push hl
  ld a,(ClearRows)
  ld c,a
-fec_row:
+fep_row:
  xor a
  ld (hl),a
- ld a,h
- sub $20
- ld h,a
- xor a
- ld (hl),a
- ld a,h
- add a,$20
- ld h,a
  dec l
  dec c
- jp nz,fec_row
+ jp nz,fep_row
  pop hl
  inc h
  dec b
- jp nz,fec_col
+ jp nz,fep_col
  ret
-
- INCLUDE "./routines/direct_sprites.asm"
- INCLUDE "./routines/color_sprites.asm"
-
-; Persistent life icons use the original sprite mask in C/E. Do not register
-; their footprints in the moving-object erase list.
+plane_erase_dual:
+ ld a,c
+ or a
+ ret z
+ ld (ClearRows),a
+ ld a,b
+ ld (ClearColumns),a
+ ex de,hl
+ ld (ClearDst),hl
+ jp FastErasePlain
+ INCLUDE "routines/direct_sprites.asm"
 plane_static_object:
- ld a,1
- ld (SUStatic),a
  ld hl,(plane_slot)
  push hl
  ld hl,plane_static_slot
@@ -205,12 +168,37 @@ plane_static_object:
  ld (pd_height_compare+1),a
  pop hl
  ld (plane_slot),hl
- xor a
- ld (SUStatic),a
  ret
 plane_static_slot: ds 4,0
+plane_object:
+ xor a
+ ld (color_valid),a
+ call plane_object_fast
+ ld a,(color_valid)
+ or a
+ ret z
+ ld a,11
+ ld (MonoOwner),a
+ call MonoCachePrepare
+ ld hl,(direct_source)
+ ld (MonoDrawSource),hl
+ ld hl,(plane_dst)
+ ld (MonoDrawVideo),hl
+ ld a,(direct_columns)
+ ld (MonoDrawCols),a
+ ld a,(direct_rows)
+ ld (MonoDrawRows),a
+ xor a
+ ld (MonoDrawBat),a
+ jp MonoDraw
+color_valid: db 0
+color_height: db 0
+color_enemy: db 0
+WarmStart:
+ ld sp,stack
+ jp game_start
+ INCLUDE "routines/mono_cache.asm"
 
-; Input HL=C-plane address, A=pixel. Keeps the animation source/counts.
 plane_screen_write:
  ld (background_pixel),a
  push hl

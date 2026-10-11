@@ -1,0 +1,191 @@
+{
+  "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+  "romBytes": 32512,
+  "branch": "experimental/three-plus-one-mono-js",
+  "cpu": "i8080 3 MHz; 64KB",
+  "budget25Hz": 119808,
+  "spritePlanes": 1,
+  "backgroundPlanes": 3,
+  "batOutlinePlanes": 1,
+  "codeInVideo": false,
+  "rows": [
+    {
+      "scene": "one_ball",
+      "beforeTicks": 66652,
+      "afterTicks": 65093,
+      "afterMs": 21.697748148148143,
+      "afterHz": 46.087731923708766,
+      "changePercent": -2.339168808237524,
+      "peakTicks": 80780
+    },
+    {
+      "scene": "ball_bonus",
+      "beforeTicks": 99053,
+      "afterTicks": 96740,
+      "afterMs": 32.24654814814815,
+      "afterHz": 31.011071182123654,
+      "changePercent": -2.3356258547599373,
+      "peakTicks": 103320
+    },
+    {
+      "scene": "ball_ufo",
+      "beforeTicks": 104868,
+      "afterTicks": 105758,
+      "afterMs": 35.2525037037037,
+      "afterHz": 28.366779517420145,
+      "changePercent": 0.8485617002087498,
+      "peakTicks": 121272
+    },
+    {
+      "scene": "ball_bird",
+      "beforeTicks": 112464,
+      "afterTicks": 101098,
+      "afterMs": 33.69928888888889,
+      "afterHz": 29.674216666622705,
+      "changePercent": -10.106250548324901,
+      "peakTicks": 115020
+    },
+    {
+      "scene": "three_balls",
+      "beforeTicks": 105781,
+      "afterTicks": 92944,
+      "afterMs": 30.981244444444442,
+      "afterHz": 32.277593038368735,
+      "changePercent": -12.135830956658555,
+      "peakTicks": 98960
+    },
+    {
+      "scene": "three_balls_bonus_enemy",
+      "beforeTicks": 160880,
+      "afterTicks": 169186,
+      "afterMs": 56.395437037037034,
+      "afterHz": 17.731931030931843,
+      "changePercent": 5.162989577882993,
+      "peakTicks": 180840
+    }
+  ],
+  "rasters": [
+    {
+      "name": "enemy",
+      "samples": 1536,
+      "blank": 0,
+      "partial": 0
+    },
+    {
+      "name": "overlap",
+      "samples": 1536,
+      "blank": 0,
+      "partial": 0
+    },
+    {
+      "name": "bonus",
+      "samples": 768,
+      "blank": 0,
+      "partial": 0
+    }
+  ],
+  "native": {
+    "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+    "strict64KB": true,
+    "scenes": 1826,
+    "planeComparisons": 7304,
+    "maxStack": 22,
+    "bgWrites": 150012,
+    "meanRenderTicks": 176186.59583789704,
+    "peakRenderTicks": 1278160,
+    "roundWindowRestored": true,
+    "passed": true
+  },
+  "natural": {
+    "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+    "frames": 9000,
+    "ticks": 5605,
+    "naturalBonuses": [
+      {
+        "frame": 585,
+        "id": 3
+      },
+      {
+        "frame": 994,
+        "id": 4
+      },
+      {
+        "frame": 1744,
+        "id": 6
+      },
+      {
+        "frame": 3016,
+        "id": 2
+      },
+      {
+        "frame": 4168,
+        "id": 9
+      },
+      {
+        "frame": 4663,
+        "id": 0
+      },
+      {
+        "frame": 5466,
+        "id": 3
+      },
+      {
+        "frame": 6930,
+        "id": 8
+      },
+      {
+        "frame": 7448,
+        "id": 1
+      },
+      {
+        "frame": 7849,
+        "id": 7
+      }
+    ],
+    "pickedBonuses": [
+      {
+        "frame": 707,
+        "id": 3
+      },
+      {
+        "frame": 1117,
+        "id": 4
+      },
+      {
+        "frame": 3133,
+        "id": 2
+      },
+      {
+        "frame": 4293,
+        "id": 9
+      },
+      {
+        "frame": 4770,
+        "id": 0
+      },
+      {
+        "frame": 5574,
+        "id": 3
+      },
+      {
+        "frame": 7101,
+        "id": 8
+      },
+      {
+        "frame": 7570,
+        "id": 1
+      },
+      {
+        "frame": 8026,
+        "id": 7
+      }
+    ],
+    "enemySeen": true,
+    "bombsSeen": 3,
+    "unexpectedResets": 0,
+    "physicalRAM": 65536,
+    "naturalSmashObserved": true,
+    "requiredNaturalSmash": true,
+    "passed": true
+  }
+}

@@ -15,36 +15,8 @@
 	CALL spr_shift_gen	; Генерация сдвинутых спрайтов шарика и всех видов кареток
  ENDIF
 
-; Инвертируется некоторая графика
-	LD HL,gfx_bat
-gfx_inverse_1:
-	ld E,(HL)
-	inc HL
-	ld D,(HL)
-	inc HL
-	ld A,E
-	or D
-	JP Z,L6800_6	; Прекращаем, если вместо адреса следующего спрайта нули
-	push HL	; save
-	ex DE,HL
-	LD C,(HL)
-	INC HL
-	LD E,(HL)
-	INC HL
-gfx_inverse_2:
-	LD B,C
-gfx_inverse_3:
-	LD A,(HL)
-	INC HL
-	XOR (HL)
-	LD (HL),A
-	INC HL
-	dec B
-	jp nz,gfx_inverse_3
-	DEC E
-	JP NZ,gfx_inverse_2
-	pop HL	; restore
-	JP gfx_inverse_1
+; Native masks and legacy static XOR pairs are converted offline.
+ jp L6800_6
 
 L6800_6:
 	LD A,$0C		; Устанавливается высота спрайта ракеты в 12 пикселей (отсекается пламя)

@@ -21,7 +21,7 @@ running_dot:
   ld A,(HL)		; ширина объекта
   ld (running_dot_batw),A
 
-  LD DE,$e02d ; $F060 - адрес строки в буфере, где бегают точки по каретке
+  LD DE,$802d ; $F060 - адрес строки в буфере, где бегают точки по каретке
   LD A,(running_dot_frame_1up)
   AND $7F
   LD B,A
@@ -63,7 +63,7 @@ LB8E6_0:
   RRA
   RRA
   AND $1F
-  add a,$e0	; Вычисление положения второй точки
+  add a,$80	; Вычисление положения второй точки
   ld d,a
   LD A,C
   AND $07
@@ -127,7 +127,7 @@ running_dot_black:
  and c
  ld (de),a
  ld a,d
- sub $20
+ add a,$60
  ld d,a
  ld a,(de)
  and c

@@ -1,5 +1,4 @@
-; Same reverse-order save-under renderer also handles crossing sparks.
 SparksRender:
  call planes_begin
- jp DrawMovingObjects
+ jp MonoRender
 SparksUnsafe: db 0

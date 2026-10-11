@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('fs'),assert=require('assert'),{make}=require('./vector_harness');
+const reports=[];
+for(const [name,x,mode,x2] of [['centre',116,0,116],['left',8,0,8],['right',220,0,220],['double-wide',8,2,220],['double-close',96,2,128]]){
+ const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const w=(a,v)=>E.memory.write(a,v),read=(a,n)=>Buffer.from(Array.from({length:n},(_,i)=>E.rd(a+i))),word=a=>E.rd(a)+256*E.rd(a+1),inst=E.cpu.instruction.bind(E.cpu);let ticks=0,death=false,done=false,steps=0,expect,bg,cycles=0,start=0,ret=0,durations=[];
+ function oracle(){const out=Buffer.alloc(8192);for(let i=0;i<11;i++){const o=E.L.object_ball_1+i*22,k=E.rd(o);if(k!==7)continue;const x=E.rd(o+2),y=E.rd(o+4),s=E.rd(o+21)&128?0:x&7;if(y>=192)continue;const a=word(E.L.anim_spark+2*E.rd(o+1)),width=E.rd(a),height=E.rd(a+1);for(let c=0;c<width;c++)for(let r=0;r<height&&y+r<192;r++){const v=E.rd(a+3+2*(c*height+r)),at=(x>>3)+c;if(at<32)out[at*256+224-y-r]|=v>>>s;if(s&&at+1<32)out[(at+1)*256+224-y-r]|=(v<<(8-s))&255;}}return out;}
+ E.cpu.instruction=function(){const pc=this.pc;if(this.sp>=0x6900&&this.sp<=E.L.stack)assert(this.sp>=E.L.StackFloor);if(start&&pc===ret){durations.push(cycles-start);start=0;}if(pc===E.L.LB9E8_2&&++ticks===40)w(E.L.balls_quantity,0);if(pc===E.L.LBC10_0){w(E.L.object_bat_1+2,x);w(E.L.object_bat_2+2,x2);w(E.L.game_mode,mode);}if(pc===E.L.SparksRender){death=true;expect=oracle();start=cycles;ret=word(this.sp);}
+ if(death&&pc===E.L.pause_game){for(let c=0;c<32;c++)for(let y=0;y<192;y++){const at=c*256+224-y;assert.equal(E.rd(0x8000+at),expect[at],name+' spark '+steps+' '+c+','+y);}const field=read(0xa000,24576);if(!bg)bg=field;else assert(field.equals(bg),'sparks modified background');steps++;}if(death&&pc===E.L.live_dec){done=true;throw 'done';}inst();cycles+=this.vcycles;};
+ try{for(let f=0;f<2500;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='done')throw e;}assert(done&&steps>10,name);reports.push({name,steps,meanRenderTicks:Math.round(durations.reduce((a,b)=>a+b,0)/durations.length),maxRenderTicks:Math.max(...durations),passed:true});
+}
+fs.writeFileSync('outputs/batty-three-plus-one-sparks.json',JSON.stringify({reports,passed:true},null,2));console.log(reports);

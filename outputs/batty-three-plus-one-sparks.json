@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "name": "centre",
+      "steps": 50,
+      "meanRenderTicks": 134412,
+      "maxRenderTicks": 269860,
+      "passed": true
+    },
+    {
+      "name": "left",
+      "steps": 50,
+      "meanRenderTicks": 136595,
+      "maxRenderTicks": 258676,
+      "passed": true
+    },
+    {
+      "name": "right",
+      "steps": 50,
+      "meanRenderTicks": 139681,
+      "maxRenderTicks": 267444,
+      "passed": true
+    },
+    {
+      "name": "double-wide",
+      "steps": 50,
+      "meanRenderTicks": 128107,
+      "maxRenderTicks": 197632,
+      "passed": true
+    },
+    {
+      "name": "double-close",
+      "steps": 50,
+      "meanRenderTicks": 130196,
+      "maxRenderTicks": 204904,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

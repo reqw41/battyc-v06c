@@ -189,6 +189,7 @@ NativeRecolorCell:
  ld hl,background_colors
  add hl,bc
  ld a,(hl)
+ ld (background_color),a
  ld d,0
  ld e,0
  rra
@@ -215,13 +216,6 @@ NativeRecolorMasks:
  ld h,a
  ld b,8
 NativeRecolorRow:
- push hl
- ld a,h
- add $20
- ld h,a
- xor a
- ld (hl),a
- pop hl
  ld a,(hl)
  ld c,a
  ld a,h
@@ -238,6 +232,19 @@ NativeRecolorRow:
  ld a,c
  and d
  ld (hl),a
+ push hl
+ ld a,h
+ add a,$20
+ ld h,a
+ ld a,(background_color)
+ and 1
+ ld a,$ff
+ jp nz,MonoRecolorE
+ ld a,c
+ cpl
+MonoRecolorE:
+ ld (hl),a
+ pop hl
  dec l
  dec b
  jp nz,NativeRecolorRow
@@ -266,6 +273,13 @@ NativeStaticScoreCheck:
  cp e
  jp z,plane_static_object
 NativeStaticBackground:
+ ld hl,(IXobj)
+ ld a,(hl)
+ or a
+ ret z
+ ret m
+ cp 3
+ jp nz,plane_static_object
  call SUInvalidate
  ld hl,(IXobj)
  ld a,(hl)
@@ -438,14 +452,9 @@ NativeDigitRow:
  ld hl,(NativeDest)
  call NativePixelAddress
  ld a,d
- add a,$20
+ sub $40
  ld d,a
  ld a,b
- ld (de),a
- ld a,d
- sub $20
- ld d,a
- xor a
  ld (de),a
  inc l
  ld (NativeDest),hl
@@ -550,12 +559,6 @@ NativeBrickRow:
  jp NativeBrickEdge
 NativeBrickZero:
  push hl
- ld a,h
- add $20
- ld h,a
- xor a
- ld (hl),a
- pop hl
  xor a
  ld (hl),a
  ld a,h
@@ -564,8 +567,11 @@ NativeBrickZero:
  xor a
  ld (hl),a
  ld a,h
- add $20
+ add a,$40
  ld h,a
+ ld a,$ff
+ ld (hl),a
+ pop hl
  ret
 NativeBrickEdge:
  ld b,8
@@ -580,7 +586,14 @@ NativeBrickEdgeRow:
  and c
  ld (hl),a
  ld a,h
- add $20
+ add $40
+ ld h,a
+ ld a,c
+ cpl
+ or (hl)
+ ld (hl),a
+ ld a,h
+ sub $20
  ld h,a
  dec l
  dec b
@@ -615,7 +628,23 @@ NativeTextureData:
 NativeTextureByte:
  push af
  ld a,(de)
+ ld (background_pixel),a
+ ld a,l
+ cp $39
+ ld a,(background_pixel)
+ jp nc,MonoTextureField
+ xor a
+MonoTextureField:
  ld (hl),a
+ push hl
+ ld (background_pixel),a
+ ld a,h
+ add a,$20
+ ld h,a
+ ld a,(background_pixel)
+ cpl
+ ld (hl),a
+ pop hl
  inc de
  inc l
  pop af

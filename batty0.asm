@@ -185,11 +185,11 @@ ColorBoth equ 00000111b    ; Color for both planes - red
 ; Palette colors, game
 PaletteMenu:
  db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
- db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
+ db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
 PaletteGame:
- ; A/C/E common screen; 8000 bit ignored, its 8 KB are ordinary RAM.
- db $00,$ff,$3f,$07,$00,$ff,$36,$07
- db $00,$ff,$3f,$07,$00,$ff,$36,$07
+ ; 8000 is the white sprite override.
+ db $00,$c0,$80,$40,$07,$38,$3f,$f8
+ db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
 
 ;----------------------------------------------------------------------------
 

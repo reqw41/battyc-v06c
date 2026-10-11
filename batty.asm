@@ -63,7 +63,7 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
 
 ; Спрайты с масками
  IFDEF NO_SPRITE_SHADOWS
-  INCLUDE "./gfx/sprites_no_shadows_2.asm"
+  INCLUDE "./gfx/sprites_mono_native_2.asm"
  ELSE
   INCLUDE "./gfx/sprites_with_masks_2.asm"
  ENDIF
@@ -6286,8 +6286,7 @@ LBB97_0:
 	CALL play_sounds_queue
 	CALL WaitVideoFrame
 	CALL planes_begin
-	LD HL,print_obj_from_buf_to_scr
-	CALL call_hl_for_all_obj
+	CALL DrawMovingObjects
 	LD A,(wins_counter)
 	AND A
 	CALL NZ,wins_recovery
@@ -6370,8 +6369,7 @@ LBC10_2:
 	LD (object_rocket),A
 	CALL WaitVideoFrame
 	CALL planes_begin
-	LD HL,print_obj_from_buf_to_scr
-	CALL call_hl_for_all_obj
+	CALL DrawMovingObjects
 	LD A,(wins_counter)
 	AND A
 	CALL NZ,wins_recovery
@@ -6499,7 +6497,7 @@ live_dec:
 
 ; Same player/level: preserve texture, border, brick state and magnets.
 ResumeLife:
-	CALL planes_begin ; retire the final death-particle footprints
+	CALL MonoRemove ; retire the final death-particle footprints
 	CALL all_var_init
 	LD DE,$e018 ; all 32 columns, lives HUD at Y=200, height=6
 	LD BC,$2006
@@ -7095,23 +7093,14 @@ SetPaletteLevel:
  and 3
  ld e,a
  ld d,0
- ld hl,LevelThemeColors
+ ld hl,LevelPaperColors
+ add hl,de
+ ld a,(hl)
+ ld (PaletteGame+1),a
+ ld hl,LevelTextureColors
  add hl,de
  ld a,(hl)
  ld (PaletteGame+2),a
- ld (PaletteGame+10),a
- ld hl,LevelBackgroundShadeColors
- add hl,de
- ld a,(hl)
- ld (PaletteGame+6),a
- ld (PaletteGame+14),a
- ld hl,LevelEnemyColors
- add hl,de
- ld a,(hl)
- ld (PaletteGame+3),a
- ld (PaletteGame+7),a
- ld (PaletteGame+11),a
- ld (PaletteGame+15),a
  jp SetPaletteGame
  INCLUDE "routines/sparks_render.asm"
 DrawLifeIcons:
@@ -7142,10 +7131,10 @@ LBE8B_9:
 
  INCLUDE "routines/initial_objects.asm"
 
- INCLUDE "routines/three_plane_restore.asm"
- INCLUDE "routines/three_plane_data.asm"
 
- INCLUDE "routines/group_compositor_helpers.asm"
+
+
+
 
 BATTYCODE_END:
 	ASSERT BATTYCODE_END <= $6b00
@@ -7187,20 +7176,18 @@ table_shifts EQU $7200
  DS $6b00-$,0
  ENDIF
  ORG $6b00
- INCLUDE "routines/group_compositor_horizontal.asm"
+
  ASSERT $ <= $6b60
  DS $6b60-$,0
-SpriteCacheMeta EQU $8fc0
- ds 32,0
 RCBoundary:
 ClearShapeFlags:
  ret
 LevelThemeColors: db $3f,$38,$f8,$ff
 LevelEnemyColors: db $07,$c7,$3f,$c0
-LevelBackgroundShadeColors: db $36,$30,$b0,$b6
+LevelPaperColors: db $c0,$10,$81,$03
+LevelTextureColors: db $80,$20,$c1,$05
 FastEraseOld:
  jp plane_erase_dual
- ASSERT $ <= $6ba0
 StackFloor EQU $6ba0
 ; Exactly 180 level bytes are copied/swapped; the remaining 76 bytes are code.
  DS $6c00-$,0
@@ -7210,29 +7197,20 @@ SpriteBonusCache7 EQU $6c80
  ASSERT SpriteBonusCache7+128 <= current_level_copy
  DS $6db4-$,0
  ORG $6db4
- INCLUDE "routines/group_compositor_outside_span.asm"
-SpriteRotateTable: dw scr0,scr1,scr2,scr3,scr4,scr5,scr6,scr7
+
+
 RCReset:
- jp SUReset
+ jp MonoReset
 
  ASSERT $ <= $6e00
 
-; Reclaimed table RAM: code followed by six bonus and seven enemy masks.
+ ; Renderer and per-owner phase cache in ordinary RAM below video.
  DS $7200-$,0
  ORG $7200
- INCLUDE "routines/fast_objects.asm"
- ASSERT FastObjectCodeEnd <= $7970
- DS $8c40-$,0
- ORG $8c40
-CGCodeBegin:
- INCLUDE "routines/group_compositor_prepare.asm"
-CGCode1End:
- ASSERT $ <= $8fc0
- DS $98a0-$,0
- ORG $98a0
-CGCode2Begin:
- INCLUDE "routines/group_compositor.asm"
- INCLUDE "routines/group_compositor_isolated.asm"
-CGCodeEnd:
- ASSERT $ <= $a000
+ INCLUDE "routines/mono_renderer.asm"
+MonoCodeEnd:
+ ASSERT $ <= $7a00
+ DS $7a00-$,0
+ ORG $7a00
+ DS $600,0
 end_bin:

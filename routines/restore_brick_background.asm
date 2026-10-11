@@ -267,6 +267,13 @@ NativeRestoreClipPixel:
  ld h,a
  ld a,(de)
  and h
+ ld l,a
+ ld a,(NativeRestoreClip+1)
+ ld h,a
+ ld a,c
+ cpl
+ and h
+ or l
  ld (de),a
  ld a,d
  sub $20
