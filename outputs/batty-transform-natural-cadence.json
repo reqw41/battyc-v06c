@@ -1,0 +1,2014 @@
+{
+  "romSHA256": "c4a115b5fef7d2ce0f3c941fee092faf00c71c9c50c2289d53623bcf0458a1c0",
+  "frames": 9000,
+  "startFrame": 107,
+  "ticks": 7635,
+  "method": "Native autoplay; draw-to-draw synchronized cycles including IRQ entry. Intervals containing a round window, full plane reset, death sparks or actual keyboard pause are excluded. Brick hits, enemies and bonus effects remain. No random-bonus coverage assertion is implied by this timing report.",
+  "samples": 7631,
+  "meanCycles": 63614.27702791246,
+  "p99Cycles": 124412,
+  "maxCycles": 212876,
+  "overBudget": 99,
+  "worst": [
+    {
+      "tick": 4641,
+      "frame": 5811,
+      "phases": {
+        "setup": 60,
+        "render": 123872,
+        "dots": 920,
+        "tail": 212,
+        "logic": 87656,
+        "wait": 156
+      },
+      "routines": {
+        "SpriteCacheBuild": {
+          "calls": 3,
+          "inclusiveCycles": 49536
+        },
+        "MonoDrawPrepared": {
+          "calls": 3,
+          "inclusiveCycles": 10036
+        },
+        "MonoSelectCandidates": {
+          "calls": 3,
+          "inclusiveCycles": 9096
+        },
+        "MonoComposeColumn": {
+          "calls": 12,
+          "inclusiveCycles": 41888
+        },
+        "random_generate": {
+          "calls": 2,
+          "inclusiveCycles": 464
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 77152
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1296
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 6224
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1280
+        }
+      },
+      "objects": [
+        [
+          2,
+          4
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15552,
+      "cycles": 212876
+    },
+    {
+      "tick": 4869,
+      "frame": 6112,
+      "phases": {
+        "setup": 60,
+        "render": 46788,
+        "dots": 940,
+        "tail": 212,
+        "logic": 144268,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 4,
+          "inclusiveCycles": 9132
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 139960
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 16320,
+      "cycles": 192424
+    },
+    {
+      "tick": 6245,
+      "frame": 7525,
+      "phases": {
+        "setup": 60,
+        "render": 28928,
+        "dots": 940,
+        "tail": 212,
+        "logic": 153568,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 4840
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 3,
+          "inclusiveCycles": 696
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 131152
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 18640
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          7
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 183864
+    },
+    {
+      "tick": 3581,
+      "frame": 4698,
+      "phases": {
+        "setup": 60,
+        "render": 27388,
+        "dots": 920,
+        "tail": 212,
+        "logic": 105272,
+        "wait": 45860
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 4400
+        },
+        "random_generate": {
+          "calls": 4,
+          "inclusiveCycles": 928
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98420
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 3184
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 179712
+    },
+    {
+      "tick": 4042,
+      "frame": 5164,
+      "phases": {
+        "setup": 60,
+        "render": 27828,
+        "dots": 956,
+        "tail": 212,
+        "logic": 104912,
+        "wait": 45744
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 4840
+        },
+        "random_generate": {
+          "calls": 2,
+          "inclusiveCycles": 464
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 97748
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 3496
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          7
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 179712
+    },
+    {
+      "tick": 4415,
+      "frame": 5551,
+      "phases": {
+        "setup": 60,
+        "render": 35928,
+        "dots": 920,
+        "tail": 212,
+        "logic": 107228,
+        "wait": 35364
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 3,
+          "inclusiveCycles": 7476
+        },
+        "random_generate": {
+          "calls": 3,
+          "inclusiveCycles": 696
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98084
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 5476
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          4
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15552,
+      "cycles": 179712
+    },
+    {
+      "tick": 5113,
+      "frame": 6380,
+      "phases": {
+        "setup": 60,
+        "render": 29980,
+        "dots": 920,
+        "tail": 212,
+        "logic": 106540,
+        "wait": 42000
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 5080
+        },
+        "random_generate": {
+          "calls": 3,
+          "inclusiveCycles": 696
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98084
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 4788
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 179712
+    },
+    {
+      "tick": 5622,
+      "frame": 6893,
+      "phases": {
+        "setup": 60,
+        "render": 30836,
+        "dots": 956,
+        "tail": 212,
+        "logic": 107768,
+        "wait": 39880
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 4840
+        },
+        "random_generate": {
+          "calls": 3,
+          "inclusiveCycles": 696
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98084
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 6016
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          4
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 179712
+    },
+    {
+      "tick": 6131,
+      "frame": 7409,
+      "phases": {
+        "setup": 60,
+        "render": 27828,
+        "dots": 940,
+        "tail": 212,
+        "logic": 104936,
+        "wait": 45736
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 4840
+        },
+        "random_generate": {
+          "calls": 3,
+          "inclusiveCycles": 696
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98084
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 3184
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          4
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 179712
+    },
+    {
+      "tick": 6652,
+      "frame": 7951,
+      "phases": {
+        "setup": 60,
+        "render": 29640,
+        "dots": 920,
+        "tail": 212,
+        "logic": 108648,
+        "wait": 40232
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 5520
+        },
+        "random_generate": {
+          "calls": 5,
+          "inclusiveCycles": 1160
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98756
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 6224
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          6
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 179712
+    },
+    {
+      "tick": 7158,
+      "frame": 8475,
+      "phases": {
+        "setup": 60,
+        "render": 40484,
+        "dots": 956,
+        "tail": 212,
+        "logic": 107808,
+        "wait": 30192
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 3,
+          "inclusiveCycles": 8436
+        },
+        "random_generate": {
+          "calls": 4,
+          "inclusiveCycles": 928
+        },
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 41160
+        },
+        "print_one_magnet": {
+          "calls": 1,
+          "inclusiveCycles": 98420
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1120
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 5600
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          6
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15552,
+      "cycles": 179712
+    },
+    {
+      "tick": 6291,
+      "frame": 7580,
+      "phases": {
+        "setup": 60,
+        "render": 37872,
+        "dots": 940,
+        "tail": 212,
+        "logic": 139536,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 3,
+          "inclusiveCycles": 8016
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 135228
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          7
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15552,
+      "cycles": 178776
+    },
+    {
+      "tick": 7061,
+      "frame": 8375,
+      "phases": {
+        "setup": 60,
+        "render": 29196,
+        "dots": 940,
+        "tail": 212,
+        "logic": 131900,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 5080
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1120
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 127472
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          4
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 162464
+    },
+    {
+      "tick": 5647,
+      "frame": 6920,
+      "phases": {
+        "setup": 60,
+        "render": 28956,
+        "dots": 940,
+        "tail": 212,
+        "logic": 127236,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 4840
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 122928
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          7
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 157560
+    },
+    {
+      "tick": 1990,
+      "frame": 2384,
+      "phases": {
+        "setup": 60,
+        "render": 116628,
+        "dots": 940,
+        "tail": 212,
+        "logic": 39260,
+        "wait": 156
+      },
+      "routines": {
+        "SpriteCacheBuild": {
+          "calls": 1,
+          "inclusiveCycles": 8788
+        },
+        "MonoDrawPrepared": {
+          "calls": 5,
+          "inclusiveCycles": 22452
+        },
+        "MonoSelectCandidates": {
+          "calls": 5,
+          "inclusiveCycles": 15408
+        },
+        "MonoComposeColumn": {
+          "calls": 13,
+          "inclusiveCycles": 36152
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 17624
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 18508
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 964
+        }
+      },
+      "objects": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 46400,
+      "cycles": 157256
+    },
+    {
+      "tick": 4769,
+      "frame": 5973,
+      "phases": {
+        "setup": 60,
+        "render": 70972,
+        "dots": 940,
+        "tail": 212,
+        "logic": 84708,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 5,
+          "inclusiveCycles": 17132
+        },
+        "MonoSelectCandidates": {
+          "calls": 2,
+          "inclusiveCycles": 5848
+        },
+        "MonoComposeColumn": {
+          "calls": 3,
+          "inclusiveCycles": 5908
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 80400
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 48896,
+      "cycles": 157048
+    },
+    {
+      "tick": 4682,
+      "frame": 5863,
+      "phases": {
+        "setup": 60,
+        "render": 28680,
+        "dots": 920,
+        "tail": 212,
+        "logic": 119040,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 2,
+          "inclusiveCycles": 5080
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 2,
+          "inclusiveCycles": 464
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 97624
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 17956
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1296
+        }
+      },
+      "objects": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15040,
+      "cycles": 149068
+    },
+    {
+      "tick": 6780,
+      "frame": 8083,
+      "phases": {
+        "setup": 60,
+        "render": 37200,
+        "dots": 920,
+        "tail": 212,
+        "logic": 109440,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 3,
+          "inclusiveCycles": 7116
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1000
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 105132
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          7
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15552,
+      "cycles": 147988
+    },
+    {
+      "tick": 4640,
+      "frame": 5808,
+      "phases": {
+        "setup": 60,
+        "render": 134552,
+        "dots": 956,
+        "tail": 212,
+        "logic": 11316,
+        "wait": 156
+      },
+      "routines": {
+        "SpriteCacheBuild": {
+          "calls": 3,
+          "inclusiveCycles": 27724
+        },
+        "MonoDrawPrepared": {
+          "calls": 3,
+          "inclusiveCycles": 20796
+        },
+        "MonoSelectCandidates": {
+          "calls": 3,
+          "inclusiveCycles": 9668
+        },
+        "MonoComposeColumn": {
+          "calls": 12,
+          "inclusiveCycles": 41320
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 136
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1408
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 6616
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1596
+        }
+      },
+      "objects": [
+        [
+          2,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 15552,
+      "cycles": 147252
+    },
+    {
+      "tick": 2277,
+      "frame": 2744,
+      "phases": {
+        "setup": 60,
+        "render": 66768,
+        "dots": 940,
+        "tail": 212,
+        "logic": 78956,
+        "wait": 156
+      },
+      "routines": {
+        "MonoDrawPrepared": {
+          "calls": 4,
+          "inclusiveCycles": 9632
+        },
+        "MonoSelectCandidates": {
+          "calls": 2,
+          "inclusiveCycles": 5808
+        },
+        "MonoComposeColumn": {
+          "calls": 4,
+          "inclusiveCycles": 13216
+        },
+        "get_left_player_ctrl_state": {
+          "calls": 1,
+          "inclusiveCycles": 320
+        },
+        "enemy_prepare": {
+          "calls": 1,
+          "inclusiveCycles": 164
+        },
+        "random_generate": {
+          "calls": 1,
+          "inclusiveCycles": 232
+        },
+        "handling_bat": {
+          "calls": 1,
+          "inclusiveCycles": 1424
+        },
+        "call_hl_for_all_obj": {
+          "calls": 1,
+          "inclusiveCycles": 74196
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "inclusiveCycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "inclusiveCycles": 1612
+        }
+      },
+      "objects": [
+        [
+          2,
+          7
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "workBoundCycles": 16320,
+      "cycles": 147092
+    }
+  ]
+}

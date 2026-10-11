@@ -1,6 +1,4 @@
-; Prepared descriptors retain original source/shift until isolation is known.
-; Isolated monochrome objects go straight from ROM to video, without a cache.
-MonoDrawPrepared:
+mdp_normal:
  ld hl,MonoShifts
  ld a,(MonoOwner)
  call hl_add_a
@@ -14,9 +12,7 @@ MonoDrawPrepared:
  ld a,(MonoFastDraw)
  or a
  jp z,mdp_cache
- ld a,(MonoDrawBat)
- or a
- jp z,MonoDrawWhite
+ jp MonoDrawWhite
 mdp_cache:
  ld hl,MonoObjects
  ld a,(MonoOwner)
@@ -40,6 +36,14 @@ mdp_cache:
  jp MonoDraw
 
 MonoShiftDraw:
+ ld a,(MonoFastDraw)
+ or a
+ ld a,0
+ jp nz,msd_merge_ready
+ ld a,$b6
+msd_merge_ready:
+ ld (msd_merge),a
+ ld (msd_last_merge),a
  ld a,(direct_shift)
  add a,a
  ld hl,MonoDrawRotations
@@ -106,6 +110,8 @@ msd_lead:
  ld e,a
  ld a,(bc)
  or e
+msd_merge:
+ nop
  ld (hl),a
  ld a,d
 msd_spill:
@@ -144,6 +150,8 @@ msd_last_column:
  ld d,a
 msd_last_row:
  ld a,(bc)
+msd_last_merge:
+ nop
  ld (hl),a
  inc c
  dec l

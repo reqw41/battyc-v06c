@@ -9,33 +9,10 @@ WaitVideoFrameLast:
 wvf_ready:
  ld (WaitVideoFrameLast+1),a
  ret
-NativeRotateByte:
- push hl
- ld b,a
- ld a,(NativeShift)
- ld c,a
- ld hl,SpriteShiftMasks
- call hl_add_a
- ld a,b
-nrb_loop:
- rrca
- dec c
- jp nz,nrb_loop
- ld b,a
- and (hl)
- push af
- ld a,(hl)
- cpl
- and b
- ld c,a
- pop af
- pop hl
- ret
-
 SpriteCacheBuild:
  ld hl,(IXobj)
  ld a,(hl)
- cp 1
+ cp 3
  ld a,0
  jp nz,mnn_kind
  inc a

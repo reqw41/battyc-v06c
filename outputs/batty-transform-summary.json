@@ -1,0 +1,39 @@
+{
+  "romSHA256": "c4a115b5fef7d2ce0f3c941fee092faf00c71c9c50c2289d53623bcf0458a1c0",
+  "cpu": "i8080 3 MHz, strict 64 KB",
+  "budgetCycles": 119808,
+  "magnet": {
+    "romSHA256": "c4a115b5fef7d2ce0f3c941fee092faf00c71c9c50c2289d53623bcf0458a1c0",
+    "magnetCases": 80,
+    "composites": 128,
+    "oldMagnetMeanTicks": 274944.25,
+    "newMagnetMeanTicks": 80881.55,
+    "passed": true
+  },
+  "compound": {
+    "oldMeanTicks": 83766.85714285714,
+    "newMeanTicks": 36120.642857142855,
+    "oldMaxTicks": 101772,
+    "newMaxTicks": 38020
+  },
+  "wide": {
+    "beforeMeanCycles": 190226,
+    "beforeMaxCycles": 212676,
+    "afterMeanCycles": 111432,
+    "afterMaxCycles": 119512,
+    "beforeMeanMs": 63.408533333333324,
+    "afterMeanMs": 37.14411851851851
+  },
+  "natural": {
+    "samples": 7631,
+    "meanCycles": 63614.27702791246,
+    "p99Cycles": 124412,
+    "maxCycles": 212876,
+    "overBudget": 99
+  },
+  "raster": {
+    "samples": 1536,
+    "blankFrames": 0,
+    "tearFreeProven": false
+  }
+}

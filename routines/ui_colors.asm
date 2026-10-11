@@ -27,21 +27,7 @@ UiPixelWrite:
  ld a,(UiActive)
  or a
  jp nz,UiPixelColor
- pop af
- push hl
- push bc
- ld c,a
- ld a,h
- sub $40
- ld h,a
- ld a,(hl)
- or c
- ld (hl),a
- ld a,1
- ld (OverlayActive),a
- pop bc
- pop hl
- ret
+ jp UiMonoOutline
 UiPixelColor:
  pop af
  ld (UiPixel),a

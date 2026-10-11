@@ -20,7 +20,7 @@ let reports=[]; for(const mode of ['normal','wide','gun'])for(let id=0;id<10;id+
   const type=E.rd(bonus);if(type===4||type===11){ptr(E.L.IXobj,bonus);call(type===4?'handling_bonus':'handling_400pts');}
   if(E.rd(bonus)===11)caught=true;
   call('planes_begin');call('DrawMovingObjects');
-  seen.push([E.rd(bat+1),E.rd(bat+12),E.rd(bat+20),E.rd(bat+21),E.rd(E.L.bonus_flag)]);maxWidth=Math.max(maxWidth,E.rd(bat+12));frames.push(E.rd(bat+1));
+  assert.equal(E.rd(E.L.spr_bonus_rocket_1+1),27,'rocket native column pitch changed');seen.push([E.rd(bat+1),E.rd(bat+12),E.rd(bat+20),E.rd(bat+21),E.rd(E.L.bonus_flag)]);maxWidth=Math.max(maxWidth,E.rd(bat+12));frames.push(E.rd(bat+1));
  }
 assert(caught,mode+' '+id+' not caught');
  if(id===0)assert.equal(E.rd(bat+12),44,mode+' expansion');

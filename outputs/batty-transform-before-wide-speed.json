@@ -1,0 +1,42 @@
+{
+  "romSHA256": "b9074cb797e2d003d04575e39931d81066b78337429ba2dd43948bbb222ba719",
+  "cpu": "i8080 3 MHz, 64 KB",
+  "method": "65 controlled moving steps; positions injected at the unchanged logic entry before handling; actual native logic and rendering run. Frame timing starts at GameplayDrawBegin when present; legacy ROM uses LB9E8_2, or the instruction after its normal wait CALL with BATTY_BENCH_DRAW_ANCHOR=1. IRQ entry is reported separately in machineMs; activeMs excludes the complete gameplay wait call. 25 Hz budget: 119808 cycles, cadence tolerance 0.02 ms for IRQ/instruction boundary jitter.",
+  "reports": [
+    {
+      "name": "wide_transform",
+      "balls": 3,
+      "bonus": true,
+      "enemy": 8,
+      "resize": true,
+      "worstFrame": {
+        "ms": 70.876,
+        "machineMs": 70.892,
+        "irqEntryCycles": 48,
+        "activeMs": 70.82666666666667,
+        "waitMs": 0.04933333333333333,
+        "renderMs": 63.062666666666665,
+        "logicMs": 7.665333333333334
+      },
+      "cacheBuilds": 68,
+      "warmCacheBuilds": 44,
+      "steps": 65,
+      "warmMeanMs": 63.394903703703704,
+      "meanMs": 63.3876717948718,
+      "activeMs": 63.33491282051281,
+      "waitMs": 0.05275897435897428,
+      "warmActiveMs": 63.34557037037037,
+      "stepsPerSecond": 15.775938312359694,
+      "renderMs": 55.62933333333335,
+      "logicMs": 7.606912820512812,
+      "minMs": 56.072,
+      "maxMs": 70.876,
+      "warmMaxMs": 70.876,
+      "warmMachineMeanMs": 63.408533333333324,
+      "warmMachineMaxMs": 70.892,
+      "warmMachineMinMs": 56.29866666666667,
+      "maxMachineMs": 70.892,
+      "warmOverBudget": 45
+    }
+  ]
+}

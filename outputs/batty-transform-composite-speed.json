@@ -1,0 +1,348 @@
+{
+  "romSHA256": "c4a115b5fef7d2ce0f3c941fee092faf00c71c9c50c2289d53623bcf0458a1c0",
+  "cases": 56,
+  "oldMeanTicks": 83766.85714285714,
+  "newMeanTicks": 36120.642857142855,
+  "oldMaxTicks": 101772,
+  "newMaxTicks": 38020,
+  "method": "Two native renders per independent phased split-paddle fixture; second render measured; source selection, composition and erase included; logic and raster wait excluded.",
+  "reports": [
+    {
+      "offset": 8,
+      "phase": 0,
+      "oldTicks": 81476,
+      "newTicks": 27428
+    },
+    {
+      "offset": 8,
+      "phase": 1,
+      "oldTicks": 101772,
+      "newTicks": 36472
+    },
+    {
+      "offset": 8,
+      "phase": 2,
+      "oldTicks": 101772,
+      "newTicks": 36712
+    },
+    {
+      "offset": 8,
+      "phase": 3,
+      "oldTicks": 101772,
+      "newTicks": 36952
+    },
+    {
+      "offset": 8,
+      "phase": 4,
+      "oldTicks": 101772,
+      "newTicks": 37192
+    },
+    {
+      "offset": 8,
+      "phase": 5,
+      "oldTicks": 101772,
+      "newTicks": 37432
+    },
+    {
+      "offset": 8,
+      "phase": 6,
+      "oldTicks": 101772,
+      "newTicks": 37672
+    },
+    {
+      "offset": 8,
+      "phase": 7,
+      "oldTicks": 101772,
+      "newTicks": 37912
+    },
+    {
+      "offset": 10,
+      "phase": 0,
+      "oldTicks": 88804,
+      "newTicks": 32208
+    },
+    {
+      "offset": 10,
+      "phase": 1,
+      "oldTicks": 101772,
+      "newTicks": 36712
+    },
+    {
+      "offset": 10,
+      "phase": 2,
+      "oldTicks": 101772,
+      "newTicks": 36952
+    },
+    {
+      "offset": 10,
+      "phase": 3,
+      "oldTicks": 101772,
+      "newTicks": 37192
+    },
+    {
+      "offset": 10,
+      "phase": 4,
+      "oldTicks": 101772,
+      "newTicks": 37432
+    },
+    {
+      "offset": 10,
+      "phase": 5,
+      "oldTicks": 101772,
+      "newTicks": 37672
+    },
+    {
+      "offset": 10,
+      "phase": 6,
+      "oldTicks": 88852,
+      "newTicks": 32528
+    },
+    {
+      "offset": 10,
+      "phase": 7,
+      "oldTicks": 96180,
+      "newTicks": 37308
+    },
+    {
+      "offset": 14,
+      "phase": 0,
+      "oldTicks": 88804,
+      "newTicks": 32688
+    },
+    {
+      "offset": 14,
+      "phase": 1,
+      "oldTicks": 101772,
+      "newTicks": 37192
+    },
+    {
+      "offset": 14,
+      "phase": 2,
+      "oldTicks": 88852,
+      "newTicks": 32048
+    },
+    {
+      "offset": 14,
+      "phase": 3,
+      "oldTicks": 96180,
+      "newTicks": 36828
+    },
+    {
+      "offset": 14,
+      "phase": 4,
+      "oldTicks": 96180,
+      "newTicks": 37068
+    },
+    {
+      "offset": 14,
+      "phase": 5,
+      "oldTicks": 96180,
+      "newTicks": 37308
+    },
+    {
+      "offset": 14,
+      "phase": 6,
+      "oldTicks": 96180,
+      "newTicks": 37548
+    },
+    {
+      "offset": 14,
+      "phase": 7,
+      "oldTicks": 96180,
+      "newTicks": 37788
+    },
+    {
+      "offset": 18,
+      "phase": 0,
+      "oldTicks": 83244,
+      "newTicks": 32324
+    },
+    {
+      "offset": 18,
+      "phase": 1,
+      "oldTicks": 96180,
+      "newTicks": 36828
+    },
+    {
+      "offset": 18,
+      "phase": 2,
+      "oldTicks": 96180,
+      "newTicks": 37068
+    },
+    {
+      "offset": 18,
+      "phase": 3,
+      "oldTicks": 96180,
+      "newTicks": 37308
+    },
+    {
+      "offset": 18,
+      "phase": 4,
+      "oldTicks": 96180,
+      "newTicks": 37548
+    },
+    {
+      "offset": 18,
+      "phase": 5,
+      "oldTicks": 96180,
+      "newTicks": 37788
+    },
+    {
+      "offset": 18,
+      "phase": 6,
+      "oldTicks": 83260,
+      "newTicks": 32644
+    },
+    {
+      "offset": 18,
+      "phase": 7,
+      "oldTicks": 90588,
+      "newTicks": 37424
+    },
+    {
+      "offset": 22,
+      "phase": 0,
+      "oldTicks": 83244,
+      "newTicks": 32804
+    },
+    {
+      "offset": 22,
+      "phase": 1,
+      "oldTicks": 96180,
+      "newTicks": 37308
+    },
+    {
+      "offset": 22,
+      "phase": 2,
+      "oldTicks": 83260,
+      "newTicks": 32164
+    },
+    {
+      "offset": 22,
+      "phase": 3,
+      "oldTicks": 90588,
+      "newTicks": 36944
+    },
+    {
+      "offset": 22,
+      "phase": 4,
+      "oldTicks": 90588,
+      "newTicks": 37184
+    },
+    {
+      "offset": 22,
+      "phase": 5,
+      "oldTicks": 90588,
+      "newTicks": 37424
+    },
+    {
+      "offset": 22,
+      "phase": 6,
+      "oldTicks": 90588,
+      "newTicks": 37664
+    },
+    {
+      "offset": 22,
+      "phase": 7,
+      "oldTicks": 90588,
+      "newTicks": 37904
+    },
+    {
+      "offset": 26,
+      "phase": 0,
+      "oldTicks": 34588,
+      "newTicks": 32440
+    },
+    {
+      "offset": 26,
+      "phase": 1,
+      "oldTicks": 90588,
+      "newTicks": 36944
+    },
+    {
+      "offset": 26,
+      "phase": 2,
+      "oldTicks": 90588,
+      "newTicks": 37184
+    },
+    {
+      "offset": 26,
+      "phase": 3,
+      "oldTicks": 90588,
+      "newTicks": 37424
+    },
+    {
+      "offset": 26,
+      "phase": 4,
+      "oldTicks": 90588,
+      "newTicks": 37664
+    },
+    {
+      "offset": 26,
+      "phase": 5,
+      "oldTicks": 90588,
+      "newTicks": 37904
+    },
+    {
+      "offset": 26,
+      "phase": 6,
+      "oldTicks": 34588,
+      "newTicks": 32760
+    },
+    {
+      "offset": 26,
+      "phase": 7,
+      "oldTicks": 36424,
+      "newTicks": 37540
+    },
+    {
+      "offset": 30,
+      "phase": 0,
+      "oldTicks": 34588,
+      "newTicks": 32920
+    },
+    {
+      "offset": 30,
+      "phase": 1,
+      "oldTicks": 90588,
+      "newTicks": 37424
+    },
+    {
+      "offset": 30,
+      "phase": 2,
+      "oldTicks": 34588,
+      "newTicks": 32280
+    },
+    {
+      "offset": 30,
+      "phase": 3,
+      "oldTicks": 36424,
+      "newTicks": 37060
+    },
+    {
+      "offset": 30,
+      "phase": 4,
+      "oldTicks": 36424,
+      "newTicks": 37300
+    },
+    {
+      "offset": 30,
+      "phase": 5,
+      "oldTicks": 36424,
+      "newTicks": 37540
+    },
+    {
+      "offset": 30,
+      "phase": 6,
+      "oldTicks": 36424,
+      "newTicks": 37780
+    },
+    {
+      "offset": 30,
+      "phase": 7,
+      "oldTicks": 36424,
+      "newTicks": 38020
+    }
+  ],
+  "passed": true
+}

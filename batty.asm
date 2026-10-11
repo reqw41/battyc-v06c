@@ -47,7 +47,7 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
   INCLUDE "./routines/preparation.asm"
 
 ; Элементы оформления игрового поля
-  INCLUDE "./gfx/sprites_with_masks_1.asm"
+  INCLUDE "./gfx/sprites_mono_native_1.asm"
 
 ; Знакогенератор
   INCLUDE "./gfx/font.asm"
@@ -3416,8 +3416,6 @@ LAA9D_0:
   POP HL
   ADD A,$06
   LD (object_rocket+$04),A
-  LD A,$1B
-  LD (spr_bonus_rocket_1+$01),A
   LD HL,$0000
   LD (LA8CF),HL
   PUSH HL
@@ -5918,8 +5916,6 @@ all_var_init:
 	LD A,(ball_x_coord+$01)
 	XOR $88
 	LD (ball_x_coord+$01),A	; Запись в object_ball_1+2
-	LD A,$0C
-	LD (spr_bonus_rocket_1+$01),A
 ; Restore all 11 original records from the immutable packed snapshot.
 	CALL InitialObjectsRestore
 ; A = 0
@@ -7233,6 +7229,12 @@ MonoDrawWhite:
  ASSERT $ <= $6e00
 
  ; Renderer and per-owner phase cache in ordinary RAM below video.
+ DS $7144-$,0
+ ORG $7144
+ INCLUDE "routines/mono_composite_build.asm"
+ INCLUDE "routines/native_static_masks.asm"
+ INCLUDE "routines/native_rotate.asm"
+ ASSERT $ <= SpriteCacheOriginal
  DS $7200-$,0
  ORG $7200
  INCLUDE "routines/mono_renderer.asm"

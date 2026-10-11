@@ -208,17 +208,6 @@ mono_prepare:
  ld (hl),d
  inc hl
  ld (hl),0
- ld hl,(IXobj)
- ld a,(hl)
- cp 1
- jp nz,mono_next
- ld a,(plane_y)
- cp 168
- jp c,mono_next
- ld hl,(MonoPtr)
- ld de,6
- add hl,de
- ld (hl),1
 mono_next:
  ld a,(MonoPtr)
  add a,7
@@ -228,7 +217,9 @@ mono_next:
  ld (MonoOwner),a
  cp 11
  jp nz,mono_prepare
+ call MonoCompositeBat
  call MonoFindIsolated
+ call MonoPairPrepare
  call PaceStart
  xor a
  ld (MonoOwner),a
@@ -353,25 +344,6 @@ mono_commit:
  dec l
  dec b
  jp nz,mono_commit
- ld a,(MonoOldBat)
- or a
- jp z,mono_old_nextcol
- ld a,(MonoColumn)
- add a,$60
- ld h,a
- ld a,(MonoTop)
- ld l,a
- ld de,MonoBlack
- ld a,(MonoRows)
- ld b,a
-mono_commit_black:
- ld a,(de)
- cpl
- ld (hl),a
- inc e
- dec l
- dec b
- jp nz,mono_commit_black
 mono_old_nextcol:
  ld hl,MonoColumn
  inc (hl)
@@ -404,19 +376,10 @@ MonoDraw:
  ld a,(MonoFastDraw)
  or a
  ld a,$b6 ; OR M
- ld b,$7e ; MOV A,M
- ld c,$a3 ; AND E
  jp z,mono_draw_mode
- xor a     ; NOP: the isolated rectangle can be overwritten directly
- ld b,$7b  ; MOV A,E: final paper from coverage, no old outline left behind
- ld c,a
+ xor a
 mono_draw_mode:
- ld (mono_draw_merge),a
  ld (mono_bare_merge),a
- ld a,b
- ld (mono_draw_paper_load),a
- ld a,c
- ld (mono_draw_paper_merge),a
  ld hl,0
  add hl,sp
  ld (mono_draw_restore+1),hl
@@ -426,39 +389,7 @@ mono_draw_mode:
  ld hl,(MonoDrawVideo)
  ld a,(MonoDrawCols)
  ld b,a
- ld a,(MonoDrawBat)
- or a
- jp z,MonoDrawBare
-mono_draw_col:
- ld a,(MonoDrawRows)
- ld c,a
-mono_draw_row:
- pop de
- ld a,d
-mono_draw_merge:
- or (hl)
- ld (hl),a
- ld a,h
- add a,$60
- ld h,a
-mono_draw_paper_load:
- ld a,(hl)
-mono_draw_paper_merge:
- and e
- ld (hl),a
- ld a,h
- sub $60
- ld h,a
-mono_draw_nextrow:
- dec l
- dec c
- jp nz,mono_draw_row
- ld a,(MonoDrawRows)
- add a,l
- ld l,a
- inc h
- dec b
- jp nz,mono_draw_col
+ jp MonoDrawBare
 mono_draw_restore:
  ld sp,0
  ei
@@ -477,15 +408,12 @@ MonoComposeColumn:
  jp mono_candidates_ready
 mono_many_candidates:
  ld hl,MonoScratch
- ld de,MonoBlack
  ld a,(MonoRows)
  ld b,a
  xor a
 mono_clear_scratch:
  ld (hl),a
- ld (de),a
  inc hl
- inc de
  dec b
  jp nz,mono_clear_scratch
 mono_candidates_ready:
@@ -599,21 +527,6 @@ mono_union_rows:
  or (hl)
  ld (de),a
  inc hl
- ld a,(MonoNewBat)
- or a
- jp z,mono_union_rownext
- ld a,e
- add a,32
- ld e,a
- ld a,c
- cpl
- ld c,a
- ld a,(de)
- or c
- ld (de),a
- ld a,e
- sub 32
- ld e,a
 mono_union_rownext:
  inc e
  dec b
@@ -641,22 +554,6 @@ mono_single_rows:
  ld a,(de)
  ld (hl),a
  inc de
- ld a,(MonoOldBat)
- or a
- jp z,mono_single_nextrow
- ld a,h
- add a,$60
- ld h,a
- ld a,(MonoNewBat)
- or a
- ld a,$ff
- jp z,mono_single_paper
- ld a,c
-mono_single_paper:
- ld (hl),a
- ld a,h
- sub $60
- ld h,a
 mono_single_nextrow:
  dec l
  dec b
@@ -691,16 +588,6 @@ MonoZeroRange:
 mono_zero_row:
  xor a
  ld (hl),a
- ld a,(MonoOldBat)
- or a
- jp z,mono_zero_next
- ld a,h
- add a,$60
- ld h,a
- ld (hl),$ff
- ld a,h
- sub $60
- ld h,a
 mono_zero_next:
  dec l
  dec b
@@ -776,7 +663,7 @@ mono_select_next:
  dec (hl)
  jp nz,mono_select
  ret
-; Round text uses only the sprite plane: save/restore its 10x40 rectangle.
+; Outlined round text saves/restores its 10x40 rectangle in all four planes.
 ; Active moving objects have already been removed at the round transition.
  INCLUDE "routines/mono_isolation.asm"
 
@@ -815,9 +702,7 @@ mono_remove_old:
  or a
  jp z,mono_remove_skip
  call plane_erase_dual
- ld a,(MonoOldBat)
- or a
- call nz,MonoRestorePaper
+
 mono_remove_skip:
  pop hl
  ld de,7
@@ -827,24 +712,5 @@ mono_remove_skip:
  jp nz,mono_remove_old
  jp SpriteCacheReset
 
-MonoRestorePaper:
- ld hl,(ClearDst)
- ld a,h
- add a,$60
- ld h,a
- ld a,(ClearColumns)
- ld b,a
-mono_restore_paper_col:
- push hl
- ld a,(ClearRows)
- ld c,a
-mono_restore_paper_row:
- ld (hl),$ff
- dec l
- dec c
- jp nz,mono_restore_paper_row
- pop hl
- inc h
- dec b
- jp nz,mono_restore_paper_col
- ret
+ INCLUDE "routines/mono_composite_bat.asm"
+ INCLUDE "routines/mono_pair_clear.asm"

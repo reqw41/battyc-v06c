@@ -85,30 +85,30 @@ NativeSampleMagnetLayer:
  cp b
  ret nc
 NativeSampleLocate:
- ld a,(NativeSampleRow)
- ld l,a
- ld h,0
- add hl,hl
- ld d,h
- ld e,l
- add hl,hl
  ld a,(NativeSampleWidth)
- cp 3
- jp nz,NativeSampleStrideFour
- add hl,de
- jp NativeSampleStrideReady
-NativeSampleStrideFour:
- add hl,hl
+ cp 4
+ ld de,46
+ jp nz,NativeSampleStrideReady
+ ld de,60
 NativeSampleStrideReady:
- ld a,(NativeSampleByte)
- add a,a
- call hl_add_a
+ ex de,hl
+ ld (NativeSamplePreviousStride+1),hl
  ex de,hl
  ld hl,(NativeSampleSprite)
- ex de,hl
+ inc hl
+ inc hl
+ ld a,(NativeSampleByte)
+ or a
+ jp z,NativeSampleRowOffset
+ ld b,a
+NativeSampleColumnOffset:
  add hl,de
- inc hl
- inc hl
+ dec b
+ jp nz,NativeSampleColumnOffset
+NativeSampleRowOffset:
+ ld a,(NativeSampleRow)
+ add a,a
+ call hl_add_a
  ld (NativeSampleSource),hl
  ; Current source byte and the previous byte's shifted carry.
  ld a,(NativeSampleWidth)
@@ -118,6 +118,7 @@ NativeSampleStrideReady:
  ld a,0
  jp z,NativeSampleCurrentMask
  ld a,(hl)
+ cpl
 NativeSampleCurrentMask:
  call NativeSampleShift
  ld (NativeSampleMask),a
@@ -137,9 +138,16 @@ NativeSampleCurrentPixel:
  or a
  jp z,NativeSampleMerge
  ld hl,(NativeSampleSource)
- dec hl
- dec hl
+NativeSamplePreviousStride:
+ ld de,0
+ ld a,l
+ sub e
+ ld l,a
+ ld a,h
+ sbc a,d
+ ld h,a
  ld a,(hl)
+ cpl
  call NativeSampleShift
  ld a,(NativeSampleMask)
  or c
@@ -152,11 +160,12 @@ NativeSampleCurrentPixel:
  ld (NativeSamplePixel),a
 NativeSampleMerge:
  ld a,(NativeSampleMask)
+ cpl
  ld b,a
  ld a,(NativeSampleValue)
- or b
+ and b
  ld b,a
  ld a,(NativeSamplePixel)
- xor b
+ or b
  ld (NativeSampleValue),a
  ret

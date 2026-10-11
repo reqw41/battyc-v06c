@@ -100,6 +100,7 @@ pd_position_valid:
  inc hl
  ld a,(hl)
  ld b,a
+ call MonoBonusHeight
  ld a,(plane_y)
  add a,b
 pd_height_compare:

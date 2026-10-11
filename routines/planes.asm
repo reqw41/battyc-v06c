@@ -70,10 +70,6 @@ background_write_selected:
  push de
  ld a,(background_pixel)
  ld c,a
- ld a,e
- cp $39
- jp nc,bw_field
- ld c,0 ; solid E-only paper under the paddle, logical Y >=168
 bw_field:
  ld a,(background_color)
  and 2

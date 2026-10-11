@@ -1,5 +1,5 @@
 ; Virtual legacy pointers are coordinates only: 7000+256*column+row.
-; Background uses A/C with E=0; moving sprites use C/E and preserve A.
+; Background uses A/C/E; the white moving overlay occupies 8000.
 NativeAttrs EQU $6e00
 NativeAttrBytes EQU 768
 OverlayActive: db 0
@@ -333,91 +333,8 @@ NativeStaticHeight:
  and 7
 NativeStaticShift:
  ld (NativeShift),a
-NativeStaticRow:
- xor a
- ld (NativeCarryMask),a
- ld (NativeCarryPixel),a
- ld a,(NativeWidth)
- ld (NativeLeft),a
-NativeStaticByte:
- ld hl,(NativeSource)
- ld a,(hl)
- ld (NativeMask),a
- inc hl
- ld a,(hl)
- ld (NativePixel),a
- inc hl
- ld (NativeSource),hl
- ld a,(NativeShift)
- or a
- jp z,NativeStaticNoShift
- ld a,(NativeMask)
- call NativeRotateByte
- ld (NativeMask),a
- ld a,c
- ld (NativeNextMask),a
- ld a,(NativePixel)
- call NativeRotateByte
- ld (NativePixel),a
- ld a,c
- ld (NativeNextPixel),a
- jp NativeStaticMerge
-NativeStaticNoShift:
- xor a
- ld (NativeNextMask),a
- ld (NativeNextPixel),a
-NativeStaticMerge:
- ld a,(NativeCarryMask)
- ld b,a
- ld a,(NativeMask)
- or b
- ld b,a
- ld a,(NativeCarryPixel)
- ld c,a
- ld a,(NativePixel)
- or c
- ld c,a
- ld hl,(NativeDest)
- call NativeReadHL
- or b
- xor c
- call NativeWriteHL
- inc h
- ld (NativeDest),hl
- ld a,(NativeNextMask)
- ld (NativeCarryMask),a
- ld a,(NativeNextPixel)
- ld (NativeCarryPixel),a
- ld a,(NativeLeft)
- dec a
- ld (NativeLeft),a
- jp nz,NativeStaticByte
- ld a,(NativeShift)
- or a
- jp z,NativeStaticEndRow
- ld a,(NativeCarryMask)
- ld b,a
- ld a,(NativeCarryPixel)
- ld c,a
- ld hl,(NativeDest)
- call NativeReadHL
- or b
- xor c
- call NativeWriteHL
-NativeStaticEndRow:
- ld hl,(NativeDest)
- ld a,(NativeWidth)
- ld b,a
- ld a,h
- sub b
- ld h,a
- inc l
- ld (NativeDest),hl
- ld a,(NativeHeight)
- dec a
- ld (NativeHeight),a
- jp nz,NativeStaticRow
- ret
+ jp NativeStaticColumns
+ INCLUDE "routines/native_static_columns.asm"
 NativeSource: dw 0
 NativeDest: dw 0
 NativeWidth: db 0
@@ -629,11 +546,7 @@ NativeTextureByte:
  push af
  ld a,(de)
  ld (background_pixel),a
- ld a,l
- cp $39
  ld a,(background_pixel)
- jp nc,MonoTextureField
- xor a
 MonoTextureField:
  ld (hl),a
  push hl
