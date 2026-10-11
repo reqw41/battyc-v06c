@@ -7136,6 +7136,12 @@ LBE8B_9:
 
 
 
+ INCLUDE "routines/mono_region_intersect.asm"
+ INCLUDE "routines/mono_draw_bare.asm"
+ INCLUDE "routines/mono_shift_draw.asm"
+ INCLUDE "routines/mono_cache_reset.asm"
+
+
 BATTYCODE_END:
 	ASSERT BATTYCODE_END <= $6b00
 
@@ -7176,6 +7182,7 @@ table_shifts EQU $7200
  DS $6b00-$,0
  ENDIF
  ORG $6b00
+ INCLUDE "routines/mono_isolation_data.asm"
 
  ASSERT $ <= $6b60
  DS $6b60-$,0
@@ -7188,6 +7195,9 @@ LevelPaperColors: db $c0,$10,$81,$03
 LevelTextureColors: db $80,$20,$c1,$05
 FastEraseOld:
  jp plane_erase_dual
+ INCLUDE "routines/mono_cache_address.asm"
+ INCLUDE "routines/mono_zero_column.asm"
+ ASSERT $ <= $6ba0
 StackFloor EQU $6ba0
 ; Exactly 180 level bytes are copied/swapped; the remaining 76 bytes are code.
  DS $6c00-$,0
@@ -7195,12 +7205,28 @@ StackFloor EQU $6ba0
  INCLUDE "routines/initial_objects_data.asm"
 SpriteBonusCache7 EQU $6c80
  ASSERT SpriteBonusCache7+128 <= current_level_copy
+ DS $6c80-$,0
+ ORG $6c80
+ INCLUDE "routines/mono_window.asm"
+ ASSERT $ <= $6d00
  DS $6db4-$,0
  ORG $6db4
 
 
 RCReset:
  jp MonoReset
+ INCLUDE "routines/mono_region_include.asm"
+MonoShifts: ds 11,0
+MonoDrawWhite:
+ ld a,b
+ or a
+ jp nz,MonoShiftDraw
+ ld hl,(MonoDrawSource)
+ dec hl
+ ld a,(MonoDrawRows)
+ cp (hl)
+ jp nz,MonoShiftDraw
+ jp MonoDraw
 
  ASSERT $ <= $6e00
 

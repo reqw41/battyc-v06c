@@ -1,10 +1,10 @@
 {
-  "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
   "musicVoices": 3,
   "musicNotes": 8,
-  "musicSeconds": 1.0841786666666666,
+  "musicSeconds": 1.092356,
   "launchEventToToneMs": 1.0586666666666666,
-  "launchToneMs": 35.2,
+  "launchToneMs": 34.06666666666667,
   "phaseTests": [
     {
       "phase": 0,

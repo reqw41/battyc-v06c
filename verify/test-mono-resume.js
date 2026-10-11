@@ -22,10 +22,11 @@ for(const scene of [{mode:0,other:0,name:'one-player'},{mode:2,other:3,name:'dou
  try{for(let frame=0;frame<2400;frame++){if(frame===100)E.key(48,1);if(frame===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='done')throw e;}
  assert(done,scene.name+' did not resume');const same=scene.mode!==1||scene.other===0;
  if(same&&!legacy){assert.equal(draws,0);assert.equal(resets,0);assert.equal(resumes,1);assert.equal(music,0);assert(background.equals(field(E,range(0xa000,24576))),'background repainted '+scene.name);assert(attrs.equals(range(E.L.NativeAttrs,E.L.NativeAttrBytes||1024)));assert(map.equals(range(level,180)));assert(magnets.equals(range(E.L.NativeMagnetOverlayFlags,4)));assert(score.equals(range(E.L.current_score_1up,3)));assert.equal(E.rd(E.L.lives_1up),2);assert.equal(E.rd(E.L.balls_quantity),1);assert.equal(E.rd(E.L.object_ball_1),2);assert.equal(E.rd(E.L.object_bat_1),1);assert.equal(E.rd(E.L.object_bat_2),scene.mode===2?1:0);assert.equal(E.rd(E.L.object_bonus),0);assert.equal(E.rd(E.L.object_enemy),0);
-  assert.equal(E.rd(E.L.SUCount),0,'old moving sprites remain');for(let i=0;i<11;i++)assert.equal(E.rd(E.L.MonoOld+5*i+2),0,'old sprite geometry remains');
+  assert.equal(E.rd(E.L.SUCount),0,'old moving sprites remain');for(const bank of [word(E.L.mono_old_base+1),word(E.L.mono_new_base+1)])for(let i=0;i<11;i++)assert.equal(E.rd(bank+7*i+2),0,'old sprite geometry remains');
   assert.equal(E.rd(E.L.SUDropped),0,'save-under capacity');
-  const source=E.L.spr_lives_indicator,width=E.rd(source),height=E.rd(source+1),expected=Buffer.alloc(192);
-  for(let r=0;r<height;r++)for(let c=0;c<width;c++){const m=E.rd(source+2+2*(r*width+c)),black=m&E.rd(source+3+2*(r*width+c));expected[6*(1+c)+r]=m&~black;}
+  // Oracle uses the original row pairs, independently of the ROM transpose.
+  const block=fs.readFileSync(root+'/gfx/sprites_no_shadows_2.asm','utf8').match(/^spr_lives_indicator:([\s\S]*?)(?=^spr_)/m)[1],source=[...block.matchAll(/\$([\da-f]{2})/gi)].map(m=>parseInt(m[1],16)),width=source[0],height=source[1],expected=Buffer.alloc(192);
+  for(let r=0;r<height;r++)for(let c=0;c<width;c++){const at=2+2*(r*width+c);expected[6*(1+c)+r]=source[at]&source[at+1];}
   for(let c=0;c<32;c++)for(let r=0;r<6;r++)assert.equal(E.rd(0x8000+256*c+24-r),expected[6*c+r],'life HUD '+scene.name);
  }else{assert.equal(draws,1);assert.equal(resets,1);assert.equal(resumes,0);assert.equal(E.rd(E.L.player_number),same?0:1);assert.equal(music,1);}
  reports.push({...scene,fullDraws:draws,fullResets:resets,resumes,sameBackground:same&&!legacy?true:null,lifeToNextTickMs:(cycles-lossCycles)/3000,minStackAddress:minSP.toString(16),stackBytes:E.L.stack-minSP,passed:true});

@@ -35,14 +35,18 @@ nrb_loop:
 SpriteCacheBuild:
  ld hl,(IXobj)
  ld a,(hl)
- cp 3
- jp z,MonoLegacyBuild
  cp 1
  ld a,0
  jp nz,mnn_kind
  inc a
 mnn_kind:
  ld (MonoBuildBat),a
+ or a
+ ld hl,mnn_lit
+ jp z,mnn_select_cover
+ ld hl,mnn_cover
+mnn_select_cover:
+ ld (mnn_cover_select+1),hl
  ld a,(SpriteCacheShift)
  add a,a
  ld hl,MonoNativeRotations
@@ -64,6 +68,17 @@ mnn_kind:
  cpl
  ld (mnn_lit_spill+1),a
  ld (mnn_cover_spill+1),a
+ ld hl,mnn_cover_step
+ ld de,mnn_lit_step
+ ld a,(SpriteCacheShift)
+ or a
+ jp nz,mnn_select_spill
+ ld hl,mnn_lit
+ ld de,mnn_row_next
+mnn_select_spill:
+ ld (mnn_cover_skip+1),hl
+ ex de,hl
+ ld (mnn_lit_skip+1),hl
  ld hl,(SpriteCacheOriginal)
  ld a,(hl)
  ld (MonoNativeCols),a
@@ -104,13 +119,24 @@ mnn_width:
  ld sp,hl
  ld hl,(MonoNativeDest)
 mnn_col:
+ ld a,(MonoNativeFirst)
+ or a
+ ld a,0
+ ld b,a
+ jp nz,mnn_select_merge
+ ld a,$b6 ; OR M for lit
+ ld b,$a6 ; AND M for cover
+mnn_select_merge:
+ ld (mnn_lit_merge),a
+ ld a,b
+ ld (mnn_cover_merge),a
  ld a,(SpriteCacheHeight)
  ld c,a
 mnn_row:
  pop de
- ld a,(MonoBuildBat)
- or a
- jp z,mnn_lit
+mnn_cover_select:
+ jp mnn_lit
+mnn_cover:
  ld a,e
  cpl
 mnn_cover_rotate:
@@ -127,17 +153,13 @@ mnn_cover_r0:
 mnn_cover_lead:
  and $ff
  cpl
- ld b,a
- ld a,(MonoNativeFirst)
- or a
- ld a,b
- jp nz,mnn_cover_store
+mnn_cover_merge:
  and (hl)
 mnn_cover_store:
  ld (hl),a
- ld a,(SpriteCacheShift)
- or a
- jp z,mnn_lit
+mnn_cover_skip:
+ jp mnn_cover_step
+mnn_cover_step:
  ld a,l
 mnn_cover_to_next:
  add a,0
@@ -172,17 +194,13 @@ mnn_lit_r0:
  ld d,a
 mnn_lit_lead:
  and $ff
- ld b,a
- ld a,(MonoNativeFirst)
- or a
- ld a,b
- jp nz,mnn_lit_store
+mnn_lit_merge:
  or (hl)
 mnn_lit_store:
  ld (hl),a
- ld a,(SpriteCacheShift)
- or a
- jp z,mnn_row_next
+mnn_lit_skip:
+ jp mnn_lit_step
+mnn_lit_step:
  ld a,l
 mnn_lit_to_next:
  add a,0
@@ -231,177 +249,6 @@ MonoNativeRotations: dw mnn_lit_r0,mnn_lit_r1,mnn_lit_r2,mnn_lit_r3
 MonoNativeCols: db 0
 MonoNativeFirst: db 0
 MonoNativeDest: dw 0
-MonoLegacyBuild:
- ld a,(SpriteCacheShift)
- add a,a
- ld hl,MonoLitRotations
- call hl_add_a
- ld e,(hl)
- inc hl
- ld d,(hl)
- ex de,hl
- ld (mono_lit_rotate+1),hl
- ld de,mono_cover_r0-mono_lit_r0
- add hl,de
- ld (mono_cover_rotate+1),hl
- ld hl,SpriteShiftMasks
- ld a,(SpriteCacheShift)
- call hl_add_a
- ld a,(hl)
- ld (mono_lit_lead+1),a
- ld (mono_cover_lead+1),a
- cpl
- ld (mono_lit_spill+1),a
- ld (mono_cover_spill+1),a
- ld hl,(IXobj)
- ld a,(hl)
- cp 1
- ld a,0
- jp nz,mono_build_kind
- inc a
-mono_build_kind:
- ld (MonoBuildBat),a
- ld hl,(SpriteCacheOriginal)
- ld a,(hl)
- ld (SpriteCacheWidth),a
- ld b,a
- ld a,(SpriteCacheShift)
- or a
- jp z,mono_build_width
- inc b
-mono_build_width:
- ld hl,(SpriteCacheBuffer)
- ld (hl),b
- inc hl
- ld a,(SpriteCacheHeight)
- ld (hl),a
- ld (SpriteCacheRows),a
- add a,a
- dec a
- ld (mono_build_step+1),a
- inc hl
- ld (PreparedRow),hl
- ld hl,0
- add hl,sp
- ld (mono_build_restore+1),hl
- ld hl,(SpriteCacheOriginal)
- inc hl
- inc hl
- di
- ld sp,hl
-mono_build_row:
- ld hl,(PreparedRow)
- xor a
- ld (SpriteCacheCarryMask),a
- ld (SpriteCacheCarryPixel),a
- ld a,(SpriteCacheWidth)
- ld (SpriteCacheBytes),a
-mono_build_byte:
- pop de
- ld a,d
- cpl
- and e
- ld d,a
- ld a,(MonoBuildBat)
- or a
- jp z,mono_build_lit
- ld a,e
-mono_cover_rotate:
- jp mono_cover_r0
-mono_cover_r7: rrca
-mono_cover_r6: rrca
-mono_cover_r5: rrca
-mono_cover_r4: rrca
-mono_cover_r3: rrca
-mono_cover_r2: rrca
-mono_cover_r1: rrca
-mono_cover_r0:
- ld e,a
-mono_cover_lead:
- and $ff
- ld b,a
- ld a,(SpriteCacheCarryMask)
- or b
- ld (PreparedCover),a
- ld a,e
-mono_cover_spill:
- and 0
- ld (SpriteCacheCarryMask),a
-mono_build_lit:
- ld a,d
-mono_lit_rotate:
- jp mono_lit_r0
-mono_lit_r7: rrca
-mono_lit_r6: rrca
-mono_lit_r5: rrca
-mono_lit_r4: rrca
-mono_lit_r3: rrca
-mono_lit_r2: rrca
-mono_lit_r1: rrca
-mono_lit_r0:
- ld d,a
-mono_lit_lead:
- and $ff
- ld b,a
- ld a,(SpriteCacheCarryPixel)
- or b
- ld b,a
- ld a,d
-mono_lit_spill:
- and 0
- ld (SpriteCacheCarryPixel),a
- ld a,(MonoBuildBat)
- or a
- ld a,b
- jp z,mono_build_store
- ld a,(PreparedCover)
-mono_build_store:
- cpl
- ld (hl),a
- inc hl
- ld (hl),b
-mono_build_advance:
- ld a,l
-mono_build_step:
- add a,0
- ld l,a
- jp nc,mono_build_count
- inc h
-mono_build_count:
- ld a,(SpriteCacheBytes)
- dec a
- ld (SpriteCacheBytes),a
- jp nz,mono_build_byte
- ld a,(SpriteCacheShift)
- or a
- jp z,mono_build_nextrow
- ld a,(SpriteCacheCarryPixel)
- ld b,a
- ld a,(MonoBuildBat)
- or a
- ld a,b
- jp z,mono_build_store_spill
- ld a,(SpriteCacheCarryMask)
-mono_build_store_spill:
- cpl
- ld (hl),a
- inc hl
- ld (hl),b
-mono_build_nextrow:
- ld hl,(PreparedRow)
- inc hl
- inc hl
- ld (PreparedRow),hl
- ld a,(SpriteCacheRows)
- dec a
- ld (SpriteCacheRows),a
- jp nz,mono_build_row
-mono_build_restore:
- ld sp,0
- ei
- ret
-MonoLitRotations: dw mono_lit_r0,mono_lit_r1,mono_lit_r2,mono_lit_r3
- dw mono_lit_r4,mono_lit_r5,mono_lit_r6,mono_lit_r7
 MonoBuildBat: db 0
 NativeMagnetSetOverlay:
  push hl

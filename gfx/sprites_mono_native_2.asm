@@ -1,4 +1,4 @@
-; Generated native column pairs (~cover,lit). Static kind 3 keeps legacy row pairs.
+; Generated native column pairs (~cover,lit). Background assets keep legacy row pairs; overlay HUD uses native columns.
 spr_bomb:
  DEFB $01,$0b,$83,$00,$01,$5c,$83,$38,$c7,$00,$83,$38
  DEFB $01,$5c,$01,$5c,$01,$5c,$01,$5c,$83,$38,$c7,$00
@@ -62,9 +62,9 @@ spr_400_points:
  DEFB $01,$cc,$01,$cc,$01,$fc,$01,$fc,$03,$00,$ff,$00
  DEFB $ff,$00
 spr_lives_indicator:
- DEFB $02,$06,$1f,$1f,$fe,$fe,$3f,$34,$ff,$0b,$3f,$24
- DEFB $ff,$09,$3f,$24,$ff,$09,$3f,$34,$ff,$0b,$1f,$1f
- DEFB $fe,$fe
+ DEFB $02,$06,$e0,$00,$c0,$0b,$c0,$1b,$c0,$1b,$c0,$0b
+ DEFB $e0,$00,$01,$00,$00,$f4,$00,$f6,$00,$f6,$00,$f4
+ DEFB $01,$00
 spr_ball_normal:
  DEFB $01,$07,$c7,$00,$83,$38,$01,$4c,$01,$5c,$01,$7c
  DEFB $83,$38,$c7,$00

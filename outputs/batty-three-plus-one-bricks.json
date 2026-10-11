@@ -1,5 +1,5 @@
 {
-  "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
   "physicalRAM": 65536,
   "individualCases": 370,
   "saveUnderRetiredBeforeWrite": true,
@@ -31,7 +31,7 @@
       "sequentialBricks": 128
     }
   ],
-  "destructionMeanMs": 21.007412612612622,
+  "destructionMeanMs": 20.98150270270271,
   "destructionMinMs": 12.030666666666667,
   "destructionMaxMs": 36.68,
   "passed": true

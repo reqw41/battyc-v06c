@@ -1,0 +1,3537 @@
+{
+  "cpu": "i8080 3 MHz, vanilla 64 KB; Vector machine cycles from cpu.vcycles (bus-synchronized timings), not bare nominal cpu_cycles",
+  "method": "Same injection as measure-object-speed.js: 65 steps, 45 warm. Paddle, 3 balls, bonus, UFO. Reference offset=tick%8; smooth offset=0..7..0. No forced impacts. Instruction cycles charged to exactly one main phase and one renderer group. Renderer groups are mutually exclusive; they include helper calls, with separately listed children and IRQ removed. MonoSingleCommit excludes its MonoZeroRange fringe calls. Routine inclusive/exclusive costs are reported separately. IRQ entry (16 cycles) outside instruction() is separate. Frame budget 119808 cycles.",
+  "reports": [
+    {
+      "base": ".",
+      "motion": "reference",
+      "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+      "warm": {
+        "steps": 45,
+        "total": 104130.5777777778,
+        "irqEntryCycles": 20.266666666666662,
+        "phases": {
+          "logic": 22127.466666666667,
+          "wait": 8659.555555555555,
+          "setup": 60.000000000000036,
+          "render": 72138.75555555554,
+          "dots": 932.8000000000005,
+          "tail": 211.99999999999991
+        },
+        "render": {
+          "MonoRender_setup": 79.99999999999996,
+          "MonoRender_prepare": 6428.000000000007,
+          "plane_object_fast": 8606.04444444445,
+          "MonoFindIsolated": 14523.466666666665,
+          "MonoRender_draw": 4565.600000000004,
+          "MonoDrawPrepared": 2134.577777777777,
+          "MonoShiftDraw": 14670.844444444441,
+          "MonoDraw": 10954.400000000003,
+          "MonoCachePrepare": 100.00000000000009,
+          "MonoRender_restore": 4235.999999999998,
+          "MonoEraseFringes": 4106.31111111111,
+          "IRQ": 349.86666666666673,
+          "MonoZeroRange": 1283.6444444444446,
+          "MonoRender_copy": 100.00000000000009
+        },
+        "stageCycles": {
+          "setup": 79.99999999999996,
+          "prepare": 29732.44444444445,
+          "draw": 32512.88888888888,
+          "restore": 9713.422222222223,
+          "copy": 100.00000000000009
+        },
+        "routines": {
+          "MonoRender": {
+            "calls": 1.0000000000000004,
+            "inclusive": 72058.75555555556,
+            "exclusive": 14853.599999999988
+          },
+          "MonoShiftDraw": {
+            "calls": 1.7555555555555558,
+            "inclusive": 14670.844444444441,
+            "exclusive": 14572.53333333333
+          },
+          "MonoDraw": {
+            "calls": 4.244444444444445,
+            "inclusive": 10954.400000000003,
+            "exclusive": 10954.400000000003
+          },
+          "MonoFindIsolated": {
+            "calls": 1.0000000000000004,
+            "inclusive": 14698.399999999998,
+            "exclusive": 9286.666666666662
+          },
+          "WaitVideoFrame": {
+            "calls": 1.0000000000000004,
+            "inclusive": 8659.555555555555,
+            "exclusive": 8367.999999999996
+          },
+          "plane_object_fast": {
+            "calls": 6.000000000000005,
+            "inclusive": 8606.04444444445,
+            "exclusive": 7622.04444444445
+          },
+          "handling_ball": {
+            "calls": 3.0000000000000027,
+            "inclusive": 11156.97777777778,
+            "exclusive": 5137.5999999999985
+          },
+          "MonoEraseFringes": {
+            "calls": 6.000000000000005,
+            "inclusive": 5477.422222222224,
+            "exclusive": 4106.31111111111
+          },
+          "MonoIncludeRegion": {
+            "calls": 21.99999999999998,
+            "inclusive": 3932.355555555555,
+            "exclusive": 3903.2
+          },
+          "LAFFC": {
+            "calls": 4.000000000000002,
+            "inclusive": 2400,
+            "exclusive": 2344.0000000000014
+          },
+          "LAD69": {
+            "calls": 4.000000000000002,
+            "inclusive": 5167.2888888888865,
+            "exclusive": 2191.28888888889
+          },
+          "MonoDrawPrepared": {
+            "calls": 6.000000000000005,
+            "inclusive": 27859.822222222218,
+            "exclusive": 1938.5777777777791
+          },
+          "LACF9": {
+            "calls": 8.000000000000004,
+            "inclusive": 1591.999999999999,
+            "exclusive": 1591.999999999999
+          },
+          "handling_bat": {
+            "calls": 1.0000000000000004,
+            "inclusive": 1423.9999999999984,
+            "exclusive": 1423.9999999999984
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1.0000000000000004,
+            "inclusive": 18028.622222222217,
+            "exclusive": 1400.5333333333326
+          },
+          "MonoRegionsIntersect": {
+            "calls": 15.000000000000009,
+            "inclusive": 1333.5999999999992,
+            "exclusive": 1333.5999999999992
+          },
+          "hl_add_a": {
+            "calls": 45.511111111111134,
+            "inclusive": 1274.3111111111116,
+            "exclusive": 1274.3111111111116
+          },
+          "bounce_wall": {
+            "calls": 3.0000000000000027,
+            "inclusive": 1200,
+            "exclusive": 1200
+          },
+          "MonoZeroRange": {
+            "calls": 2.822222222222221,
+            "inclusive": 1173.511111111111,
+            "exclusive": 1173.511111111111
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4.000000000000002,
+            "inclusive": 1384.0000000000005,
+            "exclusive": 1130.8444444444444
+          },
+          "sprite_search": {
+            "calls": 6.000000000000005,
+            "inclusive": 984.0000000000002,
+            "exclusive": 984.0000000000002
+          },
+          "play_sounds_queue": {
+            "calls": 1.0000000000000004,
+            "inclusive": 978.8444444444443,
+            "exclusive": 964.2666666666665
+          },
+          "running_dot": {
+            "calls": 1.0000000000000004,
+            "inclusive": 824.8000000000004,
+            "exclusive": 768.7999999999998
+          },
+          "KEYINT": {
+            "calls": 1.2666666666666664,
+            "inclusive": 830.9333333333335,
+            "exclusive": 663.7333333333329
+          },
+          "handling_object": {
+            "calls": 6.000000000000005,
+            "inclusive": 16598.933333333323,
+            "exclusive": 659.9999999999999
+          },
+          "fill_briks_data": {
+            "calls": 1.0000000000000004,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 1.0000000000000004,
+            "inclusive": 432.71111111111145,
+            "exclusive": 432.71111111111145
+          },
+          "handling_ufo": {
+            "calls": 1.0000000000000004,
+            "inclusive": 4181.244444444445,
+            "exclusive": 425.9555555555555
+          },
+          "obj_compare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 387.37777777777785,
+            "exclusive": 329.0666666666667
+          },
+          "check_margins": {
+            "calls": 1.0000000000000004,
+            "inclusive": 323.9999999999997,
+            "exclusive": 323.9999999999997
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1.0000000000000004,
+            "inclusive": 319.99999999999983,
+            "exclusive": 319.99999999999983
+          },
+          "random_generate": {
+            "calls": 1.0000000000000004,
+            "inclusive": 232.00000000000017,
+            "exclusive": 232.00000000000017
+          },
+          "LAAD2": {
+            "calls": 1.0000000000000004,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 136.00000000000009,
+            "exclusive": 136.00000000000009
+          },
+          "SfxTick": {
+            "calls": 1.2666666666666664,
+            "inclusive": 121.6000000000001,
+            "exclusive": 121.6000000000001
+          },
+          "MonoZeroColumn": {
+            "calls": 1.311111111111111,
+            "inclusive": 1126.488888888889,
+            "exclusive": 110.13333333333333
+          },
+          "MonoCachePrepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 100.00000000000009,
+            "exclusive": 100.00000000000009
+          },
+          "pause_game": {
+            "calls": 1.0000000000000004,
+            "inclusive": 79.99999999999996,
+            "exclusive": 79.99999999999996
+          },
+          "LAA7D": {
+            "calls": 0.24444444444444446,
+            "inclusive": 57.6888888888889,
+            "exclusive": 57.6888888888889
+          },
+          "MusicTick": {
+            "calls": 1.2666666666666664,
+            "inclusive": 45.599999999999994,
+            "exclusive": 45.599999999999994
+          },
+          "planes_begin": {
+            "calls": 1.0000000000000004,
+            "inclusive": 43.99999999999996,
+            "exclusive": 43.99999999999996
+          },
+          "bomb_appear": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCFlush": {
+            "calls": 2.000000000000001,
+            "inclusive": 24.00000000000002,
+            "exclusive": 24.00000000000002
+          },
+          "DrawMovingObjects": {
+            "calls": 1.0000000000000004,
+            "inclusive": 72070.75555555553,
+            "exclusive": 12.00000000000001
+          }
+        },
+        "videoWrites": {
+          "8000": 194.71111111111122,
+          "e000": 46
+        },
+        "videoByStage": {
+          "draw:8000": 180.7777777777778,
+          "draw:e000": 44.66666666666666,
+          "restore:8000": 13.933333333333332,
+          "restore:e000": 1.3333333333333335
+        },
+        "videoStoreCycles": 1931.0222222222217,
+        "writesByGroup": {
+          "MonoShiftDraw": 87.64444444444447,
+          "MonoDraw": 137.79999999999998,
+          "MonoZeroRange": 15.266666666666667
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {
+          "direct_ROM": 1.0000000000000004
+        },
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 225.4444444444444,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 104150.84444444446
+      },
+      "warmWorst": {
+        "steps": 1,
+        "total": 128340,
+        "irqEntryCycles": 16,
+        "phases": {
+          "logic": 21776,
+          "wait": 25932,
+          "setup": 60,
+          "render": 79420,
+          "dots": 940,
+          "tail": 212
+        },
+        "render": {
+          "MonoRender_setup": 80,
+          "MonoRender_prepare": 6428,
+          "plane_object_fast": 8608,
+          "MonoFindIsolated": 14564,
+          "MonoRender_draw": 4564,
+          "MonoDrawPrepared": 2116,
+          "MonoShiftDraw": 17140,
+          "MonoDraw": 11180,
+          "MonoCachePrepare": 100,
+          "MonoRender_restore": 4236,
+          "MonoEraseFringes": 7032,
+          "MonoZeroRange": 3272,
+          "MonoRender_copy": 100
+        },
+        "stageCycles": {
+          "setup": 80,
+          "prepare": 29600,
+          "draw": 35100,
+          "restore": 14540,
+          "copy": 100
+        },
+        "routines": {
+          "WaitVideoFrame": {
+            "calls": 1,
+            "inclusive": 25932,
+            "exclusive": 25276
+          },
+          "MonoShiftDraw": {
+            "calls": 2,
+            "inclusive": 17140,
+            "exclusive": 17028
+          },
+          "MonoRender": {
+            "calls": 1,
+            "inclusive": 79340,
+            "exclusive": 14852
+          },
+          "MonoDraw": {
+            "calls": 4,
+            "inclusive": 11180,
+            "exclusive": 11180
+          },
+          "MonoFindIsolated": {
+            "calls": 1,
+            "inclusive": 14564,
+            "exclusive": 9284
+          },
+          "plane_object_fast": {
+            "calls": 6,
+            "inclusive": 8608,
+            "exclusive": 7624
+          },
+          "MonoEraseFringes": {
+            "calls": 6,
+            "inclusive": 10304,
+            "exclusive": 7032
+          },
+          "handling_ball": {
+            "calls": 3,
+            "inclusive": 10884,
+            "exclusive": 5012
+          },
+          "MonoIncludeRegion": {
+            "calls": 22,
+            "inclusive": 3920,
+            "exclusive": 3920
+          },
+          "MonoZeroRange": {
+            "calls": 4,
+            "inclusive": 2936,
+            "exclusive": 2936
+          },
+          "LAFFC": {
+            "calls": 4,
+            "inclusive": 2400,
+            "exclusive": 2344
+          },
+          "LAD69": {
+            "calls": 4,
+            "inclusive": 5164,
+            "exclusive": 2204
+          },
+          "MonoDrawPrepared": {
+            "calls": 6,
+            "inclusive": 30536,
+            "exclusive": 1920
+          },
+          "LACF9": {
+            "calls": 8,
+            "inclusive": 1592,
+            "exclusive": 1592
+          },
+          "handling_bat": {
+            "calls": 1,
+            "inclusive": 1424,
+            "exclusive": 1424
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1,
+            "inclusive": 17692,
+            "exclusive": 1400
+          },
+          "MonoRegionsIntersect": {
+            "calls": 15,
+            "inclusive": 1360,
+            "exclusive": 1360
+          },
+          "hl_add_a": {
+            "calls": 46,
+            "inclusive": 1288,
+            "exclusive": 1288
+          },
+          "bounce_wall": {
+            "calls": 3,
+            "inclusive": 1200,
+            "exclusive": 1200
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4,
+            "inclusive": 1368,
+            "exclusive": 1144
+          },
+          "sprite_search": {
+            "calls": 6,
+            "inclusive": 984,
+            "exclusive": 984
+          },
+          "play_sounds_queue": {
+            "calls": 1,
+            "inclusive": 964,
+            "exclusive": 964
+          },
+          "running_dot": {
+            "calls": 1,
+            "inclusive": 832,
+            "exclusive": 776
+          },
+          "handling_object": {
+            "calls": 6,
+            "inclusive": 16292,
+            "exclusive": 660
+          },
+          "fill_briks_data": {
+            "calls": 1,
+            "inclusive": 532,
+            "exclusive": 532
+          },
+          "KEYINT": {
+            "calls": 1,
+            "inclusive": 656,
+            "exclusive": 524
+          },
+          "handling_bonus": {
+            "calls": 1,
+            "inclusive": 432,
+            "exclusive": 432
+          },
+          "handling_ufo": {
+            "calls": 1,
+            "inclusive": 4148,
+            "exclusive": 424
+          },
+          "MonoZeroColumn": {
+            "calls": 4,
+            "inclusive": 3272,
+            "exclusive": 336
+          },
+          "obj_compare": {
+            "calls": 1,
+            "inclusive": 328,
+            "exclusive": 328
+          },
+          "check_margins": {
+            "calls": 1,
+            "inclusive": 324,
+            "exclusive": 324
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "random_generate": {
+            "calls": 1,
+            "inclusive": 232,
+            "exclusive": 232
+          },
+          "LAAD2": {
+            "calls": 1,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1,
+            "inclusive": 136,
+            "exclusive": 136
+          },
+          "MonoCachePrepare": {
+            "calls": 1,
+            "inclusive": 100,
+            "exclusive": 100
+          },
+          "SfxTick": {
+            "calls": 1,
+            "inclusive": 96,
+            "exclusive": 96
+          },
+          "pause_game": {
+            "calls": 1,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "planes_begin": {
+            "calls": 1,
+            "inclusive": 44,
+            "exclusive": 44
+          },
+          "bomb_appear": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "MusicTick": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCFlush": {
+            "calls": 2,
+            "inclusive": 24,
+            "exclusive": 24
+          },
+          "DrawMovingObjects": {
+            "calls": 1,
+            "inclusive": 79352,
+            "exclusive": 12
+          }
+        },
+        "videoWrites": {
+          "8000": 231,
+          "e000": 50
+        },
+        "videoByStage": {
+          "draw:8000": 192,
+          "draw:e000": 50,
+          "restore:8000": 39
+        },
+        "videoStoreCycles": 2248,
+        "writesByGroup": {
+          "MonoShiftDraw": 100,
+          "MonoDraw": 142,
+          "MonoZeroRange": 39
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {
+          "direct_ROM": 1
+        },
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 242,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 128356
+      },
+      "worstTick": 80,
+      "all": {
+        "steps": 65,
+        "total": 104170.58461538462,
+        "irqEntryCycles": 20.184615384615363,
+        "phases": {
+          "logic": 22127.815384615376,
+          "wait": 8749.84615384615,
+          "setup": 59.99999999999991,
+          "render": 72089.1076923077,
+          "dots": 931.8153846153847,
+          "tail": 212.00000000000014
+        },
+        "render": {
+          "MonoRender_setup": 80,
+          "MonoRender_prepare": 6427.999999999998,
+          "plane_object_fast": 8606.03076923077,
+          "MonoFindIsolated": 14512.800000000003,
+          "MonoRender_draw": 4565.661538461539,
+          "MonoDrawPrepared": 2134.70769230769,
+          "MonoShiftDraw": 14689.292307692314,
+          "MonoDraw": 11024.430769230768,
+          "MonoCachePrepare": 99.99999999999991,
+          "MonoRender_restore": 4218.276923076918,
+          "MonoEraseFringes": 4038.0307692307697,
+          "MonoZeroRange": 1248.7384615384613,
+          "MonoRender_copy": 99.99999999999991,
+          "IRQ": 343.13846153846157
+        },
+        "stageCycles": {
+          "setup": 80,
+          "prepare": 29718.400000000005,
+          "draw": 32604.923076923074,
+          "restore": 9585.784615384611,
+          "copy": 99.99999999999991
+        },
+        "routines": {
+          "MonoRender": {
+            "calls": 0.9999999999999982,
+            "inclusive": 72009.10769230768,
+            "exclusive": 14835.938461538464
+          },
+          "MonoShiftDraw": {
+            "calls": 1.7538461538461512,
+            "inclusive": 14689.292307692314,
+            "exclusive": 14591.076923076927
+          },
+          "MonoDraw": {
+            "calls": 4.246153846153845,
+            "inclusive": 11024.430769230768,
+            "exclusive": 11024.430769230768
+          },
+          "MonoFindIsolated": {
+            "calls": 0.9999999999999982,
+            "inclusive": 14684.36923076924,
+            "exclusive": 9286.584615384612
+          },
+          "WaitVideoFrame": {
+            "calls": 0.9999999999999982,
+            "inclusive": 8749.84615384615,
+            "exclusive": 8457.169230769228
+          },
+          "plane_object_fast": {
+            "calls": 5.9999999999999964,
+            "inclusive": 8606.03076923077,
+            "exclusive": 7622.030769230775
+          },
+          "handling_ball": {
+            "calls": 2.9999999999999982,
+            "inclusive": 11150.461538461546,
+            "exclusive": 5135.692307692307
+          },
+          "MonoEraseFringes": {
+            "calls": 5.938461538461535,
+            "inclusive": 5367.507692307694,
+            "exclusive": 4038.0307692307697
+          },
+          "MonoIncludeRegion": {
+            "calls": 21.99999999999999,
+            "inclusive": 3921.4153846153854,
+            "exclusive": 3891.1384615384623
+          },
+          "LAFFC": {
+            "calls": 3.999999999999993,
+            "inclusive": 2410.276923076924,
+            "exclusive": 2344.184615384616
+          },
+          "LAD69": {
+            "calls": 3.999999999999993,
+            "inclusive": 5157.969230769229,
+            "exclusive": 2191.1999999999994
+          },
+          "MonoDrawPrepared": {
+            "calls": 5.9999999999999964,
+            "inclusive": 27948.430769230763,
+            "exclusive": 1938.7076923076897
+          },
+          "LACF9": {
+            "calls": 7.999999999999986,
+            "inclusive": 1592.0000000000023,
+            "exclusive": 1592.0000000000023
+          },
+          "handling_bat": {
+            "calls": 0.9999999999999982,
+            "inclusive": 1423.999999999999,
+            "exclusive": 1423.999999999999
+          },
+          "call_hl_for_all_obj": {
+            "calls": 0.9999999999999982,
+            "inclusive": 18033.538461538457,
+            "exclusive": 1400.5538461538447
+          },
+          "MonoRegionsIntersect": {
+            "calls": 14.999999999999977,
+            "inclusive": 1335.0769230769224,
+            "exclusive": 1335.0769230769224
+          },
+          "hl_add_a": {
+            "calls": 45.507692307692274,
+            "inclusive": 1274.2153846153835,
+            "exclusive": 1274.2153846153835
+          },
+          "bounce_wall": {
+            "calls": 2.9999999999999982,
+            "inclusive": 1200.0000000000007,
+            "exclusive": 1200.0000000000007
+          },
+          "MonoZeroRange": {
+            "calls": 2.907692307692308,
+            "inclusive": 1142.7692307692307,
+            "exclusive": 1142.7692307692307
+          },
+          "hl_bc_calc_direction": {
+            "calls": 3.999999999999993,
+            "inclusive": 1374.7692307692316,
+            "exclusive": 1130.5846153846157
+          },
+          "sprite_search": {
+            "calls": 5.9999999999999964,
+            "inclusive": 984.0000000000006,
+            "exclusive": 984.0000000000006
+          },
+          "play_sounds_queue": {
+            "calls": 0.9999999999999982,
+            "inclusive": 974.2769230769221,
+            "exclusive": 964.1846153846144
+          },
+          "running_dot": {
+            "calls": 0.9999999999999982,
+            "inclusive": 823.8153846153843,
+            "exclusive": 767.8153846153845
+          },
+          "KEYINT": {
+            "calls": 1.2615384615384602,
+            "inclusive": 827.5692307692316,
+            "exclusive": 661.0461538461547
+          },
+          "handling_object": {
+            "calls": 5.9999999999999964,
+            "inclusive": 16602.707692307686,
+            "exclusive": 660.0000000000001
+          },
+          "fill_briks_data": {
+            "calls": 0.9999999999999982,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 0.9999999999999982,
+            "inclusive": 432.4923076923072,
+            "exclusive": 432.4923076923072
+          },
+          "handling_ufo": {
+            "calls": 0.9999999999999982,
+            "inclusive": 4191.753846153844,
+            "exclusive": 425.9692307692309
+          },
+          "obj_compare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 389.66153846153884,
+            "exclusive": 329.10769230769256
+          },
+          "check_margins": {
+            "calls": 0.9999999999999982,
+            "inclusive": 323.99999999999983,
+            "exclusive": 323.99999999999983
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 0.9999999999999982,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "random_generate": {
+            "calls": 0.9999999999999982,
+            "inclusive": 231.99999999999966,
+            "exclusive": 231.99999999999966
+          },
+          "LAAD2": {
+            "calls": 0.9999999999999982,
+            "inclusive": 144.0000000000001,
+            "exclusive": 144.0000000000001
+          },
+          "enemy_prepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 136.00000000000017,
+            "exclusive": 136.00000000000017
+          },
+          "SfxTick": {
+            "calls": 1.2615384615384602,
+            "inclusive": 121.10769230769226,
+            "exclusive": 121.10769230769226
+          },
+          "MonoZeroColumn": {
+            "calls": 1.2615384615384608,
+            "inclusive": 1077.5384615384614,
+            "exclusive": 105.96923076923076
+          },
+          "MonoCachePrepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 99.99999999999991,
+            "exclusive": 99.99999999999991
+          },
+          "pause_game": {
+            "calls": 0.9999999999999982,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "LAA7D": {
+            "calls": 0.24615384615384617,
+            "inclusive": 58.092307692307706,
+            "exclusive": 58.092307692307706
+          },
+          "MusicTick": {
+            "calls": 1.2615384615384602,
+            "inclusive": 45.415384615384625,
+            "exclusive": 45.415384615384625
+          },
+          "planes_begin": {
+            "calls": 0.9999999999999982,
+            "inclusive": 43.99999999999998,
+            "exclusive": 43.99999999999998
+          },
+          "bomb_appear": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "restore_objs_and_magnet": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "RCFlush": {
+            "calls": 1.9999999999999964,
+            "inclusive": 23.999999999999986,
+            "exclusive": 23.999999999999986
+          },
+          "DrawMovingObjects": {
+            "calls": 0.9999999999999982,
+            "inclusive": 72021.10769230772,
+            "exclusive": 11.999999999999993
+          }
+        },
+        "videoWrites": {
+          "8000": 194.96923076923073,
+          "e000": 46.30769230769228
+        },
+        "videoByStage": {
+          "draw:8000": 181.41538461538454,
+          "draw:e000": 45.07692307692305,
+          "restore:8000": 13.553846153846147,
+          "restore:e000": 1.2307692307692308
+        },
+        "videoStoreCycles": 1935.1384615384611,
+        "writesByGroup": {
+          "MonoShiftDraw": 87.69230769230764,
+          "MonoDraw": 138.80000000000004,
+          "MonoZeroRange": 14.784615384615375
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {
+          "direct_ROM": 0.9999999999999982
+        },
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 226.49230769230763,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 104190.76923076923
+      }
+    },
+    {
+      "base": "../vector06c-batty-three-plane",
+      "motion": "reference",
+      "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+      "warm": {
+        "steps": 45,
+        "total": 160880.08888888892,
+        "irqEntryCycles": 32.355555555555554,
+        "phases": {
+          "logic": 22196.08888888889,
+          "wait": 965.8666666666659,
+          "setup": 60.000000000000036,
+          "render": 136498.48888888885,
+          "dots": 947.644444444445,
+          "tail": 211.99999999999991
+        },
+        "render": {
+          "pipeline_setup": 104.00000000000009,
+          "CGRender_control": 44657.866666666654,
+          "CGPrepare": 28167.111111111113,
+          "plane_object_fast": 8607.111111111115,
+          "IRQ": 1020.4444444444447,
+          "CGGroups": 9407.555555555558,
+          "CGShadeSaved": 42561.6,
+          "CGRestoreVideo": 1972.7999999999997
+        },
+        "stageCycles": {
+          "setup": 136498.48888888885
+        },
+        "routines": {
+          "CGShadeSaved": {
+            "calls": 6.000000000000005,
+            "inclusive": 42663.64444444445,
+            "exclusive": 41879.11111111111
+          },
+          "CGPrepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 37094.93333333333,
+            "exclusive": 19015.466666666664
+          },
+          "CGOutside": {
+            "calls": 4.666666666666665,
+            "inclusive": 22242.48888888889,
+            "exclusive": 10888.888888888887
+          },
+          "CGRender": {
+            "calls": 1.0000000000000004,
+            "inclusive": 136394.48888888888,
+            "exclusive": 9687.28888888889
+          },
+          "CGGroups": {
+            "calls": 1.0000000000000004,
+            "inclusive": 9524.177777777779,
+            "exclusive": 8475.555555555551
+          },
+          "CGPointers": {
+            "calls": 28.000000000000018,
+            "inclusive": 9063.911111111116,
+            "exclusive": 8177.5999999999985
+          },
+          "plane_object_fast": {
+            "calls": 6.000000000000005,
+            "inclusive": 8665.422222222225,
+            "exclusive": 7623.111111111117
+          },
+          "hl_add_a": {
+            "calls": 202.73333333333332,
+            "inclusive": 5975.9111111111115,
+            "exclusive": 5917.6
+          },
+          "handling_ball": {
+            "calls": 3.0000000000000027,
+            "inclusive": 11121.688888888892,
+            "exclusive": 5132.266666666666
+          },
+          "SpriteCachePrepare": {
+            "calls": 6.000000000000005,
+            "inclusive": 4924.177777777781,
+            "exclusive": 4473.066666666666
+          },
+          "CGIncludeRect": {
+            "calls": 21.99999999999998,
+            "inclusive": 4474.311111111112,
+            "exclusive": 4386.844444444445
+          },
+          "CGCopyPacked": {
+            "calls": 5.377777777777777,
+            "inclusive": 4003.3777777777786,
+            "exclusive": 3974.222222222223
+          },
+          "CGOutsideSpan": {
+            "calls": 8.666666666666666,
+            "inclusive": 4592.266666666668,
+            "exclusive": 2590.311111111111
+          },
+          "CGLoad": {
+            "calls": 6.000000000000005,
+            "inclusive": 2555.3777777777786,
+            "exclusive": 2497.0666666666675
+          },
+          "LAFFC": {
+            "calls": 4.000000000000002,
+            "inclusive": 2414.844444444444,
+            "exclusive": 2344.2666666666682
+          },
+          "LAD69": {
+            "calls": 4.000000000000002,
+            "inclusive": 5182.133333333331,
+            "exclusive": 2191.8222222222234
+          },
+          "CGIntersect": {
+            "calls": 3.244444444444443,
+            "inclusive": 2183.288888888889,
+            "exclusive": 2154.133333333333
+          },
+          "CGRestoreVideo": {
+            "calls": 2.822222222222221,
+            "inclusive": 1972.7999999999997,
+            "exclusive": 1972.7999999999997
+          },
+          "LACF9": {
+            "calls": 8.000000000000004,
+            "inclusive": 1606.8444444444435,
+            "exclusive": 1592.2666666666657
+          },
+          "handling_bat": {
+            "calls": 1.0000000000000004,
+            "inclusive": 1438.8444444444428,
+            "exclusive": 1424.266666666665
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1.0000000000000004,
+            "inclusive": 18037.86666666666,
+            "exclusive": 1400.2666666666657
+          },
+          "bounce_wall": {
+            "calls": 3.0000000000000027,
+            "inclusive": 1214.8444444444444,
+            "exclusive": 1200.2666666666667
+          },
+          "CGIsolated": {
+            "calls": 2.3333333333333326,
+            "inclusive": 42736.355555555565,
+            "exclusive": 1180.9777777777774
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4.000000000000002,
+            "inclusive": 1354.3111111111116,
+            "exclusive": 1130.3111111111111
+          },
+          "KEYINT": {
+            "calls": 2.022222222222222,
+            "inclusive": 1326.577777777778,
+            "exclusive": 1059.6444444444437
+          },
+          "sprite_search": {
+            "calls": 6.000000000000005,
+            "inclusive": 984.0000000000002,
+            "exclusive": 984.0000000000002
+          },
+          "play_sounds_queue": {
+            "calls": 1.0000000000000004,
+            "inclusive": 993.6888888888888,
+            "exclusive": 964.5333333333332
+          },
+          "WaitVideoFrame": {
+            "calls": 1.0000000000000004,
+            "inclusive": 965.8666666666659,
+            "exclusive": 936.7111111111103
+          },
+          "running_dot": {
+            "calls": 1.0000000000000004,
+            "inclusive": 839.6444444444448,
+            "exclusive": 769.0666666666665
+          },
+          "handling_object": {
+            "calls": 6.000000000000005,
+            "inclusive": 16623.022222222215,
+            "exclusive": 660.2666666666665
+          },
+          "fill_briks_data": {
+            "calls": 1.0000000000000004,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 1.0000000000000004,
+            "inclusive": 447.5555555555559,
+            "exclusive": 432.9777777777781
+          },
+          "handling_ufo": {
+            "calls": 1.0000000000000004,
+            "inclusive": 4210.933333333334,
+            "exclusive": 425.9555555555555
+          },
+          "obj_compare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 328.00000000000006,
+            "exclusive": 328.00000000000006
+          },
+          "check_margins": {
+            "calls": 1.0000000000000004,
+            "inclusive": 323.9999999999997,
+            "exclusive": 323.9999999999997
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1.0000000000000004,
+            "inclusive": 319.99999999999983,
+            "exclusive": 319.99999999999983
+          },
+          "random_generate": {
+            "calls": 1.0000000000000004,
+            "inclusive": 261.6888888888891,
+            "exclusive": 232.5333333333335
+          },
+          "SfxTick": {
+            "calls": 2.022222222222222,
+            "inclusive": 194.1333333333334,
+            "exclusive": 194.1333333333334
+          },
+          "LAAD2": {
+            "calls": 1.0000000000000004,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 136.00000000000009,
+            "exclusive": 136.00000000000009
+          },
+          "pause_game": {
+            "calls": 1.0000000000000004,
+            "inclusive": 79.99999999999996,
+            "exclusive": 79.99999999999996
+          },
+          "MusicTick": {
+            "calls": 2.022222222222222,
+            "inclusive": 72.80000000000001,
+            "exclusive": 72.80000000000001
+          },
+          "planes_begin": {
+            "calls": 1.0000000000000004,
+            "inclusive": 68.00000000000004,
+            "exclusive": 68.00000000000004
+          },
+          "LAA7D": {
+            "calls": 0.24444444444444446,
+            "inclusive": 57.6888888888889,
+            "exclusive": 57.6888888888889
+          },
+          "bomb_appear": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCBegin": {
+            "calls": 1.0000000000000004,
+            "inclusive": 12.00000000000001,
+            "exclusive": 12.00000000000001
+          },
+          "DrawMovingObjects": {
+            "calls": 1.0000000000000004,
+            "inclusive": 136406.48888888885,
+            "exclusive": 12.00000000000001
+          },
+          "RCFlush": {
+            "calls": 1.0000000000000004,
+            "inclusive": 12.00000000000001,
+            "exclusive": 12.00000000000001
+          }
+        },
+        "videoWrites": {
+          "e000": 205.1111111111111,
+          "c000": 205.1111111111111
+        },
+        "videoByStage": {
+          "setup:e000": 205.1111111111111,
+          "setup:c000": 205.1111111111111
+        },
+        "videoStoreCycles": 3281.7777777777774,
+        "writesByGroup": {
+          "CGShadeSaved": 380.5333333333333,
+          "CGRestoreVideo": 29.688888888888894
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {},
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 0,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 160912.44444444447
+      },
+      "warmWorst": {
+        "steps": 1,
+        "total": 200028,
+        "irqEntryCycles": 32,
+        "phases": {
+          "logic": 21776,
+          "wait": 156,
+          "setup": 60,
+          "render": 176884,
+          "dots": 940,
+          "tail": 212
+        },
+        "render": {
+          "pipeline_setup": 104,
+          "CGRender_control": 78532,
+          "CGPrepare": 28152,
+          "plane_object_fast": 8608,
+          "IRQ": 1312,
+          "CGGroups": 9424,
+          "CGShadeSaved": 45008,
+          "CGRestoreVideo": 5744
+        },
+        "stageCycles": {
+          "setup": 176884
+        },
+        "routines": {
+          "CGShadeSaved": {
+            "calls": 6,
+            "inclusive": 45008,
+            "exclusive": 44284
+          },
+          "CGOutside": {
+            "calls": 12,
+            "inclusive": 59600,
+            "exclusive": 28164
+          },
+          "CGPrepare": {
+            "calls": 1,
+            "inclusive": 37416,
+            "exclusive": 18992
+          },
+          "CGOutsideSpan": {
+            "calls": 22,
+            "inclusive": 16308,
+            "exclusive": 9908
+          },
+          "CGCopyPacked": {
+            "calls": 13,
+            "inclusive": 9444,
+            "exclusive": 9444
+          },
+          "CGRender": {
+            "calls": 1,
+            "inclusive": 176780,
+            "exclusive": 8608
+          },
+          "CGGroups": {
+            "calls": 1,
+            "inclusive": 9424,
+            "exclusive": 8492
+          },
+          "CGPointers": {
+            "calls": 28,
+            "inclusive": 8960,
+            "exclusive": 8176
+          },
+          "plane_object_fast": {
+            "calls": 6,
+            "inclusive": 8608,
+            "exclusive": 7624
+          },
+          "hl_add_a": {
+            "calls": 231,
+            "inclusive": 6720,
+            "exclusive": 6720
+          },
+          "CGRestoreVideo": {
+            "calls": 7,
+            "inclusive": 5744,
+            "exclusive": 5744
+          },
+          "handling_ball": {
+            "calls": 3,
+            "inclusive": 10884,
+            "exclusive": 5012
+          },
+          "SpriteCachePrepare": {
+            "calls": 6,
+            "inclusive": 4868,
+            "exclusive": 4472
+          },
+          "CGIntersect": {
+            "calls": 8,
+            "inclusive": 4424,
+            "exclusive": 4424
+          },
+          "CGIncludeRect": {
+            "calls": 22,
+            "inclusive": 4396,
+            "exclusive": 4396
+          },
+          "CGIsolated": {
+            "calls": 6,
+            "inclusive": 115016,
+            "exclusive": 3044
+          },
+          "CGLoad": {
+            "calls": 6,
+            "inclusive": 2496,
+            "exclusive": 2496
+          },
+          "LAFFC": {
+            "calls": 4,
+            "inclusive": 2400,
+            "exclusive": 2344
+          },
+          "LAD69": {
+            "calls": 4,
+            "inclusive": 5164,
+            "exclusive": 2204
+          },
+          "LACF9": {
+            "calls": 8,
+            "inclusive": 1592,
+            "exclusive": 1592
+          },
+          "handling_bat": {
+            "calls": 1,
+            "inclusive": 1424,
+            "exclusive": 1424
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1,
+            "inclusive": 17692,
+            "exclusive": 1400
+          },
+          "bounce_wall": {
+            "calls": 3,
+            "inclusive": 1200,
+            "exclusive": 1200
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4,
+            "inclusive": 1368,
+            "exclusive": 1144
+          },
+          "KEYINT": {
+            "calls": 2,
+            "inclusive": 1312,
+            "exclusive": 1048
+          },
+          "sprite_search": {
+            "calls": 6,
+            "inclusive": 984,
+            "exclusive": 984
+          },
+          "play_sounds_queue": {
+            "calls": 1,
+            "inclusive": 964,
+            "exclusive": 964
+          },
+          "running_dot": {
+            "calls": 1,
+            "inclusive": 832,
+            "exclusive": 776
+          },
+          "handling_object": {
+            "calls": 6,
+            "inclusive": 16292,
+            "exclusive": 660
+          },
+          "fill_briks_data": {
+            "calls": 1,
+            "inclusive": 532,
+            "exclusive": 532
+          },
+          "handling_bonus": {
+            "calls": 1,
+            "inclusive": 432,
+            "exclusive": 432
+          },
+          "handling_ufo": {
+            "calls": 1,
+            "inclusive": 4148,
+            "exclusive": 424
+          },
+          "obj_compare": {
+            "calls": 1,
+            "inclusive": 328,
+            "exclusive": 328
+          },
+          "check_margins": {
+            "calls": 1,
+            "inclusive": 324,
+            "exclusive": 324
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "random_generate": {
+            "calls": 1,
+            "inclusive": 232,
+            "exclusive": 232
+          },
+          "SfxTick": {
+            "calls": 2,
+            "inclusive": 192,
+            "exclusive": 192
+          },
+          "WaitVideoFrame": {
+            "calls": 1,
+            "inclusive": 156,
+            "exclusive": 156
+          },
+          "LAAD2": {
+            "calls": 1,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1,
+            "inclusive": 136,
+            "exclusive": 136
+          },
+          "pause_game": {
+            "calls": 1,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "MusicTick": {
+            "calls": 2,
+            "inclusive": 72,
+            "exclusive": 72
+          },
+          "planes_begin": {
+            "calls": 1,
+            "inclusive": 68,
+            "exclusive": 68
+          },
+          "bomb_appear": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCBegin": {
+            "calls": 1,
+            "inclusive": 12,
+            "exclusive": 12
+          },
+          "DrawMovingObjects": {
+            "calls": 1,
+            "inclusive": 176792,
+            "exclusive": 12
+          },
+          "RCFlush": {
+            "calls": 1,
+            "inclusive": 12,
+            "exclusive": 12
+          }
+        },
+        "videoWrites": {
+          "e000": 247,
+          "c000": 247
+        },
+        "videoByStage": {
+          "setup:e000": 247,
+          "setup:c000": 247
+        },
+        "videoStoreCycles": 3952,
+        "writesByGroup": {
+          "CGShadeSaved": 404,
+          "CGRestoreVideo": 90
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {},
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 0,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 200060
+      },
+      "worstTick": 96,
+      "all": {
+        "steps": 65,
+        "total": 171742.83076923084,
+        "irqEntryCycles": 35.19999999999999,
+        "phases": {
+          "logic": 22230.584615384607,
+          "wait": 1027.4461538461528,
+          "setup": 59.99999999999991,
+          "render": 147270.70769230777,
+          "dots": 942.0923076923078,
+          "tail": 212.00000000000014
+        },
+        "render": {
+          "pipeline_setup": 103.99999999999989,
+          "CGRender_control": 44909.29230769232,
+          "CGPrepare": 28112.61538461538,
+          "plane_object_fast": 8607.507692307694,
+          "CGGroups": 9408.123076923082,
+          "IRQ": 1110.1538461538473,
+          "SpriteCacheBuild": 10373.10769230769,
+          "CGShadeSaved": 42701.538461538454,
+          "CGRestoreVideo": 1944.3692307692304
+        },
+        "stageCycles": {
+          "setup": 147270.70769230777
+        },
+        "routines": {
+          "CGShadeSaved": {
+            "calls": 5.9999999999999964,
+            "inclusive": 42782.27692307692,
+            "exclusive": 42017.046153846146
+          },
+          "CGPrepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36992.615384615405,
+            "exclusive": 18980.4923076923
+          },
+          "CGOutside": {
+            "calls": 4.615384615384614,
+            "inclusive": 22422.215384615385,
+            "exclusive": 10710.892307692306
+          },
+          "SpriteCacheBuild": {
+            "calls": 0.35384615384615387,
+            "inclusive": 10554.769230769232,
+            "exclusive": 9866.892307692307
+          },
+          "CGRender": {
+            "calls": 0.9999999999999982,
+            "inclusive": 147166.70769230768,
+            "exclusive": 9684.861538461537
+          },
+          "CGGroups": {
+            "calls": 0.9999999999999982,
+            "inclusive": 9498.953846153852,
+            "exclusive": 8476.123076923075
+          },
+          "CGPointers": {
+            "calls": 27.999999999999964,
+            "inclusive": 9042.215384615396,
+            "exclusive": 8177.292307692317
+          },
+          "plane_object_fast": {
+            "calls": 5.9999999999999964,
+            "inclusive": 8688.246153846156,
+            "exclusive": 7623.323076923083
+          },
+          "hl_add_a": {
+            "calls": 220.69230769230768,
+            "inclusive": 6512.553846153844,
+            "exclusive": 6441.90769230769
+          },
+          "handling_ball": {
+            "calls": 2.9999999999999982,
+            "inclusive": 11129.907692307701,
+            "exclusive": 5136.0615384615385
+          },
+          "SpriteCachePrepare": {
+            "calls": 5.9999999999999964,
+            "inclusive": 15563.138461538456,
+            "exclusive": 4542.4615384615445
+          },
+          "CGIncludeRect": {
+            "calls": 21.99999999999999,
+            "inclusive": 4429.8461538461515,
+            "exclusive": 4369.292307692304
+          },
+          "CGCopyPacked": {
+            "calls": 5.230769230769229,
+            "inclusive": 3886.5846153846155,
+            "exclusive": 3866.4
+          },
+          "CGOutsideSpan": {
+            "calls": 9.292307692307693,
+            "inclusive": 4835.199999999999,
+            "exclusive": 2850.461538461538
+          },
+          "CGLoad": {
+            "calls": 5.9999999999999964,
+            "inclusive": 2567.9384615384647,
+            "exclusive": 2497.2923076923107
+          },
+          "CGIntersect": {
+            "calls": 3.8000000000000007,
+            "inclusive": 2401.6,
+            "exclusive": 2371.3230769230768
+          },
+          "LAFFC": {
+            "calls": 3.999999999999993,
+            "inclusive": 2430.830769230771,
+            "exclusive": 2344.5538461538467
+          },
+          "LAD69": {
+            "calls": 3.999999999999993,
+            "inclusive": 5209.353846153844,
+            "exclusive": 2191.9384615384606
+          },
+          "CGRestoreVideo": {
+            "calls": 2.907692307692308,
+            "inclusive": 1944.3692307692304,
+            "exclusive": 1944.3692307692304
+          },
+          "LACF9": {
+            "calls": 7.999999999999986,
+            "inclusive": 1612.553846153848,
+            "exclusive": 1592.3692307692327
+          },
+          "handling_bat": {
+            "calls": 0.9999999999999982,
+            "inclusive": 1434.2769230769222,
+            "exclusive": 1424.1846153846145
+          },
+          "call_hl_for_all_obj": {
+            "calls": 0.9999999999999982,
+            "inclusive": 18074.64615384614,
+            "exclusive": 1400.1846153846138
+          },
+          "bounce_wall": {
+            "calls": 2.9999999999999982,
+            "inclusive": 1210.2769230769238,
+            "exclusive": 1200.1846153846159
+          },
+          "CGIsolated": {
+            "calls": 2.307692307692307,
+            "inclusive": 46388.98461538462,
+            "exclusive": 1155.938461538462
+          },
+          "KEYINT": {
+            "calls": 2.1999999999999993,
+            "inclusive": 1443.2000000000012,
+            "exclusive": 1152.800000000001
+          },
+          "hl_bc_calc_direction": {
+            "calls": 3.999999999999993,
+            "inclusive": 1364.4923076923085,
+            "exclusive": 1130.4000000000005
+          },
+          "WaitVideoFrame": {
+            "calls": 0.9999999999999982,
+            "inclusive": 1027.4461538461528,
+            "exclusive": 997.1692307692298
+          },
+          "sprite_search": {
+            "calls": 5.9999999999999964,
+            "inclusive": 994.2769230769237,
+            "exclusive": 984.184615384616
+          },
+          "play_sounds_queue": {
+            "calls": 0.9999999999999982,
+            "inclusive": 1005.1076923076915,
+            "exclusive": 964.7384615384607
+          },
+          "running_dot": {
+            "calls": 0.9999999999999982,
+            "inclusive": 834.0923076923074,
+            "exclusive": 767.9999999999999
+          },
+          "handling_object": {
+            "calls": 5.9999999999999964,
+            "inclusive": 16664.369230769225,
+            "exclusive": 660.1846153846154
+          },
+          "fill_briks_data": {
+            "calls": 0.9999999999999982,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 0.9999999999999982,
+            "inclusive": 442.76923076923026,
+            "exclusive": 432.6769230769226
+          },
+          "handling_ufo": {
+            "calls": 0.9999999999999982,
+            "inclusive": 4253.415384615383,
+            "exclusive": 425.9692307692309
+          },
+          "obj_compare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 328.00000000000034,
+            "exclusive": 328.00000000000034
+          },
+          "check_margins": {
+            "calls": 0.9999999999999982,
+            "inclusive": 323.99999999999983,
+            "exclusive": 323.99999999999983
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 0.9999999999999982,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "random_generate": {
+            "calls": 0.9999999999999982,
+            "inclusive": 252.5538461538458,
+            "exclusive": 232.36923076923046
+          },
+          "SfxTick": {
+            "calls": 2.1999999999999993,
+            "inclusive": 211.1999999999999,
+            "exclusive": 211.1999999999999
+          },
+          "LAAD2": {
+            "calls": 0.9999999999999982,
+            "inclusive": 144.0000000000001,
+            "exclusive": 144.0000000000001
+          },
+          "enemy_prepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 136.00000000000017,
+            "exclusive": 136.00000000000017
+          },
+          "pause_game": {
+            "calls": 0.9999999999999982,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "MusicTick": {
+            "calls": 2.1999999999999993,
+            "inclusive": 79.2,
+            "exclusive": 79.2
+          },
+          "planes_begin": {
+            "calls": 0.9999999999999982,
+            "inclusive": 68.00000000000009,
+            "exclusive": 68.00000000000009
+          },
+          "LAA7D": {
+            "calls": 0.24615384615384617,
+            "inclusive": 58.092307692307706,
+            "exclusive": 58.092307692307706
+          },
+          "bomb_appear": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "restore_objs_and_magnet": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "RCBegin": {
+            "calls": 0.9999999999999982,
+            "inclusive": 11.999999999999993,
+            "exclusive": 11.999999999999993
+          },
+          "DrawMovingObjects": {
+            "calls": 0.9999999999999982,
+            "inclusive": 147178.70769230768,
+            "exclusive": 11.999999999999993
+          },
+          "RCFlush": {
+            "calls": 0.9999999999999982,
+            "inclusive": 11.999999999999993,
+            "exclusive": 11.999999999999993
+          }
+        },
+        "videoWrites": {
+          "e000": 205.36923076923082,
+          "c000": 205.36923076923082
+        },
+        "videoByStage": {
+          "setup:e000": 205.36923076923082,
+          "setup:c000": 205.36923076923082
+        },
+        "videoStoreCycles": 3285.907692307693,
+        "writesByGroup": {
+          "CGShadeSaved": 381.84615384615364,
+          "CGRestoreVideo": 28.892307692307686
+        },
+        "cacheBuilds": 0.35384615384615387,
+        "cacheDecisions": {},
+        "buildsByKind": {
+          "1": {
+            "calls": 0.1076923076923077,
+            "cycles": 3214.5846153846155
+          },
+          "4": {
+            "calls": 0.12307692307692308,
+            "cycles": 3227.753846153846
+          },
+          "8": {
+            "calls": 0.12307692307692308,
+            "cycles": 4112.430769230769
+          }
+        },
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 0,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 171778.03076923086
+      }
+    },
+    {
+      "base": ".",
+      "motion": "smooth",
+      "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+      "warm": {
+        "steps": 45,
+        "total": 104740.26666666665,
+        "irqEntryCycles": 20.26666666666667,
+        "phases": {
+          "logic": 22112.62222222222,
+          "wait": 10400.62222222222,
+          "setup": 60.000000000000036,
+          "render": 71022.22222222222,
+          "dots": 932.8000000000005,
+          "tail": 211.99999999999991
+        },
+        "render": {
+          "MonoRender_setup": 79.99999999999996,
+          "MonoRender_prepare": 6428.000000000007,
+          "plane_object_fast": 8605.86666666667,
+          "MonoFindIsolated": 14511.733333333335,
+          "MonoRender_draw": 4565.066666666671,
+          "MonoDrawPrepared": 2136.5333333333324,
+          "MonoShiftDraw": 14471.733333333326,
+          "MonoDraw": 10989.511111111115,
+          "MonoCachePrepare": 100.00000000000009,
+          "MonoRender_restore": 4235.999999999998,
+          "MonoEraseFringes": 3656.1777777777775,
+          "MonoZeroRange": 806.311111111111,
+          "MonoRender_copy": 100.00000000000009,
+          "IRQ": 335.28888888888895
+        },
+        "stageCycles": {
+          "setup": 79.99999999999996,
+          "prepare": 29705.955555555553,
+          "draw": 32350.311111111103,
+          "restore": 8785.955555555558,
+          "copy": 100.00000000000009
+        },
+        "routines": {
+          "MonoRender": {
+            "calls": 1.0000000000000004,
+            "inclusive": 70942.22222222222,
+            "exclusive": 14853.066666666655
+          },
+          "MonoShiftDraw": {
+            "calls": 1.7333333333333336,
+            "inclusive": 14471.733333333326,
+            "exclusive": 14374.666666666662
+          },
+          "MonoDraw": {
+            "calls": 4.266666666666667,
+            "inclusive": 11004.088888888893,
+            "exclusive": 10989.511111111115
+          },
+          "WaitVideoFrame": {
+            "calls": 1.0000000000000004,
+            "inclusive": 10400.62222222222,
+            "exclusive": 10079.911111111109
+          },
+          "MonoFindIsolated": {
+            "calls": 1.0000000000000004,
+            "inclusive": 14672.088888888886,
+            "exclusive": 9285.866666666663
+          },
+          "plane_object_fast": {
+            "calls": 6.000000000000005,
+            "inclusive": 8605.86666666667,
+            "exclusive": 7621.866666666672
+          },
+          "handling_ball": {
+            "calls": 3.0000000000000027,
+            "inclusive": 11142.133333333337,
+            "exclusive": 5137.5999999999985
+          },
+          "MonoIncludeRegion": {
+            "calls": 21.99999999999998,
+            "inclusive": 3913.2444444444436,
+            "exclusive": 3898.666666666666
+          },
+          "MonoEraseFringes": {
+            "calls": 6.000000000000005,
+            "inclusive": 4549.955555555554,
+            "exclusive": 3656.1777777777775
+          },
+          "LAFFC": {
+            "calls": 4.000000000000002,
+            "inclusive": 2400,
+            "exclusive": 2344.0000000000014
+          },
+          "LAD69": {
+            "calls": 4.000000000000002,
+            "inclusive": 5167.2888888888865,
+            "exclusive": 2191.8222222222234
+          },
+          "MonoDrawPrepared": {
+            "calls": 6.000000000000005,
+            "inclusive": 27726.93333333333,
+            "exclusive": 1940.5333333333344
+          },
+          "LACF9": {
+            "calls": 8.000000000000004,
+            "inclusive": 1591.999999999999,
+            "exclusive": 1591.999999999999
+          },
+          "handling_bat": {
+            "calls": 1.0000000000000004,
+            "inclusive": 1423.9999999999984,
+            "exclusive": 1423.9999999999984
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1.0000000000000004,
+            "inclusive": 18028.622222222217,
+            "exclusive": 1400.2666666666657
+          },
+          "MonoRegionsIntersect": {
+            "calls": 15.000000000000009,
+            "inclusive": 1370.933333333333,
+            "exclusive": 1327.1999999999996
+          },
+          "hl_add_a": {
+            "calls": 45.46666666666668,
+            "inclusive": 1287.9111111111117,
+            "exclusive": 1273.3333333333337
+          },
+          "bounce_wall": {
+            "calls": 3.0000000000000027,
+            "inclusive": 1214.8444444444444,
+            "exclusive": 1200.2666666666667
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4.000000000000002,
+            "inclusive": 1354.3111111111116,
+            "exclusive": 1130.3111111111111
+          },
+          "sprite_search": {
+            "calls": 6.000000000000005,
+            "inclusive": 984.0000000000002,
+            "exclusive": 984.0000000000002
+          },
+          "play_sounds_queue": {
+            "calls": 1.0000000000000004,
+            "inclusive": 963.9999999999999,
+            "exclusive": 963.9999999999999
+          },
+          "running_dot": {
+            "calls": 1.0000000000000004,
+            "inclusive": 824.8000000000004,
+            "exclusive": 768.7999999999998
+          },
+          "MonoZeroRange": {
+            "calls": 2.355555555555555,
+            "inclusive": 740.9777777777779,
+            "exclusive": 740.9777777777779
+          },
+          "KEYINT": {
+            "calls": 1.2666666666666668,
+            "inclusive": 830.9333333333335,
+            "exclusive": 663.733333333333
+          },
+          "handling_object": {
+            "calls": 6.000000000000005,
+            "inclusive": 16613.777777777766,
+            "exclusive": 660.2666666666665
+          },
+          "fill_briks_data": {
+            "calls": 1.0000000000000004,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 1.0000000000000004,
+            "inclusive": 432.71111111111145,
+            "exclusive": 432.71111111111145
+          },
+          "handling_ufo": {
+            "calls": 1.0000000000000004,
+            "inclusive": 4181.244444444445,
+            "exclusive": 425.9555555555555
+          },
+          "obj_compare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 357.6888888888889,
+            "exclusive": 328.53333333333336
+          },
+          "check_margins": {
+            "calls": 1.0000000000000004,
+            "inclusive": 323.9999999999997,
+            "exclusive": 323.9999999999997
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1.0000000000000004,
+            "inclusive": 319.99999999999983,
+            "exclusive": 319.99999999999983
+          },
+          "random_generate": {
+            "calls": 1.0000000000000004,
+            "inclusive": 232.00000000000017,
+            "exclusive": 232.00000000000017
+          },
+          "LAAD2": {
+            "calls": 1.0000000000000004,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 136.00000000000009,
+            "exclusive": 136.00000000000009
+          },
+          "SfxTick": {
+            "calls": 1.2666666666666668,
+            "inclusive": 121.60000000000008,
+            "exclusive": 121.60000000000008
+          },
+          "MonoCachePrepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 100.00000000000009,
+            "exclusive": 100.00000000000009
+          },
+          "pause_game": {
+            "calls": 1.0000000000000004,
+            "inclusive": 79.99999999999996,
+            "exclusive": 79.99999999999996
+          },
+          "MonoZeroColumn": {
+            "calls": 0.7777777777777777,
+            "inclusive": 642.2222222222223,
+            "exclusive": 65.33333333333334
+          },
+          "LAA7D": {
+            "calls": 0.24444444444444446,
+            "inclusive": 57.6888888888889,
+            "exclusive": 57.6888888888889
+          },
+          "MusicTick": {
+            "calls": 1.2666666666666668,
+            "inclusive": 45.599999999999994,
+            "exclusive": 45.599999999999994
+          },
+          "planes_begin": {
+            "calls": 1.0000000000000004,
+            "inclusive": 43.99999999999996,
+            "exclusive": 43.99999999999996
+          },
+          "bomb_appear": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCFlush": {
+            "calls": 2.000000000000001,
+            "inclusive": 24.00000000000002,
+            "exclusive": 24.00000000000002
+          },
+          "DrawMovingObjects": {
+            "calls": 1.0000000000000004,
+            "inclusive": 70954.22222222219,
+            "exclusive": 12.00000000000001
+          }
+        },
+        "videoWrites": {
+          "8000": 188.91111111111124,
+          "e000": 45.33333333333334
+        },
+        "videoByStage": {
+          "draw:8000": 180.2222222222222,
+          "draw:e000": 44.66666666666667,
+          "restore:8000": 8.688888888888888,
+          "restore:e000": 0.6666666666666666
+        },
+        "videoStoreCycles": 1876.622222222222,
+        "writesByGroup": {
+          "MonoShiftDraw": 86.66666666666669,
+          "MonoDraw": 138.2222222222222,
+          "MonoZeroRange": 9.355555555555554
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {
+          "direct_ROM": 1.0000000000000004
+        },
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 224.8888888888889,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 104760.53333333331
+      },
+      "warmWorst": {
+        "steps": 1,
+        "total": 123748,
+        "irqEntryCycles": 16,
+        "phases": {
+          "logic": 21776,
+          "wait": 28244,
+          "setup": 60,
+          "render": 72516,
+          "dots": 940,
+          "tail": 212
+        },
+        "render": {
+          "MonoRender_setup": 80,
+          "MonoRender_prepare": 6428,
+          "plane_object_fast": 8608,
+          "MonoFindIsolated": 14436,
+          "MonoRender_draw": 4564,
+          "MonoDrawPrepared": 2116,
+          "MonoShiftDraw": 17140,
+          "MonoDraw": 11180,
+          "MonoCachePrepare": 100,
+          "MonoRender_restore": 4236,
+          "MonoEraseFringes": 3216,
+          "MonoZeroRange": 312,
+          "MonoRender_copy": 100
+        },
+        "stageCycles": {
+          "setup": 80,
+          "prepare": 29472,
+          "draw": 35100,
+          "restore": 7764,
+          "copy": 100
+        },
+        "routines": {
+          "WaitVideoFrame": {
+            "calls": 1,
+            "inclusive": 28244,
+            "exclusive": 27588
+          },
+          "MonoShiftDraw": {
+            "calls": 2,
+            "inclusive": 17140,
+            "exclusive": 17028
+          },
+          "MonoRender": {
+            "calls": 1,
+            "inclusive": 72436,
+            "exclusive": 14852
+          },
+          "MonoDraw": {
+            "calls": 4,
+            "inclusive": 11180,
+            "exclusive": 11180
+          },
+          "MonoFindIsolated": {
+            "calls": 1,
+            "inclusive": 14436,
+            "exclusive": 9284
+          },
+          "plane_object_fast": {
+            "calls": 6,
+            "inclusive": 8608,
+            "exclusive": 7624
+          },
+          "handling_ball": {
+            "calls": 3,
+            "inclusive": 10884,
+            "exclusive": 5012
+          },
+          "MonoIncludeRegion": {
+            "calls": 22,
+            "inclusive": 3900,
+            "exclusive": 3900
+          },
+          "MonoEraseFringes": {
+            "calls": 6,
+            "inclusive": 3528,
+            "exclusive": 3216
+          },
+          "LAFFC": {
+            "calls": 4,
+            "inclusive": 2400,
+            "exclusive": 2344
+          },
+          "LAD69": {
+            "calls": 4,
+            "inclusive": 5164,
+            "exclusive": 2204
+          },
+          "MonoDrawPrepared": {
+            "calls": 6,
+            "inclusive": 30536,
+            "exclusive": 1920
+          },
+          "LACF9": {
+            "calls": 8,
+            "inclusive": 1592,
+            "exclusive": 1592
+          },
+          "handling_bat": {
+            "calls": 1,
+            "inclusive": 1424,
+            "exclusive": 1424
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1,
+            "inclusive": 17692,
+            "exclusive": 1400
+          },
+          "hl_add_a": {
+            "calls": 46,
+            "inclusive": 1288,
+            "exclusive": 1288
+          },
+          "MonoRegionsIntersect": {
+            "calls": 15,
+            "inclusive": 1252,
+            "exclusive": 1252
+          },
+          "bounce_wall": {
+            "calls": 3,
+            "inclusive": 1200,
+            "exclusive": 1200
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4,
+            "inclusive": 1368,
+            "exclusive": 1144
+          },
+          "sprite_search": {
+            "calls": 6,
+            "inclusive": 984,
+            "exclusive": 984
+          },
+          "play_sounds_queue": {
+            "calls": 1,
+            "inclusive": 964,
+            "exclusive": 964
+          },
+          "running_dot": {
+            "calls": 1,
+            "inclusive": 832,
+            "exclusive": 776
+          },
+          "handling_object": {
+            "calls": 6,
+            "inclusive": 16292,
+            "exclusive": 660
+          },
+          "fill_briks_data": {
+            "calls": 1,
+            "inclusive": 532,
+            "exclusive": 532
+          },
+          "KEYINT": {
+            "calls": 1,
+            "inclusive": 656,
+            "exclusive": 524
+          },
+          "handling_bonus": {
+            "calls": 1,
+            "inclusive": 432,
+            "exclusive": 432
+          },
+          "handling_ufo": {
+            "calls": 1,
+            "inclusive": 4148,
+            "exclusive": 424
+          },
+          "obj_compare": {
+            "calls": 1,
+            "inclusive": 328,
+            "exclusive": 328
+          },
+          "check_margins": {
+            "calls": 1,
+            "inclusive": 324,
+            "exclusive": 324
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "MonoZeroRange": {
+            "calls": 3,
+            "inclusive": 312,
+            "exclusive": 312
+          },
+          "random_generate": {
+            "calls": 1,
+            "inclusive": 232,
+            "exclusive": 232
+          },
+          "LAAD2": {
+            "calls": 1,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1,
+            "inclusive": 136,
+            "exclusive": 136
+          },
+          "MonoCachePrepare": {
+            "calls": 1,
+            "inclusive": 100,
+            "exclusive": 100
+          },
+          "SfxTick": {
+            "calls": 1,
+            "inclusive": 96,
+            "exclusive": 96
+          },
+          "pause_game": {
+            "calls": 1,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "planes_begin": {
+            "calls": 1,
+            "inclusive": 44,
+            "exclusive": 44
+          },
+          "bomb_appear": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "MusicTick": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCFlush": {
+            "calls": 2,
+            "inclusive": 24,
+            "exclusive": 24
+          },
+          "DrawMovingObjects": {
+            "calls": 1,
+            "inclusive": 72448,
+            "exclusive": 12
+          }
+        },
+        "videoWrites": {
+          "8000": 195,
+          "e000": 50
+        },
+        "videoByStage": {
+          "draw:8000": 192,
+          "draw:e000": 50,
+          "restore:8000": 3
+        },
+        "videoStoreCycles": 1960,
+        "writesByGroup": {
+          "MonoShiftDraw": 100,
+          "MonoDraw": 142,
+          "MonoZeroRange": 3
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {
+          "direct_ROM": 1
+        },
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 242,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 123764
+      },
+      "worstTick": 82,
+      "all": {
+        "steps": 65,
+        "total": 104049.90769230768,
+        "irqEntryCycles": 20.676923076923053,
+        "phases": {
+          "logic": 22107.26153846153,
+          "wait": 9680.923076923073,
+          "setup": 59.99999999999991,
+          "render": 71057.90769230766,
+          "dots": 931.8153846153847,
+          "tail": 212.00000000000014
+        },
+        "render": {
+          "MonoRender_setup": 80,
+          "MonoRender_prepare": 6427.999999999998,
+          "plane_object_fast": 8605.969230769233,
+          "MonoFindIsolated": 14503.876923076927,
+          "MonoRender_draw": 4565.4769230769225,
+          "MonoDrawPrepared": 2137.4153846153827,
+          "MonoShiftDraw": 14392.184615384616,
+          "MonoDraw": 11083.323076923078,
+          "MonoCachePrepare": 99.99999999999991,
+          "MonoRender_restore": 4218.276923076918,
+          "MonoEraseFringes": 3643.015384615385,
+          "MonoZeroRange": 826.9538461538459,
+          "MonoRender_copy": 99.99999999999991,
+          "IRQ": 373.41538461538477
+        },
+        "stageCycles": {
+          "setup": 80,
+          "prepare": 29719.507692307696,
+          "draw": 32389.415384615386,
+          "restore": 8768.984615384612,
+          "copy": 99.99999999999991
+        },
+        "routines": {
+          "MonoRender": {
+            "calls": 0.9999999999999982,
+            "inclusive": 70977.90769230768,
+            "exclusive": 14835.75384615385
+          },
+          "MonoShiftDraw": {
+            "calls": 1.7230769230769205,
+            "inclusive": 14392.184615384616,
+            "exclusive": 14295.692307692312
+          },
+          "MonoDraw": {
+            "calls": 4.276923076923076,
+            "inclusive": 11093.415384615386,
+            "exclusive": 11083.323076923078
+          },
+          "WaitVideoFrame": {
+            "calls": 0.9999999999999982,
+            "inclusive": 9680.923076923073,
+            "exclusive": 9378.153846153846
+          },
+          "MonoFindIsolated": {
+            "calls": 0.9999999999999982,
+            "inclusive": 14675.446153846162,
+            "exclusive": 9286.215384615381
+          },
+          "plane_object_fast": {
+            "calls": 5.9999999999999964,
+            "inclusive": 8616.06153846154,
+            "exclusive": 7621.969230769237
+          },
+          "handling_ball": {
+            "calls": 2.9999999999999982,
+            "inclusive": 11129.9076923077,
+            "exclusive": 5135.876923076922
+          },
+          "MonoIncludeRegion": {
+            "calls": 21.99999999999999,
+            "inclusive": 3907.2,
+            "exclusive": 3887.0153846153844
+          },
+          "MonoEraseFringes": {
+            "calls": 5.938461538461535,
+            "inclusive": 4550.707692307693,
+            "exclusive": 3643.015384615385
+          },
+          "LAFFC": {
+            "calls": 3.999999999999993,
+            "inclusive": 2410.276923076924,
+            "exclusive": 2344.184615384616
+          },
+          "LAD69": {
+            "calls": 3.999999999999993,
+            "inclusive": 5157.9692307692285,
+            "exclusive": 2191.56923076923
+          },
+          "MonoDrawPrepared": {
+            "calls": 5.9999999999999964,
+            "inclusive": 27743.199999999997,
+            "exclusive": 1941.2307692307668
+          },
+          "LACF9": {
+            "calls": 7.999999999999986,
+            "inclusive": 1592.0000000000023,
+            "exclusive": 1592.0000000000023
+          },
+          "handling_bat": {
+            "calls": 0.9999999999999982,
+            "inclusive": 1423.999999999999,
+            "exclusive": 1423.999999999999
+          },
+          "call_hl_for_all_obj": {
+            "calls": 0.9999999999999982,
+            "inclusive": 18023.26153846153,
+            "exclusive": 1400.3692307692293
+          },
+          "MonoRegionsIntersect": {
+            "calls": 14.999999999999977,
+            "inclusive": 1360.9230769230767,
+            "exclusive": 1330.6461538461533
+          },
+          "hl_add_a": {
+            "calls": 45.44615384615381,
+            "inclusive": 1293.0461538461527,
+            "exclusive": 1272.8615384615375
+          },
+          "bounce_wall": {
+            "calls": 2.9999999999999982,
+            "inclusive": 1210.2769230769238,
+            "exclusive": 1200.1846153846159
+          },
+          "hl_bc_calc_direction": {
+            "calls": 3.999999999999993,
+            "inclusive": 1354.2153846153853,
+            "exclusive": 1130.2153846153851
+          },
+          "sprite_search": {
+            "calls": 5.9999999999999964,
+            "inclusive": 984.0000000000006,
+            "exclusive": 984.0000000000006
+          },
+          "play_sounds_queue": {
+            "calls": 0.9999999999999982,
+            "inclusive": 963.9999999999991,
+            "exclusive": 963.9999999999991
+          },
+          "running_dot": {
+            "calls": 0.9999999999999982,
+            "inclusive": 823.8153846153843,
+            "exclusive": 767.8153846153845
+          },
+          "MonoZeroRange": {
+            "calls": 2.476923076923076,
+            "inclusive": 762.3384615384613,
+            "exclusive": 762.3384615384613
+          },
+          "KEYINT": {
+            "calls": 1.2923076923076908,
+            "inclusive": 847.753846153847,
+            "exclusive": 677.1692307692316
+          },
+          "handling_object": {
+            "calls": 5.9999999999999964,
+            "inclusive": 16602.707692307686,
+            "exclusive": 660.1846153846154
+          },
+          "fill_briks_data": {
+            "calls": 0.9999999999999982,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 0.9999999999999982,
+            "inclusive": 432.4923076923072,
+            "exclusive": 432.4923076923072
+          },
+          "handling_ufo": {
+            "calls": 0.9999999999999982,
+            "inclusive": 4191.753846153844,
+            "exclusive": 425.9692307692309
+          },
+          "obj_compare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 348.55384615384645,
+            "exclusive": 328.3692307692311
+          },
+          "check_margins": {
+            "calls": 0.9999999999999982,
+            "inclusive": 323.99999999999983,
+            "exclusive": 323.99999999999983
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 0.9999999999999982,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "random_generate": {
+            "calls": 0.9999999999999982,
+            "inclusive": 231.99999999999966,
+            "exclusive": 231.99999999999966
+          },
+          "LAAD2": {
+            "calls": 0.9999999999999982,
+            "inclusive": 144.0000000000001,
+            "exclusive": 144.0000000000001
+          },
+          "enemy_prepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 136.00000000000017,
+            "exclusive": 136.00000000000017
+          },
+          "SfxTick": {
+            "calls": 1.2923076923076908,
+            "inclusive": 124.06153846153842,
+            "exclusive": 124.06153846153842
+          },
+          "MonoCachePrepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 99.99999999999991,
+            "exclusive": 99.99999999999991
+          },
+          "pause_game": {
+            "calls": 0.9999999999999982,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "MonoZeroColumn": {
+            "calls": 0.769230769230769,
+            "inclusive": 649.3538461538462,
+            "exclusive": 64.61538461538463
+          },
+          "LAA7D": {
+            "calls": 0.24615384615384617,
+            "inclusive": 58.092307692307706,
+            "exclusive": 58.092307692307706
+          },
+          "MusicTick": {
+            "calls": 1.2923076923076908,
+            "inclusive": 46.523076923076935,
+            "exclusive": 46.523076923076935
+          },
+          "planes_begin": {
+            "calls": 0.9999999999999982,
+            "inclusive": 43.99999999999998,
+            "exclusive": 43.99999999999998
+          },
+          "bomb_appear": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "restore_objs_and_magnet": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "RCFlush": {
+            "calls": 1.9999999999999964,
+            "inclusive": 23.999999999999986,
+            "exclusive": 23.999999999999986
+          },
+          "DrawMovingObjects": {
+            "calls": 0.9999999999999982,
+            "inclusive": 70989.9076923077,
+            "exclusive": 11.999999999999993
+          }
+        },
+        "videoWrites": {
+          "8000": 189.6153846153846,
+          "e000": 45.69230769230767
+        },
+        "videoByStage": {
+          "draw:8000": 180.76923076923072,
+          "draw:e000": 44.9230769230769,
+          "restore:8000": 8.846153846153843,
+          "restore:e000": 0.7692307692307693
+        },
+        "videoStoreCycles": 1885.538461538461,
+        "writesByGroup": {
+          "MonoShiftDraw": 86.15384615384609,
+          "MonoDraw": 139.53846153846158,
+          "MonoZeroRange": 9.615384615384611
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {
+          "direct_ROM": 0.9999999999999982
+        },
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 225.69230769230762,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 104070.5846153846
+      }
+    },
+    {
+      "base": "../vector06c-batty-three-plane",
+      "motion": "smooth",
+      "romSHA256": "05fefa2679e16e3edb2a2b63c31259e3b7b494d2397dc0b21932a033f7706ec4",
+      "warm": {
+        "steps": 45,
+        "total": 155006.31111111114,
+        "irqEntryCycles": 33.42222222222222,
+        "phases": {
+          "logic": 22121.86666666667,
+          "wait": 156.00000000000006,
+          "setup": 60.000000000000036,
+          "render": 131493.95555555556,
+          "dots": 962.4888888888894,
+          "tail": 211.99999999999991
+        },
+        "render": {
+          "pipeline_setup": 104.00000000000009,
+          "CGRender_control": 40301.6888888889,
+          "CGPrepare": 28170.93333333333,
+          "plane_object_fast": 8607.46666666667,
+          "CGGroups": 9402.755555555557,
+          "IRQ": 1151.6444444444446,
+          "CGShadeSaved": 42433.6888888889,
+          "CGRestoreVideo": 1321.7777777777776
+        },
+        "stageCycles": {
+          "setup": 131493.95555555556
+        },
+        "routines": {
+          "CGShadeSaved": {
+            "calls": 6.000000000000005,
+            "inclusive": 42477.42222222223,
+            "exclusive": 41754.133333333324
+          },
+          "CGPrepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 37201.155555555546,
+            "exclusive": 19021.066666666662
+          },
+          "CGRender": {
+            "calls": 1.0000000000000004,
+            "inclusive": 131389.95555555559,
+            "exclusive": 9836.800000000001
+          },
+          "CGGroups": {
+            "calls": 1.0000000000000004,
+            "inclusive": 9533.955555555556,
+            "exclusive": 8470.75555555555
+          },
+          "CGOutside": {
+            "calls": 3.6444444444444435,
+            "inclusive": 17338.755555555552,
+            "exclusive": 8366.488888888887
+          },
+          "CGPointers": {
+            "calls": 28.000000000000018,
+            "inclusive": 9138.133333333339,
+            "exclusive": 8178.9333333333325
+          },
+          "plane_object_fast": {
+            "calls": 6.000000000000005,
+            "inclusive": 8694.933333333336,
+            "exclusive": 7623.200000000005
+          },
+          "hl_add_a": {
+            "calls": 199.44444444444446,
+            "inclusive": 5853.333333333335,
+            "exclusive": 5824.177777777779
+          },
+          "handling_ball": {
+            "calls": 3.0000000000000027,
+            "inclusive": 11106.844444444445,
+            "exclusive": 5131.733333333334
+          },
+          "SpriteCachePrepare": {
+            "calls": 6.000000000000005,
+            "inclusive": 4953.8666666666695,
+            "exclusive": 4473.333333333332
+          },
+          "CGIncludeRect": {
+            "calls": 21.99999999999998,
+            "inclusive": 4428.533333333335,
+            "exclusive": 4384.800000000001
+          },
+          "CGCopyPacked": {
+            "calls": 4.222222222222222,
+            "inclusive": 3115.644444444445,
+            "exclusive": 3115.644444444445
+          },
+          "CGLoad": {
+            "calls": 6.000000000000005,
+            "inclusive": 2525.68888888889,
+            "exclusive": 2496.533333333334
+          },
+          "LAFFC": {
+            "calls": 4.000000000000002,
+            "inclusive": 2414.8444444444444,
+            "exclusive": 2344.266666666668
+          },
+          "CGIntersect": {
+            "calls": 3.2666666666666653,
+            "inclusive": 2269.244444444444,
+            "exclusive": 2240.088888888889
+          },
+          "LAD69": {
+            "calls": 4.000000000000002,
+            "inclusive": 5182.133333333331,
+            "exclusive": 2191.8222222222234
+          },
+          "CGOutsideSpan": {
+            "calls": 7.822222222222221,
+            "inclusive": 3088.6222222222227,
+            "exclusive": 1737.688888888889
+          },
+          "LACF9": {
+            "calls": 8.000000000000004,
+            "inclusive": 1591.999999999999,
+            "exclusive": 1591.999999999999
+          },
+          "handling_bat": {
+            "calls": 1.0000000000000004,
+            "inclusive": 1438.8444444444428,
+            "exclusive": 1424.266666666665
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1.0000000000000004,
+            "inclusive": 18008.177777777775,
+            "exclusive": 1399.999999999999
+          },
+          "CGRestoreVideo": {
+            "calls": 2.355555555555555,
+            "inclusive": 1321.7777777777776,
+            "exclusive": 1321.7777777777776
+          },
+          "bounce_wall": {
+            "calls": 3.0000000000000027,
+            "inclusive": 1214.8444444444444,
+            "exclusive": 1200.2666666666667
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4.000000000000002,
+            "inclusive": 1369.155555555556,
+            "exclusive": 1130.5777777777778
+          },
+          "KEYINT": {
+            "calls": 2.0888888888888886,
+            "inclusive": 1370.3111111111114,
+            "exclusive": 1094.5777777777769
+          },
+          "sprite_search": {
+            "calls": 6.000000000000005,
+            "inclusive": 998.8444444444447,
+            "exclusive": 984.2666666666669
+          },
+          "play_sounds_queue": {
+            "calls": 1.0000000000000004,
+            "inclusive": 978.8444444444443,
+            "exclusive": 964.2666666666665
+          },
+          "CGIsolated": {
+            "calls": 1.8222222222222217,
+            "inclusive": 32716.71111111111,
+            "exclusive": 912.6222222222221
+          },
+          "running_dot": {
+            "calls": 1.0000000000000004,
+            "inclusive": 854.4888888888893,
+            "exclusive": 769.3333333333333
+          },
+          "handling_object": {
+            "calls": 6.000000000000005,
+            "inclusive": 16608.177777777768,
+            "exclusive": 660.7999999999998
+          },
+          "fill_briks_data": {
+            "calls": 1.0000000000000004,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 1.0000000000000004,
+            "inclusive": 432.71111111111145,
+            "exclusive": 432.71111111111145
+          },
+          "handling_ufo": {
+            "calls": 1.0000000000000004,
+            "inclusive": 4196.088888888889,
+            "exclusive": 425.9555555555555
+          },
+          "obj_compare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 328.00000000000006,
+            "exclusive": 328.00000000000006
+          },
+          "check_margins": {
+            "calls": 1.0000000000000004,
+            "inclusive": 323.9999999999997,
+            "exclusive": 323.9999999999997
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1.0000000000000004,
+            "inclusive": 319.99999999999983,
+            "exclusive": 319.99999999999983
+          },
+          "random_generate": {
+            "calls": 1.0000000000000004,
+            "inclusive": 232.00000000000017,
+            "exclusive": 232.00000000000017
+          },
+          "SfxTick": {
+            "calls": 2.0888888888888886,
+            "inclusive": 200.53333333333342,
+            "exclusive": 200.53333333333342
+          },
+          "WaitVideoFrame": {
+            "calls": 1.0000000000000004,
+            "inclusive": 156.00000000000006,
+            "exclusive": 156.00000000000006
+          },
+          "LAAD2": {
+            "calls": 1.0000000000000004,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1.0000000000000004,
+            "inclusive": 136.00000000000009,
+            "exclusive": 136.00000000000009
+          },
+          "pause_game": {
+            "calls": 1.0000000000000004,
+            "inclusive": 79.99999999999996,
+            "exclusive": 79.99999999999996
+          },
+          "MusicTick": {
+            "calls": 2.0888888888888886,
+            "inclusive": 75.19999999999997,
+            "exclusive": 75.19999999999997
+          },
+          "planes_begin": {
+            "calls": 1.0000000000000004,
+            "inclusive": 68.00000000000004,
+            "exclusive": 68.00000000000004
+          },
+          "LAA7D": {
+            "calls": 0.24444444444444446,
+            "inclusive": 57.6888888888889,
+            "exclusive": 57.6888888888889
+          },
+          "bomb_appear": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1.0000000000000004,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCBegin": {
+            "calls": 1.0000000000000004,
+            "inclusive": 12.00000000000001,
+            "exclusive": 12.00000000000001
+          },
+          "DrawMovingObjects": {
+            "calls": 1.0000000000000004,
+            "inclusive": 131401.95555555556,
+            "exclusive": 12.00000000000001
+          },
+          "RCFlush": {
+            "calls": 1.0000000000000004,
+            "inclusive": 12.00000000000001,
+            "exclusive": 12.00000000000001
+          }
+        },
+        "videoWrites": {
+          "e000": 198.91111111111113,
+          "c000": 198.91111111111113
+        },
+        "videoByStage": {
+          "setup:e000": 198.91111111111113,
+          "setup:c000": 198.91111111111113
+        },
+        "videoStoreCycles": 3182.577777777778,
+        "writesByGroup": {
+          "CGShadeSaved": 379.2888888888889,
+          "CGRestoreVideo": 18.53333333333333
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {},
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 0,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 155039.73333333337
+      },
+      "warmWorst": {
+        "steps": 1,
+        "total": 181904,
+        "irqEntryCycles": 48,
+        "phases": {
+          "logic": 21776,
+          "wait": 156,
+          "setup": 60,
+          "render": 158760,
+          "dots": 940,
+          "tail": 212
+        },
+        "render": {
+          "pipeline_setup": 104,
+          "CGRender_control": 64436,
+          "CGPrepare": 28164,
+          "plane_object_fast": 8620,
+          "IRQ": 1968,
+          "CGGroups": 9424,
+          "CGShadeSaved": 45020,
+          "CGRestoreVideo": 1024
+        },
+        "stageCycles": {
+          "setup": 158760
+        },
+        "routines": {
+          "CGShadeSaved": {
+            "calls": 6,
+            "inclusive": 45020,
+            "exclusive": 44284
+          },
+          "CGOutside": {
+            "calls": 6,
+            "inclusive": 41516,
+            "exclusive": 19924
+          },
+          "CGPrepare": {
+            "calls": 1,
+            "inclusive": 37440,
+            "exclusive": 19004
+          },
+          "CGRender": {
+            "calls": 1,
+            "inclusive": 158656,
+            "exclusive": 9436
+          },
+          "CGGroups": {
+            "calls": 1,
+            "inclusive": 9424,
+            "exclusive": 8492
+          },
+          "CGCopyPacked": {
+            "calls": 11,
+            "inclusive": 8360,
+            "exclusive": 8360
+          },
+          "CGPointers": {
+            "calls": 28,
+            "inclusive": 8960,
+            "exclusive": 8176
+          },
+          "plane_object_fast": {
+            "calls": 6,
+            "inclusive": 9276,
+            "exclusive": 7636
+          },
+          "hl_add_a": {
+            "calls": 222,
+            "inclusive": 6480,
+            "exclusive": 6480
+          },
+          "CGIntersect": {
+            "calls": 8,
+            "inclusive": 5680,
+            "exclusive": 5680
+          },
+          "handling_ball": {
+            "calls": 3,
+            "inclusive": 10884,
+            "exclusive": 5012
+          },
+          "CGOutsideSpan": {
+            "calls": 18,
+            "inclusive": 5888,
+            "exclusive": 4864
+          },
+          "SpriteCachePrepare": {
+            "calls": 6,
+            "inclusive": 5536,
+            "exclusive": 4484
+          },
+          "CGIncludeRect": {
+            "calls": 22,
+            "inclusive": 4396,
+            "exclusive": 4396
+          },
+          "CGLoad": {
+            "calls": 6,
+            "inclusive": 2496,
+            "exclusive": 2496
+          },
+          "LAFFC": {
+            "calls": 4,
+            "inclusive": 2400,
+            "exclusive": 2344
+          },
+          "LAD69": {
+            "calls": 4,
+            "inclusive": 5164,
+            "exclusive": 2204
+          },
+          "LACF9": {
+            "calls": 8,
+            "inclusive": 1592,
+            "exclusive": 1592
+          },
+          "KEYINT": {
+            "calls": 3,
+            "inclusive": 1968,
+            "exclusive": 1572
+          },
+          "CGIsolated": {
+            "calls": 3,
+            "inclusive": 80036,
+            "exclusive": 1472
+          },
+          "handling_bat": {
+            "calls": 1,
+            "inclusive": 1424,
+            "exclusive": 1424
+          },
+          "call_hl_for_all_obj": {
+            "calls": 1,
+            "inclusive": 17692,
+            "exclusive": 1400
+          },
+          "bounce_wall": {
+            "calls": 3,
+            "inclusive": 1200,
+            "exclusive": 1200
+          },
+          "hl_bc_calc_direction": {
+            "calls": 4,
+            "inclusive": 1368,
+            "exclusive": 1144
+          },
+          "CGRestoreVideo": {
+            "calls": 4,
+            "inclusive": 1024,
+            "exclusive": 1024
+          },
+          "sprite_search": {
+            "calls": 6,
+            "inclusive": 984,
+            "exclusive": 984
+          },
+          "play_sounds_queue": {
+            "calls": 1,
+            "inclusive": 964,
+            "exclusive": 964
+          },
+          "running_dot": {
+            "calls": 1,
+            "inclusive": 832,
+            "exclusive": 776
+          },
+          "handling_object": {
+            "calls": 6,
+            "inclusive": 16292,
+            "exclusive": 660
+          },
+          "fill_briks_data": {
+            "calls": 1,
+            "inclusive": 532,
+            "exclusive": 532
+          },
+          "handling_bonus": {
+            "calls": 1,
+            "inclusive": 432,
+            "exclusive": 432
+          },
+          "handling_ufo": {
+            "calls": 1,
+            "inclusive": 4148,
+            "exclusive": 424
+          },
+          "obj_compare": {
+            "calls": 1,
+            "inclusive": 328,
+            "exclusive": 328
+          },
+          "check_margins": {
+            "calls": 1,
+            "inclusive": 324,
+            "exclusive": 324
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 1,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "SfxTick": {
+            "calls": 3,
+            "inclusive": 288,
+            "exclusive": 288
+          },
+          "random_generate": {
+            "calls": 1,
+            "inclusive": 232,
+            "exclusive": 232
+          },
+          "WaitVideoFrame": {
+            "calls": 1,
+            "inclusive": 156,
+            "exclusive": 156
+          },
+          "LAAD2": {
+            "calls": 1,
+            "inclusive": 144,
+            "exclusive": 144
+          },
+          "enemy_prepare": {
+            "calls": 1,
+            "inclusive": 136,
+            "exclusive": 136
+          },
+          "MusicTick": {
+            "calls": 3,
+            "inclusive": 108,
+            "exclusive": 108
+          },
+          "pause_game": {
+            "calls": 1,
+            "inclusive": 80,
+            "exclusive": 80
+          },
+          "planes_begin": {
+            "calls": 1,
+            "inclusive": 68,
+            "exclusive": 68
+          },
+          "bomb_appear": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "restore_objs_and_magnet": {
+            "calls": 1,
+            "inclusive": 36,
+            "exclusive": 36
+          },
+          "RCBegin": {
+            "calls": 1,
+            "inclusive": 12,
+            "exclusive": 12
+          },
+          "DrawMovingObjects": {
+            "calls": 1,
+            "inclusive": 158668,
+            "exclusive": 12
+          },
+          "RCFlush": {
+            "calls": 1,
+            "inclusive": 12,
+            "exclusive": 12
+          }
+        },
+        "videoWrites": {
+          "e000": 206,
+          "c000": 206
+        },
+        "videoByStage": {
+          "setup:e000": 206,
+          "setup:c000": 206
+        },
+        "videoStoreCycles": 3296,
+        "writesByGroup": {
+          "CGShadeSaved": 404,
+          "CGRestoreVideo": 8
+        },
+        "cacheBuilds": 0,
+        "cacheDecisions": {},
+        "buildsByKind": {},
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 0,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 181952
+      },
+      "worstTick": 93,
+      "all": {
+        "steps": 65,
+        "total": 166437.2307692308,
+        "irqEntryCycles": 37.41538461538459,
+        "phases": {
+          "logic": 22189.476923076912,
+          "wait": 156.0000000000002,
+          "setup": 59.99999999999991,
+          "render": 142857.1076923077,
+          "dots": 952.3692307692309,
+          "tail": 222.2769230769232
+        },
+        "render": {
+          "pipeline_setup": 103.99999999999989,
+          "CGRender_control": 41082.09230769233,
+          "CGPrepare": 28118.892307692302,
+          "plane_object_fast": 8607.076923076926,
+          "CGGroups": 9404.984615384623,
+          "IRQ": 1251.4461538461549,
+          "SpriteCacheBuild": 10373.10769230769,
+          "CGShadeSaved": 42561.41538461538,
+          "CGRestoreVideo": 1354.0923076923075
+        },
+        "stageCycles": {
+          "setup": 142857.1076923077
+        },
+        "routines": {
+          "CGShadeSaved": {
+            "calls": 5.9999999999999964,
+            "inclusive": 42621.969230769224,
+            "exclusive": 41879.20000000001
+          },
+          "CGPrepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 37089.29230769232,
+            "exclusive": 18988.061538461534
+          },
+          "SpriteCacheBuild": {
+            "calls": 0.35384615384615387,
+            "inclusive": 10554.769230769232,
+            "exclusive": 9866.892307692307
+          },
+          "CGRender": {
+            "calls": 0.9999999999999982,
+            "inclusive": 142753.10769230768,
+            "exclusive": 9823.876923076921
+          },
+          "CGOutside": {
+            "calls": 3.661538461538461,
+            "inclusive": 18116.55384615385,
+            "exclusive": 8498.892307692302
+          },
+          "CGGroups": {
+            "calls": 0.9999999999999982,
+            "inclusive": 9516.000000000005,
+            "exclusive": 8472.984615384614
+          },
+          "CGPointers": {
+            "calls": 27.999999999999964,
+            "inclusive": 9103.876923076934,
+            "exclusive": 8178.400000000008
+          },
+          "plane_object_fast": {
+            "calls": 5.9999999999999964,
+            "inclusive": 8677.723076923077,
+            "exclusive": 7622.892307692314
+          },
+          "hl_add_a": {
+            "calls": 217.81538461538454,
+            "inclusive": 6431.07692307692,
+            "exclusive": 6360.430769230767
+          },
+          "handling_ball": {
+            "calls": 2.9999999999999982,
+            "inclusive": 11129.907692307701,
+            "exclusive": 5135.692307692308
+          },
+          "SpriteCachePrepare": {
+            "calls": 5.9999999999999964,
+            "inclusive": 15573.04615384615,
+            "exclusive": 4542.4615384615445
+          },
+          "CGIncludeRect": {
+            "calls": 21.99999999999999,
+            "inclusive": 4408.184615384613,
+            "exclusive": 4367.815384615382
+          },
+          "CGCopyPacked": {
+            "calls": 4.246153846153844,
+            "inclusive": 3158.5230769230775,
+            "exclusive": 3148.43076923077
+          },
+          "CGLoad": {
+            "calls": 5.9999999999999964,
+            "inclusive": 2516.5538461538495,
+            "exclusive": 2496.369230769234
+          },
+          "CGIntersect": {
+            "calls": 3.8000000000000007,
+            "inclusive": 2489.1692307692315,
+            "exclusive": 2448.8000000000006
+          },
+          "LAFFC": {
+            "calls": 3.999999999999993,
+            "inclusive": 2420.5538461538467,
+            "exclusive": 2344.3692307692313
+          },
+          "LAD69": {
+            "calls": 3.999999999999993,
+            "inclusive": 5219.630769230767,
+            "exclusive": 2192.1230769230765
+          },
+          "CGOutsideSpan": {
+            "calls": 8.507692307692304,
+            "inclusive": 3450.7692307692296,
+            "exclusive": 2066.3999999999987
+          },
+          "LACF9": {
+            "calls": 7.999999999999986,
+            "inclusive": 1602.2769230769254,
+            "exclusive": 1592.1846153846177
+          },
+          "handling_bat": {
+            "calls": 0.9999999999999982,
+            "inclusive": 1444.5538461538451,
+            "exclusive": 1424.36923076923
+          },
+          "call_hl_for_all_obj": {
+            "calls": 0.9999999999999982,
+            "inclusive": 18064.369230769225,
+            "exclusive": 1400.1846153846138
+          },
+          "CGRestoreVideo": {
+            "calls": 2.476923076923076,
+            "inclusive": 1354.0923076923075,
+            "exclusive": 1354.0923076923075
+          },
+          "KEYINT": {
+            "calls": 2.338461538461537,
+            "inclusive": 1534.0307692307704,
+            "exclusive": 1225.3538461538471
+          },
+          "bounce_wall": {
+            "calls": 2.9999999999999982,
+            "inclusive": 1210.2769230769238,
+            "exclusive": 1200.1846153846159
+          },
+          "hl_bc_calc_direction": {
+            "calls": 3.999999999999993,
+            "inclusive": 1374.7692307692314,
+            "exclusive": 1130.5846153846157
+          },
+          "sprite_search": {
+            "calls": 5.9999999999999964,
+            "inclusive": 994.2769230769236,
+            "exclusive": 984.1846153846159
+          },
+          "play_sounds_queue": {
+            "calls": 0.9999999999999982,
+            "inclusive": 984.5538461538451,
+            "exclusive": 964.3692307692298
+          },
+          "CGIsolated": {
+            "calls": 1.8307692307692305,
+            "inclusive": 37586.7076923077,
+            "exclusive": 905.4769230769238
+          },
+          "running_dot": {
+            "calls": 0.9999999999999982,
+            "inclusive": 844.3692307692305,
+            "exclusive": 768.1846153846152
+          },
+          "handling_object": {
+            "calls": 5.9999999999999964,
+            "inclusive": 16654.0923076923,
+            "exclusive": 660.5538461538463
+          },
+          "fill_briks_data": {
+            "calls": 0.9999999999999982,
+            "inclusive": 531.9999999999994,
+            "exclusive": 531.9999999999994
+          },
+          "handling_bonus": {
+            "calls": 0.9999999999999982,
+            "inclusive": 432.4923076923072,
+            "exclusive": 432.4923076923072
+          },
+          "handling_ufo": {
+            "calls": 0.9999999999999982,
+            "inclusive": 4232.861538461537,
+            "exclusive": 425.9692307692309
+          },
+          "obj_compare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 328.00000000000034,
+            "exclusive": 328.00000000000034
+          },
+          "check_margins": {
+            "calls": 0.9999999999999982,
+            "inclusive": 323.99999999999983,
+            "exclusive": 323.99999999999983
+          },
+          "get_left_player_ctrl_state": {
+            "calls": 0.9999999999999982,
+            "inclusive": 320,
+            "exclusive": 320
+          },
+          "random_generate": {
+            "calls": 0.9999999999999982,
+            "inclusive": 231.99999999999966,
+            "exclusive": 231.99999999999966
+          },
+          "SfxTick": {
+            "calls": 2.338461538461537,
+            "inclusive": 224.4923076923077,
+            "exclusive": 224.4923076923077
+          },
+          "WaitVideoFrame": {
+            "calls": 0.9999999999999982,
+            "inclusive": 156.0000000000002,
+            "exclusive": 156.0000000000002
+          },
+          "LAAD2": {
+            "calls": 0.9999999999999982,
+            "inclusive": 144.0000000000001,
+            "exclusive": 144.0000000000001
+          },
+          "enemy_prepare": {
+            "calls": 0.9999999999999982,
+            "inclusive": 136.00000000000017,
+            "exclusive": 136.00000000000017
+          },
+          "MusicTick": {
+            "calls": 2.338461538461537,
+            "inclusive": 84.18461538461536,
+            "exclusive": 84.18461538461536
+          },
+          "pause_game": {
+            "calls": 0.9999999999999982,
+            "inclusive": 90.27692307692304,
+            "exclusive": 80.18461538461538
+          },
+          "planes_begin": {
+            "calls": 0.9999999999999982,
+            "inclusive": 68.00000000000009,
+            "exclusive": 68.00000000000009
+          },
+          "LAA7D": {
+            "calls": 0.24615384615384617,
+            "inclusive": 58.092307692307706,
+            "exclusive": 58.092307692307706
+          },
+          "bomb_appear": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "restore_objs_and_magnet": {
+            "calls": 0.9999999999999982,
+            "inclusive": 36.00000000000003,
+            "exclusive": 36.00000000000003
+          },
+          "RCBegin": {
+            "calls": 0.9999999999999982,
+            "inclusive": 11.999999999999993,
+            "exclusive": 11.999999999999993
+          },
+          "DrawMovingObjects": {
+            "calls": 0.9999999999999982,
+            "inclusive": 142765.10769230765,
+            "exclusive": 11.999999999999993
+          },
+          "RCFlush": {
+            "calls": 0.9999999999999982,
+            "inclusive": 11.999999999999993,
+            "exclusive": 11.999999999999993
+          }
+        },
+        "videoWrites": {
+          "e000": 199.64615384615385,
+          "c000": 199.64615384615385
+        },
+        "videoByStage": {
+          "setup:e000": 199.64615384615385,
+          "setup:c000": 199.64615384615385
+        },
+        "videoStoreCycles": 3194.3384615384616,
+        "writesByGroup": {
+          "CGShadeSaved": 380.49230769230746,
+          "CGRestoreVideo": 18.799999999999997
+        },
+        "cacheBuilds": 0.35384615384615387,
+        "cacheDecisions": {},
+        "buildsByKind": {
+          "1": {
+            "calls": 0.1076923076923077,
+            "cycles": 3214.5846153846155
+          },
+          "4": {
+            "calls": 0.12307692307692308,
+            "cycles": 3227.753846153846
+          },
+          "8": {
+            "calls": 0.12307692307692308,
+            "cycles": 4112.430769230769
+          }
+        },
+        "repeatWrites": 0,
+        "drawUniqueAddresses": 0,
+        "selectChecks": 0,
+        "columns": {},
+        "modeledTotal": 166474.6461538462
+      }
+    }
+  ]
+}

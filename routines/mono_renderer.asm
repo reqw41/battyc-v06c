@@ -1,13 +1,15 @@
-; Cached column-major (~coverage,lit) pairs. Only lit affects sprite plane.
-; Draw new pixels first, then replace old rectangles with final new unions.
-; No old/new bounding-box union, no background read, no transient blanking.
+; Native column-major (~coverage,lit) pairs. Only lit affects sprite plane.
+; Isolated owners overwrite the new rectangle and clear only retiring fringes.
+; Intersecting owners use OR and final composition of their old rectangles.
 MonoObjects: dw object_bonus,object_ball_1,object_ball_2,object_ball_3
  dw object_bullet_1,object_bullet_2,object_bat_2,object_bat_1,object_bat_temp
  dw object_enemy,object_rocket
 MonoSlots: dw $7a00,$7a80,$7ac0,$7b00,$7b40,$7b68,$7b90,$7c34,$7cd8,$7d7c,$7e1c,$7f00
 MonoCapacities: db 128,64,64,64,40,40,164,164,164,160,228,228
-MonoDesc: ds 77,0 ; top address, cols, rows, cached source, bottom-strip bat flag
-MonoOld: ds 55,0  ; previous top address, cols, rows, bat flag
+MonoDesc: ds 77,0 ; top address, cols, rows, source, bottom-strip bat flag
+MonoOld: ds 77,0  ; second descriptor bank; no per-frame geometry copy
+ ASSERT high MonoDesc == high (MonoOld+77)
+ ASSERT high MonoRegions == high (MonoRegions+55)
 MonoTags: ds 48,0 ; source pointer, shift, clipped height, per owner
 MonoOwner: db 0
 MonoPtr: dw 0
@@ -23,7 +25,6 @@ MonoRows: db 0
 MonoCols: db 0
 MonoOldBat: db 0
 MonoScan: db 0
-MonoScanPtr: dw 0
 MonoCandidates: ds 22,0
 MonoCandidateCount: db 0
 MonoCandidatePtr: dw 0
@@ -66,7 +67,7 @@ SUDropped: db 0
 SpriteShiftMasks: db $ff,$7f,$3f,$1f,$0f,$07,$03,$01
 MonoReset:
  ld hl,MonoDesc
- ld b,77+55+48
+ ld b,77+77+48
  xor a
 mr_zero:
  ld (hl),a
@@ -82,25 +83,11 @@ mr_old:
  dec b
  jp nz,mr_old
  ret
-SpriteCacheReset:
- ld hl,MonoTags
- ld b,48
- xor a
-mcr_zero:
- ld (hl),a
- inc hl
- dec b
- jp nz,mcr_zero
- ret
 RCBegin:
 RCFlush:
 SUInvalidate:
  ret
 MonoCachePrepare:
- ld hl,(IXobj)
- ld a,(hl)
- cp 3
- jp z,mono_cache_needed
  ld a,(direct_shift)
  or a
  jp nz,mono_cache_needed
@@ -158,18 +145,8 @@ mcp_hit:
  inc hl
  ld (direct_source),hl
  ret
-MonoCacheAddress:
- ld a,(MonoOwner)
- add a,a
- ld hl,MonoSlots
- call hl_add_a
- ld e,(hl)
- inc hl
- ld d,(hl)
- ex de,hl
- ld (SpriteCacheBuffer),hl
- ret
 MonoRender:
+mono_new_base:
  ld hl,MonoDesc
  ld (MonoPtr),hl
  ld hl,plane_old
@@ -199,7 +176,11 @@ mono_prepare:
  ld a,(color_valid)
  or a
  jp z,mono_next
- call MonoCachePrepare
+ ld hl,MonoShifts
+ ld a,(MonoOwner)
+ call hl_add_a
+ ld a,(direct_shift)
+ ld (hl),a
  ld hl,(plane_dst)
  ex de,hl
  ld hl,(MonoPtr)
@@ -234,20 +215,35 @@ mono_prepare:
  add hl,de
  ld (hl),1
 mono_next:
- ld hl,(MonoPtr)
- ld de,7
- add hl,de
- ld (MonoPtr),hl
+ ld a,(MonoPtr)
+ add a,7
+ ld (MonoPtr),a
  ld a,(MonoOwner)
  inc a
  ld (MonoOwner),a
  cp 11
  jp nz,mono_prepare
- ld hl,MonoDesc
+ call MonoFindIsolated
+ xor a
+ ld (MonoOwner),a
+ ld hl,MonoRegions
+ ld (MonoRegionPtr),hl
+ ld hl,(mono_new_base+1)
  ld (MonoPtr),hl
  ld b,11
 mono_draw_all:
  push bc
+ ld hl,(MonoPtr)
+ inc hl
+ inc hl
+ ld a,(hl)
+ or a
+ jp z,mono_draw_next
+ ld hl,(MonoRegionPtr)
+ ld de,4
+ add hl,de
+ ld a,(hl)
+ ld (MonoFastDraw),a
  ld hl,(MonoPtr)
  ld e,(hl)
  inc hl
@@ -270,22 +266,38 @@ mono_draw_all:
  ld h,b
  ld l,c
  ld (MonoDrawSource),hl
- ld a,(MonoDrawCols)
- or a
- call nz,MonoDraw
- ld hl,(MonoPtr)
- ld de,7
- add hl,de
- ld (MonoPtr),hl
+ call MonoDrawPrepared
+mono_draw_next:
+ ld a,(MonoRegionPtr)
+ add a,5
+ ld (MonoRegionPtr),a
+ ld a,(MonoOwner)
+ inc a
+ ld (MonoOwner),a
+ ld a,(MonoPtr)
+ add a,7
+ ld (MonoPtr),a
  pop bc
  dec b
  jp nz,mono_draw_all
+ ld hl,(mono_new_base+1)
+ ld (MonoPtr),hl
+ ld hl,MonoRegions
+ ld (MonoRegionPtr),hl
+mono_old_base:
  ld hl,MonoOld
  ld (MonoOldPtr),hl
  ld b,11
 mono_erase_all:
  push bc
  ld hl,(MonoOldPtr)
+ inc hl
+ inc hl
+ ld a,(hl)
+ or a
+ jp z,mono_erase_next
+ dec hl
+ dec hl
  ld a,(hl)
  ld (MonoTop),a
  inc hl
@@ -298,11 +310,19 @@ mono_erase_all:
  ld a,(hl)
  ld (MonoRows),a
  inc hl
+ inc hl
+ inc hl
  ld a,(hl)
  ld (MonoOldBat),a
- ld a,(MonoCols)
+ ld hl,(MonoRegionPtr)
+ ld de,4
+ add hl,de
+ ld a,(hl)
  or a
- jp z,mono_erase_next
+ jp z,mono_erase_general
+ call MonoEraseFringes
+ jp mono_erase_next
+mono_erase_general:
  call MonoSelectCandidates
 mono_old_column:
  call MonoComposeColumn
@@ -349,36 +369,44 @@ mono_old_nextcol:
  dec (hl)
  jp nz,mono_old_column
 mono_erase_next:
- ld hl,(MonoOldPtr)
- ld de,5
- add hl,de
- ld (MonoOldPtr),hl
+ ld a,(MonoPtr)
+ add a,7
+ ld (MonoPtr),a
+ ld a,(MonoRegionPtr)
+ add a,5
+ ld (MonoRegionPtr),a
+ ld a,(MonoOldPtr)
+ add a,7
+ ld (MonoOldPtr),a
  pop bc
  dec b
  jp nz,mono_erase_all
- ; Keep only previous geometry, never previous background or sprite bytes.
- ld hl,MonoDesc
- ld de,MonoOld
- ld b,11
+ ; The completed new list becomes previous without copying any records.
 mono_copy_old:
- ld c,4
-mono_copy_geometry:
- ld a,(hl)
- ld (de),a
- inc hl
- inc de
- dec c
- jp nz,mono_copy_geometry
- inc hl
- inc hl
- ld a,(hl)
- ld (de),a
- inc hl
- inc de
- dec b
- jp nz,mono_copy_old
+ ld hl,(mono_new_base+1)
+ ex de,hl
+ ld hl,(mono_old_base+1)
+ ld (mono_new_base+1),hl
+ ex de,hl
+ ld (mono_old_base+1),hl
  ret
 MonoDraw:
+ ld a,(MonoFastDraw)
+ or a
+ ld a,$b6 ; OR M
+ ld b,$7e ; MOV A,M
+ ld c,$a3 ; AND E
+ jp z,mono_draw_mode
+ xor a     ; NOP: the isolated rectangle can be overwritten directly
+ ld b,$7b  ; MOV A,E: final paper from coverage, no old outline left behind
+ ld c,a
+mono_draw_mode:
+ ld (mono_draw_merge),a
+ ld (mono_bare_merge),a
+ ld a,b
+ ld (mono_draw_paper_load),a
+ ld a,c
+ ld (mono_draw_paper_merge),a
  ld hl,0
  add hl,sp
  ld (mono_draw_restore+1),hl
@@ -388,21 +416,24 @@ MonoDraw:
  ld hl,(MonoDrawVideo)
  ld a,(MonoDrawCols)
  ld b,a
+ ld a,(MonoDrawBat)
+ or a
+ jp z,MonoDrawBare
 mono_draw_col:
  ld a,(MonoDrawRows)
  ld c,a
 mono_draw_row:
  pop de
  ld a,d
+mono_draw_merge:
  or (hl)
  ld (hl),a
- ld a,(MonoDrawBat)
- or a
- jp z,mono_draw_nextrow
  ld a,h
  add a,$60
  ld h,a
+mono_draw_paper_load:
  ld a,(hl)
+mono_draw_paper_merge:
  and e
  ld (hl),a
  ld a,h
@@ -643,13 +674,6 @@ mono_single_nextrow:
  ld a,(MonoColumn)
  ld h,a
  jp MonoZeroRange
-MonoZeroColumn:
- ld a,(MonoColumn)
- ld h,a
- ld a,(MonoTop)
- ld l,a
- ld a,(MonoRows)
- ld b,a
 MonoZeroRange:
  ld a,b
  or a
@@ -688,7 +712,7 @@ MonoSelectCandidates:
  sub b
  inc a
  ld (MonoOldBottom),a
- ld hl,MonoDesc
+ ld hl,(mono_new_base+1)
  ld (MonoSelectPtr),hl
  ld a,11
  ld (MonoSelectCount),a
@@ -744,77 +768,11 @@ mono_select_next:
  ret
 ; Round text uses only the sprite plane: save/restore its 10x40 rectangle.
 ; Active moving objects have already been removed at the round transition.
-SUWindowSave:
- xor a
- ld (UiActive),a
- call MonoRemove
- call MonoWindowSetup
- call MonoWindowCopySave
- ld a,1
- ld (SUWindowValid),a
- ret
-SUWindowRestore:
- ld a,(SUWindowValid)
- or a
- ret z
- call MonoWindowSetup
- call MonoWindowCopyRestore
- xor a
- ld (SUWindowValid),a
- ld (OverlayActive),a
- jp SpriteCacheReset
-MonoWindowSetup:
- ld hl,$8158
- call screen_addr_calc
- ld a,h
- sub $40
- ld h,a
- ld (MonoDrawVideo),hl
- ld hl,$7a00
- ld (MonoDrawSource),hl
- ret
-MonoWindowCopySave:
- ld a,0
- ld (mono_window_mode+1),a
- jp MonoWindowCopy
-MonoWindowCopyRestore:
- ld a,1
- ld (mono_window_mode+1),a
-MonoWindowCopy:
- ld hl,(MonoDrawSource)
- ex de,hl
- ld hl,(MonoDrawVideo)
- ld b,10
-mono_window_col:
- ld c,40
-mono_window_row:
-mono_window_mode:
- ld a,0
- or a
- jp nz,mono_window_restore
- ld a,(hl)
- ld (de),a
- xor a
- ld (hl),a
- jp mono_window_next
-mono_window_restore:
- ld a,(de)
- ld (hl),a
-mono_window_next:
- inc de
- dec l
- dec c
- jp nz,mono_window_row
- ld a,l
- add a,40
- ld l,a
- inc h
- dec b
- jp nz,mono_window_col
- ret
+ INCLUDE "routines/mono_isolation.asm"
+
 MonoRemove:
  ; Empty new list makes MonoRender restore all old sprite regions to zero.
- ld hl,MonoDesc
+ ld hl,(mono_new_base+1)
  ld b,11
 mono_remove_new:
  inc hl
@@ -825,7 +783,7 @@ mono_remove_new:
  dec b
  jp nz,mono_remove_new
  ; Use old geometry directly; no callbacks or sprite preparation here.
- ld hl,MonoOld
+ ld hl,(mono_old_base+1)
  ld b,11
 mono_remove_old:
  push bc
@@ -839,6 +797,8 @@ mono_remove_old:
  inc hl
  ld c,(hl)
  inc hl
+ inc hl
+ inc hl
  ld a,(hl)
  ld (MonoOldBat),a
  ld a,b
@@ -850,7 +810,7 @@ mono_remove_old:
  call nz,MonoRestorePaper
 mono_remove_skip:
  pop hl
- ld de,5
+ ld de,7
  add hl,de
  pop bc
  dec b

@@ -190,6 +190,7 @@ plane_object:
  ld (MonoDrawRows),a
  xor a
  ld (MonoDrawBat),a
+ ld (MonoFastDraw),a
  jp MonoDraw
 color_valid: db 0
 color_height: db 0

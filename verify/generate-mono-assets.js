@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('fs'),assert=require('assert');
 const text=fs.readFileSync('gfx/sprites_no_shadows_2.asm','utf8');
-const staticNames=new Set(['spr_lives_indicator','spr_1up','spr_2up','spr_hi','spr_score_digits','spr_separator','spr_magnet_circle_on','spr_magnet_circle_off']);
-let count=0,total=0,output='; Generated native column pairs (~cover,lit). Static kind 3 keeps legacy row pairs.\n';
+const staticNames=new Set(['spr_score_digits','spr_separator','spr_magnet_circle_on','spr_magnet_circle_off']);
+let count=0,total=0,output='; Generated native column pairs (~cover,lit). Background assets keep legacy row pairs; overlay HUD uses native columns.\n';
 for(const m of text.matchAll(/^(spr_\w+):([\s\S]*?)(?=^spr_\w+:|$(?![\s\S]))/gm)){
  let bytes=[],padding=0;for(const line of m[2].split('\n')){const p=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(p)for(const v of p[1].split(','))bytes.push(parseInt(v.trim().slice(1),16));const d=line.match(/^\s*DS\s+(\d+),0/i);if(d)padding+=+d[1];}
  const original=bytes.slice(),allocated=bytes.length+padding,w=bytes[0],fullH=bytes[1];

@@ -1,5 +1,5 @@
 {
-  "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
   "romBytes": 32512,
   "branch": "experimental/three-plus-one-mono-js",
   "cpu": "i8080 3 MHz; 64KB",
@@ -12,180 +12,1222 @@
     {
       "scene": "one_ball",
       "beforeTicks": 66652,
-      "afterTicks": 65093,
-      "afterMs": 21.697748148148143,
-      "afterHz": 46.087731923708766,
-      "changePercent": -2.339168808237524,
-      "peakTicks": 80780
+      "afterTicks": 59943,
+      "afterMs": 19.980859259259265,
+      "afterHz": 50.0478976917168,
+      "changePercent": -10.066347929877873,
+      "peakTicks": 63220,
+      "activeMs": 13.60512592592592
     },
     {
       "scene": "ball_bonus",
       "beforeTicks": 99053,
-      "afterTicks": 96740,
-      "afterMs": 32.24654814814815,
-      "afterHz": 31.011071182123654,
-      "changePercent": -2.3356258547599373,
-      "peakTicks": 103320
+      "afterTicks": 59957,
+      "afterMs": 19.985570370370365,
+      "afterHz": 50.03610011964189,
+      "changePercent": -39.47007045610825,
+      "peakTicks": 71732,
+      "activeMs": 18.03934814814815
     },
     {
       "scene": "ball_ufo",
       "beforeTicks": 104868,
-      "afterTicks": 105758,
-      "afterMs": 35.2525037037037,
-      "afterHz": 28.366779517420145,
-      "changePercent": 0.8485617002087498,
-      "peakTicks": 121272
+      "afterTicks": 65080,
+      "afterMs": 21.693274074074075,
+      "afterHz": 46.0972371706267,
+      "changePercent": -37.941200154268,
+      "peakTicks": 101844,
+      "activeMs": 21.143407407407402
     },
     {
       "scene": "ball_bird",
       "beforeTicks": 112464,
-      "afterTicks": 101098,
-      "afterMs": 33.69928888888889,
-      "afterHz": 29.674216666622705,
-      "changePercent": -10.106250548324901,
-      "peakTicks": 115020
+      "afterTicks": 62606,
+      "afterMs": 20.868622222222225,
+      "afterHz": 47.91883188795938,
+      "changePercent": -44.33252714942854,
+      "peakTicks": 98936,
+      "activeMs": 20.52998518518518
     },
     {
       "scene": "three_balls",
       "beforeTicks": 105781,
-      "afterTicks": 92944,
-      "afterMs": 30.981244444444442,
-      "afterHz": 32.277593038368735,
-      "changePercent": -12.135830956658555,
-      "peakTicks": 98960
+      "afterTicks": 62485,
+      "afterMs": 20.828266666666657,
+      "afterHz": 48.01167643971016,
+      "changePercent": -40.930034694321314,
+      "peakTicks": 93920,
+      "activeMs": 20.302014814814815
     },
     {
       "scene": "three_balls_bonus_enemy",
       "beforeTicks": 160880,
-      "afterTicks": 169186,
-      "afterMs": 56.395437037037034,
-      "afterHz": 17.731931030931843,
-      "changePercent": 5.162989577882993,
-      "peakTicks": 180840
+      "afterTicks": 104131,
+      "afterMs": 34.7101925925926,
+      "afterHz": 28.809981314059524,
+      "changePercent": -35.27437979998894,
+      "peakTicks": 128340,
+      "activeMs": 31.82367407407407
     }
   ],
-  "rasters": [
-    {
-      "name": "enemy",
-      "samples": 1536,
-      "blank": 0,
-      "partial": 0
+  "rasters": {
+    "raster": {
+      "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+      "cpu": "i8080 3 MHz, strict 64 KB",
+      "moving": false,
+      "overlap": false,
+      "method": "Stable object positions, real game pipeline and actual raster; 64 samples per scene after warmup. Foreground checked against native source masks, palette and scroll. Moving mode checks foreground in the union of eight X and four Y positions: zero blank frames proves the object does not completely disappear, without proving a tear-free image.",
+      "reports": [
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        }
+      ]
     },
-    {
-      "name": "overlap",
-      "samples": 1536,
-      "blank": 0,
-      "partial": 0
+    "overlap-raster": {
+      "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+      "cpu": "i8080 3 MHz, strict 64 KB",
+      "moving": false,
+      "overlap": true,
+      "method": "Stable object positions, real game pipeline and actual raster; 64 samples per scene after warmup. Foreground checked against native source masks, palette and scroll. Moving mode checks foreground in the union of eight X and four Y positions: zero blank frames proves the object does not completely disappear, without proving a tear-free image.",
+      "reports": [
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        }
+      ]
     },
-    {
-      "name": "bonus",
-      "samples": 768,
-      "blank": 0,
-      "partial": 0
+    "bonus-raster": {
+      "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+      "cpu": "i8080 3 MHz, strict 64 KB",
+      "moving": false,
+      "overlap": false,
+      "method": "Stable object positions, real game pipeline and actual raster; 64 samples per scene after warmup. Foreground checked against native source masks, palette and scroll. Moving mode checks foreground in the union of eight X and four Y positions: zero blank frames proves the object does not completely disappear, without proving a tear-free image.",
+      "reports": [
+        {
+          "heavy": false,
+          "target": "bonus",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bonus",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bonus",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bonus",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bonus",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bonus",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bonus",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bonus",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bonus",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bonus",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bonus",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bonus",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 0,
+          "minVisibleFraction": 1,
+          "meanVisibleFraction": 1,
+          "memoryBlankFrames": 0
+        }
+      ]
+    },
+    "moving-raster": {
+      "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
+      "cpu": "i8080 3 MHz, strict 64 KB",
+      "moving": true,
+      "overlap": false,
+      "method": "Stable object positions, real game pipeline and actual raster; 64 samples per scene after warmup. Foreground checked against native source masks, palette and scroll. Moving mode checks foreground in the union of eight X and four Y positions: zero blank frames proves the object does not completely disappear, without proving a tear-free image.",
+      "reports": [
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.5106963087248321,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.49265939597315433,
+          "meanVisibleFraction": 0.5136456585570467,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.5125838926174494,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.510696308724832,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.48468959731543626,
+          "meanVisibleFraction": 0.5154414848993288,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "UFO",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.5138848835989931,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.37163461538461545,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.33990384615384617,
+          "meanVisibleFraction": 0.3728966346153846,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.37163461538461545,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.37163461538461545,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.32403846153846155,
+          "meanVisibleFraction": 0.37064302884615385,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": false,
+          "target": "bird",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.3716947115384616,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.510696308724832,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.5106963087248321,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.510696308724832,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.510696308724832,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.510696308724832,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "UFO",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.4901426174496644,
+          "meanVisibleFraction": 0.510696308724832,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.38025841346153855,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.3798076923076924,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 0,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.3798076923076924,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 40,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.36941105769230764,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 108,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.37163461538461545,
+          "memoryBlankFrames": 0
+        },
+        {
+          "heavy": true,
+          "target": "bird",
+          "shift": 3,
+          "y": 144,
+          "samples": 64,
+          "blankFrames": 0,
+          "partialFrames": 64,
+          "minVisibleFraction": 0.3245192307692308,
+          "meanVisibleFraction": 0.37163461538461545,
+          "memoryBlankFrames": 0
+        }
+      ]
     }
-  ],
+  },
   "native": {
-    "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+    "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
     "strict64KB": true,
     "scenes": 1826,
     "planeComparisons": 7304,
     "maxStack": 22,
-    "bgWrites": 150012,
-    "meanRenderTicks": 176186.59583789704,
-    "peakRenderTicks": 1278160,
+    "bgWrites": 149612,
+    "meanRenderTicks": 172057.5443592552,
+    "peakRenderTicks": 1269540,
     "roundWindowRestored": true,
     "passed": true
   },
   "natural": {
-    "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+    "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
     "frames": 9000,
-    "ticks": 5605,
+    "startFrame": 107,
+    "ticks": 6180,
     "naturalBonuses": [
       {
-        "frame": 585,
-        "id": 3
-      },
-      {
-        "frame": 994,
-        "id": 4
-      },
-      {
-        "frame": 1744,
-        "id": 6
-      },
-      {
-        "frame": 3016,
-        "id": 2
-      },
-      {
-        "frame": 4168,
-        "id": 9
-      },
-      {
-        "frame": 4663,
-        "id": 0
-      },
-      {
-        "frame": 5466,
-        "id": 3
-      },
-      {
-        "frame": 6930,
-        "id": 8
-      },
-      {
-        "frame": 7448,
+        "frame": 489,
         "id": 1
       },
       {
-        "frame": 7849,
-        "id": 7
+        "frame": 662,
+        "id": 0
+      },
+      {
+        "frame": 825,
+        "id": 3
+      },
+      {
+        "frame": 2737,
+        "id": 5
+      },
+      {
+        "frame": 2961,
+        "id": 4
+      },
+      {
+        "frame": 3342,
+        "id": 0
+      },
+      {
+        "frame": 3690,
+        "id": 9
+      },
+      {
+        "frame": 4096,
+        "id": 1
+      },
+      {
+        "frame": 4327,
+        "id": 8
+      },
+      {
+        "frame": 4495,
+        "id": 2
+      },
+      {
+        "frame": 8369,
+        "id": 6
       }
     ],
     "pickedBonuses": [
       {
-        "frame": 707,
-        "id": 3
-      },
-      {
-        "frame": 1117,
-        "id": 4
-      },
-      {
-        "frame": 3133,
-        "id": 2
-      },
-      {
-        "frame": 4293,
-        "id": 9
-      },
-      {
-        "frame": 4770,
-        "id": 0
-      },
-      {
-        "frame": 5574,
-        "id": 3
-      },
-      {
-        "frame": 7101,
-        "id": 8
-      },
-      {
-        "frame": 7570,
+        "frame": 576,
         "id": 1
       },
       {
-        "frame": 8026,
-        "id": 7
+        "frame": 746,
+        "id": 0
+      },
+      {
+        "frame": 911,
+        "id": 3
+      },
+      {
+        "frame": 2842,
+        "id": 5
+      },
+      {
+        "frame": 3051,
+        "id": 4
+      },
+      {
+        "frame": 3425,
+        "id": 0
+      },
+      {
+        "frame": 3782,
+        "id": 9
+      },
+      {
+        "frame": 4187,
+        "id": 1
+      },
+      {
+        "frame": 4416,
+        "id": 8
+      },
+      {
+        "frame": 4616,
+        "id": 2
       }
     ],
     "enemySeen": true,
-    "bombsSeen": 3,
+    "bombsSeen": 17,
     "unexpectedResets": 0,
     "physicalRAM": 65536,
-    "naturalSmashObserved": true,
-    "requiredNaturalSmash": true,
+    "naturalSmashObserved": false,
+    "requiredNaturalSmash": false,
     "passed": true
-  }
+  },
+  "naturalCoverageLimitation": "Smash not observed naturally; covered by deterministic bonus cases. Earlier full-coverage probes failed coverage assertions."
 }

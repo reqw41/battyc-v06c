@@ -2,6 +2,7 @@ const {make}=require('./vector_harness'),assert=require('assert'),fs=require('fs
 const root=process.argv[2]||'.',E=make(root+'/batty.rom',root+'/batty.sym');
 const romSHA256=require('crypto').createHash('sha256').update(fs.readFileSync(root+'/batty.rom')).digest('hex');
 const frameLimit=Number(process.env.BATTY_GAMEPLAY_FRAMES||6000);
+const startFrame=Number(process.env.BATTY_GAMEPLAY_START_FRAME||100);
 E.memory.bytes=E.memory.bytes.slice(0,65536);
 const w=(a,v)=>E.memory.bytes[E.memory.tobank(a&65535)]=v,inst=E.cpu.instruction.bind(E.cpu);
 let ticks=0,frame=0,launchTick=0,lastBonus=0,enemySeen=false,bombsSeen=0,created=[],caught=[],started=false;
@@ -20,7 +21,7 @@ E.cpu.instruction=function(){if(E.L.StackFloor&&this.sp>=0x6900&&this.sp<=E.L.st
  }
  inst();
 };
-for(frame=0;frame<frameLimit;frame++){if(frame===100)E.key(48,1);if(frame===110)E.key(48,0);E.run(1);}
+for(frame=0;frame<frameLimit;frame++){if(frame===startFrame)E.key(48,1);if(frame===startFrame+10)E.key(48,0);E.run(1);}
 console.log({ticks,created,caught,enemySeen,bombsSeen}); assert(created.length>=4&&caught.length>=3);assert(created.some(v=>v.id===4));if(process.env.BATTY_GAMEPLAY_REQUIRE_SMASH!=='0')assert(caught.some(v=>v.id===7));assert(enemySeen&&bombsSeen>0);
-const result={romSHA256,frames:frameLimit,ticks,naturalBonuses:created,pickedBonuses:caught,enemySeen,bombsSeen,unexpectedResets:0,physicalRAM:65536,naturalSmashObserved:caught.some(v=>v.id===7),requiredNaturalSmash:process.env.BATTY_GAMEPLAY_REQUIRE_SMASH!=='0',passed:true};
+const result={romSHA256,frames:frameLimit,startFrame,ticks,naturalBonuses:created,pickedBonuses:caught,enemySeen,bombsSeen,unexpectedResets:0,physicalRAM:65536,naturalSmashObserved:caught.some(v=>v.id===7),requiredNaturalSmash:process.env.BATTY_GAMEPLAY_REQUIRE_SMASH!=='0',passed:true};
 console.log(result);if(process.env.BATTY_GAMEPLAY_OUT||!process.argv[2])fs.writeFileSync(process.env.BATTY_GAMEPLAY_OUT||'outputs/batty-natural-bonus-verification.json',JSON.stringify(result,null,2));

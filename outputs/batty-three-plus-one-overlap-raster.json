@@ -1,5 +1,5 @@
 {
-  "romSHA256": "870b8de67982c694229d54cbb591bde9c42099f9d16b2af8fdc6936b03af7732",
+  "romSHA256": "e06fd30447245889ac5d0090357cdeec43d04fa44d856d97668c3de0d0d6ff62",
   "cpu": "i8080 3 MHz, strict 64 KB",
   "moving": false,
   "overlap": true,
