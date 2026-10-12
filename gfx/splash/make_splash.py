@@ -36,12 +36,11 @@ def pixel(x,y):
 # upper part
 for y in range(SPLIT):
     for x in range(W):img[y+TOP][x]=pixel(x,y)
-# pipe highlights: first ink row of the pipe white, last rows darker
+# pipe highlight: first ink row of the pipe white
 for x in range(36,220):
     ys=[y for y in range(72,100) if img[y+TOP][x]==LGREY]
     if ys:
         img[ys[0]+TOP][x]=WHITE
-        for y in ys[-3:]:img[y+TOP][x]=GREY
 # brick rows: geometry from the ZX rows (left/right edge and joints are linear in y)
 def runs(y):
     row=[zbit(x,y) for x in range(W)];L=26+ (127-y) ;  # search inside the field
