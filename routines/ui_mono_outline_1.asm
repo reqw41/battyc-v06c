@@ -15,3 +15,5 @@ UiMonoOutline:
  pop bc
  pop hl
  ret
+
+ INCLUDE "routines/smash_rotation_1.asm"

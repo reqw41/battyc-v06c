@@ -1,5 +1,7 @@
 # Solid game font, common panels, paddle dots and Joystick-P
 
+This records the earlier adaptive-rotation build. The current all-ball rotation and Smash changes are described in [ROTATION_FAST.md](ROTATION_FAST.md).
+
 ROM SHA256: `4be81da1e4982868aa3112de54645e3a3380b57e524ab8249de30a736a3bbb04`.
 32512 bytes, vanilla 64 KB, i8080 at 3 MHz. Score stays above the frame; paddle stays at Y181.
 

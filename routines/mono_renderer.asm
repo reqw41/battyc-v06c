@@ -165,8 +165,8 @@ mono_prepare:
  ld (hl),0
  ld a,(MonoOwner)
  add a,a
- ld hl,MonoObjects
- call hl_add_a
+ ld l,a
+ ld h,high MonoObjects
  ld e,(hl)
  inc hl
  ld d,(hl)
@@ -574,8 +574,8 @@ MonoZeroRange:
  ld a,b
  or a
  ret z
-mono_zero_row:
  xor a
+mono_zero_row:
  ld (hl),a
 mono_zero_next:
  dec l
@@ -698,3 +698,5 @@ mono_remove_skip:
 
  INCLUDE "routines/mono_composite_bat.asm"
  INCLUDE "routines/mono_pair_clear.asm"
+
+ ASSERT low MonoObjects == 0

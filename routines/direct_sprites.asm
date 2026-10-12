@@ -18,12 +18,6 @@ set_big_ball:
 	ld HL,(IXobj)
 	inc HL
 	LD (HL),$08		; IX+$01 = spr_big_ball
-	ld DE,$15-$01
-	add HL,DE
-	ld A,(HL)		; IX+$15
-	and %01111111		; RES 7,(IX+$15)
-	ld (HL),A		; IX+$15
-
 ; Обработка длительности действия приза
 	LD A,(counter_misc)
 	RRA
@@ -48,19 +42,11 @@ not_smash:
 	LD (object_bat_2+$14),A	; применённый к объекту бонус
 
 obj_processing:
- ld a,(balls_quantity)
- cp 3
- jp nc,obj_processing_1
  ld hl,(IXobj)
  ld a,(hl)
  cp 2
  jp nz,obj_processing_1
- inc hl
- ld a,(hl)
- cp 8
- jp nc,obj_processing_1
- ld (hl),0
- ld de,20
+ ld de,21
  add hl,de
  ld a,(hl)
  and $7f
@@ -117,7 +103,10 @@ pd_position_valid:
  inc hl
  ld a,(hl)
  ld b,a
- call MonoBonusHeight
+ ; Only owner 0 is the falling bonus; static HUD owners are never bonuses.
+ ld a,(MonoOwner)
+ or a
+ call z,MonoBonusHeight
  ld a,(plane_y)
  add a,b
 pd_height_compare:

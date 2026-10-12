@@ -1,7 +1,8 @@
 mdp_normal:
- ld hl,MonoShifts
  ld a,(MonoOwner)
- call hl_add_a
+ add a,low MonoShifts
+ ld l,a
+ ld h,high MonoShifts
  ld a,(hl)
  ld (direct_shift),a
  ld b,a
@@ -159,3 +160,5 @@ msd_last_merge:
  jp nz,msd_last_row
  jp mono_draw_restore
 MonoDrawRotations: dw msd_r0,msd_r1,msd_r2,msd_r3,msd_r4,msd_r5,msd_r6,msd_r7
+
+ ASSERT high MonoShifts == high (MonoShifts+10)

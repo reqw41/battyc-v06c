@@ -1,0 +1,13 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "drawnFrames": 384,
+  "heldCases": 24,
+  "rotationOverlapAndRestorationVerified": true,
+  "distinctNormalPhases": 4,
+  "distinctSmashPhases": 4,
+  "periodGameplaySteps": 16,
+  "threeBallsRotate": true,
+  "RGBPreserved": true,
+  "stackBytes": 12,
+  "passed": true
+}

@@ -1,0 +1,17 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "cases": 221,
+  "starts": [
+    {
+      "pad": 1,
+      "fireStartedGame": true
+    },
+    {
+      "pad": 2,
+      "fireStartedGame": true
+    }
+  ],
+  "irqDevicesSeparate": true,
+  "doubleKeyboardIndependent": true,
+  "passed": true
+}

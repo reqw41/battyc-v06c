@@ -8,7 +8,9 @@ const pacePads={spr_bomb:'mono_pace_start',spr_ball_normal:'mono_pace_white',spr
 let count=0,total=0,output='; Generated native column pairs (~cover,lit). Static magnets, separators and HUD headings use native columns; score digits retain their separate legacy format.\n';
 for(const m of text.matchAll(/^(spr_\w+):([\s\S]*?)(?=^spr_\w+:|$(?![\s\S]))/gm)){
  let bytes=[],padding=0;for(const line of m[2].split('\n')){const p=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(p)for(const v of p[1].split(','))bytes.push(parseInt(v.trim().slice(1),16));const d=line.match(/^\s*DS\s+(\d+),0/i);if(d)padding+=+d[1];}
- const original=bytes.slice(),allocated=bytes.length+padding,w=bytes[0],fullH=bytes[1];
+ const allocated=bytes.length+padding;
+ if(m[1]==='spr_big_ball'){const [ow,oh]=bytes;for(let y=0;y<oh;y++)for(let c=1;c<ow;c++)assert.equal(bytes[3+2*(y*ow+c)],0,'Smash has lit spill');bytes=[1,oh,...Array.from({length:oh},(_,y)=>bytes.slice(2+2*y*ow,4+2*y*ow)).flat()];}
+ const original=bytes.slice(),w=bytes[0],fullH=bytes[1];
  let data;if(staticNames.has(m[1])){data=bytes.slice();for(let i=2;i+1<data.length;i+=2)data[i+1]^=data[i];}
  else {let h=fullH;
  // White-only owners need no trailing rows containing only black coverage.

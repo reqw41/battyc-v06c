@@ -54,9 +54,8 @@ spr_separator:
  DEFB $0f,$00,$0f,$00,$0f,$00,$0f,$00,$0f,$00,$0f,$00
  DEFB $9f,$00
 spr_big_ball:
- DEFB $02,$08,$e3,$00,$c1,$1c,$80,$26,$00,$4f,$00,$5f
- DEFB $00,$7f,$80,$3e,$c0,$1c,$ff,$00,$ff,$00,$ff,$00
- DEFB $7f,$00,$7f,$00,$7f,$00,$7f,$00,$ff,$00
+ DEFB $01,$08,$e3,$00,$c1,$1c,$80,$26,$00,$4f,$00,$5f
+ DEFB $00,$7f,$80,$3e,$c0,$1c
  INCLUDE "routines/magnet_center_read.asm"
 MonoPadEnd_spr_big_ball:
  ASSERT $ <= spr_big_ball+50

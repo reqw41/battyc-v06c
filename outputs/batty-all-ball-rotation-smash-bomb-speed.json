@@ -1,0 +1,43 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "cpu": "i8080 3 MHz, 64 KB",
+  "method": "65 controlled moving steps; positions injected at the unchanged logic entry before handling; actual native logic and rendering run. Frame timing starts at GameplayDrawBegin when present; legacy ROM uses LB9E8_2, or the instruction after its normal wait CALL with BATTY_BENCH_DRAW_ANCHOR=1. IRQ entry is reported separately in machineMs; activeMs excludes the complete gameplay wait call. 25 Hz budget: 119808 cycles, cadence tolerance 0.02 ms for IRQ/instruction boundary jitter.",
+  "reports": [
+    {
+      "name": "smash_enemy_bomb",
+      "balls": 3,
+      "smash": true,
+      "bonus": true,
+      "bonusFrame": 10,
+      "enemy": 8,
+      "worstFrame": {
+        "ms": 39.93066666666667,
+        "machineMs": 39.936,
+        "irqEntryCycles": 16,
+        "activeMs": 29.229333333333333,
+        "waitMs": 10.701333333333332,
+        "renderMs": 21.786666666666665,
+        "logicMs": 7.344
+      },
+      "cacheBuilds": 2,
+      "warmCacheBuilds": 0,
+      "steps": 65,
+      "warmMeanMs": 32.38518518518519,
+      "meanMs": 32.55589743589744,
+      "activeMs": 30.314646153846155,
+      "waitMs": 2.2412512820512838,
+      "warmActiveMs": 30.33789629629629,
+      "stepsPerSecond": 30.716400982924824,
+      "renderMs": 22.99124102564103,
+      "logicMs": 7.224738461538463,
+      "minMs": 29.057333333333332,
+      "maxMs": 39.93066666666667,
+      "warmMaxMs": 39.821333333333335,
+      "warmMachineMeanMs": 32.39253333333334,
+      "warmMachineMaxMs": 39.82666666666667,
+      "warmMachineMinMs": 29.062666666666665,
+      "maxMachineMs": 39.936,
+      "warmOverBudget": 0
+    }
+  ]
+}

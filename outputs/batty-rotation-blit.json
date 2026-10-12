@@ -1,0 +1,106 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "jsRotateCases": 1792,
+  "nativeOracleCases": 98,
+  "results": [
+    {
+      "name": "normal",
+      "shift": 1,
+      "generalCycles": 2312,
+      "ballCycles": 1212,
+      "savedCycles": 1100
+    },
+    {
+      "name": "normal",
+      "shift": 2,
+      "generalCycles": 2336,
+      "ballCycles": 1236,
+      "savedCycles": 1100
+    },
+    {
+      "name": "normal",
+      "shift": 3,
+      "generalCycles": 2360,
+      "ballCycles": 1260,
+      "savedCycles": 1100
+    },
+    {
+      "name": "normal",
+      "shift": 4,
+      "generalCycles": 2384,
+      "ballCycles": 1284,
+      "savedCycles": 1100
+    },
+    {
+      "name": "normal",
+      "shift": 5,
+      "generalCycles": 2408,
+      "ballCycles": 1308,
+      "savedCycles": 1100
+    },
+    {
+      "name": "normal",
+      "shift": 6,
+      "generalCycles": 2432,
+      "ballCycles": 1332,
+      "savedCycles": 1100
+    },
+    {
+      "name": "normal",
+      "shift": 7,
+      "generalCycles": 2456,
+      "ballCycles": 1356,
+      "savedCycles": 1100
+    },
+    {
+      "name": "smash",
+      "shift": 1,
+      "generalCycles": 2800,
+      "ballCycles": 1468,
+      "savedCycles": 1332
+    },
+    {
+      "name": "smash",
+      "shift": 2,
+      "generalCycles": 2832,
+      "ballCycles": 1500,
+      "savedCycles": 1332
+    },
+    {
+      "name": "smash",
+      "shift": 3,
+      "generalCycles": 2864,
+      "ballCycles": 1532,
+      "savedCycles": 1332
+    },
+    {
+      "name": "smash",
+      "shift": 4,
+      "generalCycles": 2896,
+      "ballCycles": 1564,
+      "savedCycles": 1332
+    },
+    {
+      "name": "smash",
+      "shift": 5,
+      "generalCycles": 2928,
+      "ballCycles": 1596,
+      "savedCycles": 1332
+    },
+    {
+      "name": "smash",
+      "shift": 6,
+      "generalCycles": 2960,
+      "ballCycles": 1628,
+      "savedCycles": 1332
+    },
+    {
+      "name": "smash",
+      "shift": 7,
+      "generalCycles": 2992,
+      "ballCycles": 1660,
+      "savedCycles": 1332
+    }
+  ],
+  "passed": true
+}

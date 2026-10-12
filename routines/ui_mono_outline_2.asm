@@ -1,26 +1,3 @@
-UiMonoOutlineTail:
- call UiOutlineByte
- inc l
- ld a,c
- and $80
- rlca
- ld b,a
- dec h
- call UiOutlineByte
- inc h
- inc h
- ld a,c
- and 1
- rrca
- ld b,a
- call UiOutlineByte
-UiMonoDone:
- ld a,1
- ld (OverlayActive),a
- pop de
- pop bc
- pop hl
- pop af
- ret
-
+ INCLUDE "routines/smash_rotation_2.asm"
+SmashRotationFrames: dw spr_big_ball,SmashRotation1,SmashRotation2,SmashRotation3
  INCLUDE "routines/magnet_center_source.asm"

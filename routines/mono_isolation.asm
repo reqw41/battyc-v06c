@@ -82,18 +82,15 @@ mfi_pair:
  ld d,(hl)
  inc hl
  ld (MonoPairPtr),hl
- ex de,hl
- ld (MonoPairInner),hl
- ex de,hl
  ld hl,(MonoPairOuter)
  call MonoRegionsIntersect
  or a
  jp z,mfi_pair_next
+ inc de
+ xor a
+ ld (de),a
  ld hl,(MonoPairOuter)
  ld de,4
- add hl,de
- ld (hl),0
- ld hl,(MonoPairInner)
  add hl,de
  ld (hl),0
 mfi_pair_next:

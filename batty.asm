@@ -6574,6 +6574,7 @@ LBE8B_11:
 
 ; Графика текстуры уровня 1
   INCLUDE "./gfx/sprites_color_3.asm"
+ INCLUDE "routines/smash_rotation_3.asm"
 
 ; Used by the routines at print_obj_from_buf_to_scr, LAFFC, print_sprite_pix, ix_buf_addr_calc and game_start.
 ; На входе в HL координаты
@@ -6771,6 +6772,7 @@ LBE8B_9:
  INCLUDE "routines/cpc_bricks.asm"
  INCLUDE "routines/menu_controls.asm"
  INCLUDE "routines/game_over_panel.asm"
+ INCLUDE "routines/mono_ball_shift.asm"
 
 
 BATTYCODE_END:
@@ -6845,7 +6847,7 @@ RCReset:
  jp MonoReset
  INCLUDE "routines/mono_region_include.asm"
 MonoShifts: ds 11,0
-MonoDrawWhite:
+MonoDrawWhiteGeneral:
  ld a,b
  or a
  jp nz,MonoShiftDraw

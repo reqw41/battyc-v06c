@@ -1,0 +1,13 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "identicalPanelRectangle": {
+    "x": 64,
+    "y": 135,
+    "width": 128,
+    "height": 25
+  },
+  "firstLineBaseline": 143,
+  "secondLineBaseline": 158,
+  "roundBackgroundRestored": true,
+  "passed": true
+}

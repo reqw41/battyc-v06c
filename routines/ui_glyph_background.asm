@@ -1,16 +1,3 @@
-; HL C plane, C glyph bitmap. Cut the core only in the white overlay.
-; The underlying A/C/E pattern is preserved, including coloured bricks.
-UiGlyphBackground:
- ld a,h
- sub $40
- ld h,a
- ld a,c
- cpl
- and (hl)
- ld (hl),a
- jp UiMonoDone
-
- ; Save is completed before replacing each byte of the temporary panel.
 MonoWindowSaveByte:
  ld a,h
  cp $e0
@@ -19,4 +6,14 @@ MonoWindowSaveByte:
  dec a
 MonoWindowDarkByte:
  ld (hl),a
+ ret
+
+BallShiftMaskInit:
+ ld hl,SpriteShiftMasks
+ ld a,(direct_shift)
+ call hl_add_a
+ ld a,(hl)
+ ld (BallShiftLead+1),a
+ cpl
+ ld (BallShiftSpill+1),a
  ret

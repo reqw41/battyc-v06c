@@ -1,0 +1,15 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "strict64KB": true,
+  "scenes": 1955,
+  "planeComparisons": 7820,
+  "maxStack": 18,
+  "bgWrites": 0,
+  "meanRenderTicks": 128729.7084398977,
+  "peakRenderTicks": 899612,
+  "roundWindowRestored": true,
+  "pacingLowerBoundVerified": true,
+  "minPaceMargin": 628,
+  "maxPaceBound": 102976,
+  "passed": true
+}

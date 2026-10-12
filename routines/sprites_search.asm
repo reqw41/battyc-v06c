@@ -5,25 +5,23 @@
 ; На выходе в DE адрес спрайта
 
 sprite_search:
- ld a,(balls_quantity)
- cp 3
- jp nc,SpriteSearchOrdinary
-; HL = object pointer. BC is preserved; DE = selected sprite.
-; Walk the object through DE while indexing the two pointer tables in HL.
  ld a,(hl)
  cp 2
  jp nz,SpriteSearchOrdinary
+ push bc
  inc hl
  ld a,(hl)
  dec hl
  cp 8
- jp nc,SpriteSearchOrdinary
- push hl
+ ld bc,BallRotationFrames
+ jp nz,BallRotationTableChosen
+ ld bc,SmashRotationFrames
+BallRotationTableChosen:
+ push bc
  ld de,20
  add hl,de
  ld a,(hl)
  or a
- pop hl
  ld a,0
  jp nz,BallRotationSelect
  ld a,(counter_misc)
@@ -32,11 +30,13 @@ sprite_search:
  and 3
 BallRotationSelect:
  add a,a
- ld hl,BallRotationFrames
- call hl_add_a
+ pop hl
+ add a,l
+ ld l,a
  ld e,(hl)
  inc hl
  ld d,(hl)
+ pop bc
  ret
 SpriteSearchOrdinary:
  ex de,hl
@@ -212,3 +212,5 @@ anim_ufo:
   DEFW spr_ufo_4
   DEFW spr_ufo_3
   DEFW spr_ufo_2
+ ASSERT low BallRotationFrames <= $f8
+ ASSERT low SmashRotationFrames <= $f8
