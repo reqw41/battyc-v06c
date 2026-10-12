@@ -346,7 +346,7 @@ spr_bat_big_shift:
  DEFB $00,$26,$00,$d2,$00,$de,$00,$de,$00,$dc,$01,$d8
  DEFB $03,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
- INCLUDE "routines/ui_glyph_black.asm"
+ INCLUDE "routines/ui_glyph_background.asm"
 MonoPadEnd_spr_bat_big_shift:
  ASSERT $ <= spr_bat_big_shift+184
  IF $ < spr_bat_big_shift+184
@@ -441,12 +441,7 @@ spr_bird_1:
  DEFB $00,$5a,$00,$99,$00,$91,$6e,$00,$ff,$00,$f1,$00
  DEFB $80,$0e,$01,$7c,$03,$f8,$07,$e0,$1f,$80,$7f,$00
  DEFB $7f,$00,$7f,$00,$3f,$80,$7f,$00
- INCLUDE "routines/hud_core_start.asm"
-MonoPadEnd_spr_bird_1:
- ASSERT $ <= spr_bird_1+92
- IF $ < spr_bird_1+92
- DS spr_bird_1+92-$,0
- ENDIF
+ DS 24,0
 spr_bird_2:
  DEFB $03,$0b,$ff,$00,$ff,$00,$ff,$00,$fe,$00,$e0,$01
  DEFB $c0,$1f,$80,$3f,$00,$60,$9f,$00,$fe,$00,$ff,$00

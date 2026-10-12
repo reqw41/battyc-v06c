@@ -11,8 +11,8 @@ for(const [frame,name,x] of [[1,'spr_1up',28],[2,'spr_2up',204],[3,'spr_hi',120]
  for(let r=0;r<height;r++)for(let c=0;c<width;c++){const at=2+2*(r*width+c),lit=bytes[at]&bytes[at+1],dst=((x>>3)+c)*256+((224-232-r)&255);want[dst]|=lit>>>phase;if(phase)want[dst+256]|=lit<<(8-phase);}
  assert(read(0x8000,8192).equals(want),'HUD transpose '+name);cases++;
 }
-// The white cross contour with a black core is tested on a patterned background, then the
+// The white cross contour with the background in its core is tested on a patterned background, then the
 // round-window save restores all four planes, including its last 64 bytes.
 for(let p=0;p<4;p++)for(let i=0;i<8192;i++)w(0x8000+p*8192+i,(i*13+p*41)&255);
-call('MonoReset');const before=read(0x8000,32768);call('show_window_round_number');assert(!read(0xa000,24576).equals(before.subarray(8192)),'outline did not touch background');call('win_bg_recovery');assert(read(0x8000,32768).equals(before),'outlined window did not restore all planes');
+call('MonoReset');const before=read(0x8000,32768);call('show_window_round_number');assert(read(0xa000,24576).equals(before.subarray(8192)),'text changed the RGB background');call('win_bg_recovery');assert(read(0x8000,32768).equals(before),'outlined window did not restore all planes');
 const result={cases,scoreHeadings:true,outlinedWindowRestoresFourPlanes:true,passed:true};fs.writeFileSync('outputs/batty-transform-hud.json',JSON.stringify(result,null,2));console.log(result);

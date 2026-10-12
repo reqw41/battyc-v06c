@@ -34,9 +34,15 @@ for(let theme=0;theme<4;theme++){
   call(E,'planes_reset');const o=E.L.object_score_indicator;[3,frame,x,0,232].forEach((v,i)=>write(E,o+i,v));write(E,o+21,0);ptr(E,E.L.IXobj,o);call(E,'NativeStaticObject');
   const block=originals.match(new RegExp('^'+name+':([\\s\\S]*?)(?=^spr_)','m'))[1],bytes=[];for(const m of block.matchAll(/DEFB\s+(.+)/g))bytes.push(...m[1].split(',').map(v=>parseInt(v.trim().slice(1),16)));
   const core=Buffer.alloc(8192);for(let r=0;r<bytes[1];r++)for(let c=0;c<bytes[0];c++){const i=2+2*(r*bytes[0]+c),bits=bytes[i]&~bytes[i+1];for(let b=0;b<8;b++)if(bits&(128>>b)){const px=x+c*8+b;core[(px>>3)*256+((224-232-r)&255)]|=128>>(px&7);}}
-  for(let i=0;i<8192;i++){assert.equal(E.rd(0xe000+i),core[i]^255,'heading paper/core');assert.equal(E.rd(0xa000+i),0);assert.equal(E.rd(0xc000+i),0);}headingCases++;
+  for(let i=0;i<8192;i++){assert.equal(E.rd(0xe000+i),255,'heading paper/core');assert.equal(E.rd(0xa000+i),0);assert.equal(E.rd(0xc000+i),0);}headingCases++;
  }
 }
 // Additional ordinary brick shade uses native bright green without changing toughness.
 assert.equal(E.rd(E.L.briks_colors+3),0x60);assert.equal(E.rd(E.L.background_colors+6),5);assert.equal(E.rd(E.L.PaletteGame+5),0x38);
-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetMeanTicks:magnetTicks/magnets,previousMagnetMeanTicks:oldMagnetTicks/magnets,colourOverheadMeanTicks:(magnetTicks-oldMagnetTicks)/magnets,magnetCenterOn:6,magnetCenterOff:7,ringMatchesPreviousROM:true,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);
+assert.equal(E.rd(E.L.briks_colors+4),0xf0);assert.equal(E.rd(E.L.background_colors+15),0);assert.equal(E.rd(E.L.PaletteGame),0);
+// A real type-5 brick must render ink index 0 and paper index 1.
+call(E,'planes_reset');write(E,0x6d00,0x15);ptr(E,E.L.cur_level_ptr,0x6d00);ptr(E,E.L.brik_attr_buf,0x7ac8);E.cpu.set_rp(4,0x7a38);call(E,'NativePrintBrick');
+const blackPaper=Buffer.alloc(8192,255);
+for(let r=0;r<8;r++)for(let c=0;c<2;c++)blackPaper[(10+c)*256+224-56-r]=E.rd(E.L.spr_brik_1+r*2+c)^255;
+for(let i=0;i<8192;i++){assert.equal(E.rd(0xa000+i),0,'black brick A');assert.equal(E.rd(0xc000+i),0,'black brick C');assert.equal(E.rd(0xe000+i),blackPaper[i],'black brick E');}
+const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetMeanTicks:magnetTicks/magnets,previousMagnetMeanTicks:oldMagnetTicks/magnets,colourOverheadMeanTicks:(magnetTicks-oldMagnetTicks)/magnets,magnetCenterOn:6,magnetCenterOff:7,ringMatchesPreviousROM:true,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,blackBrick:true,headingCoreUsesPaper:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);

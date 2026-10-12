@@ -1,4 +1,4 @@
-; First pass adds the white cross contour; second pass cuts its black core.
+; First pass adds the white cross contour; second pass reveals the background in its core.
 ; The whole line is outlined before any glyph interior is cut.
 UiMonoOutline:
  pop af
@@ -9,7 +9,7 @@ UiMonoOutline:
  ld c,a
  ld a,(UiStencilPass)
  or a
- jp nz,UiGlyphBlack
+ jp nz,UiGlyphBackground
  ld a,h
  add a,$20
  ld h,a

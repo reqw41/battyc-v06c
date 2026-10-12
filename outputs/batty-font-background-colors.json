@@ -1,0 +1,18 @@
+{
+  "romSHA256": "c6a7d872681ba746e3c761f9f2f4927ac992f96b9fbd1c08392877f6ba76a592",
+  "magnets": 120,
+  "magnetMeanTicks": 101035.9,
+  "previousMagnetMeanTicks": 92737.23333333334,
+  "colourOverheadMeanTicks": 8298.666666666666,
+  "magnetCenterOn": 6,
+  "magnetCenterOff": 7,
+  "ringMatchesPreviousROM": true,
+  "menuCases": 80,
+  "menuInkIndices": 16,
+  "headingCases": 12,
+  "paperAcrossScreen": true,
+  "brightGreenBrick": true,
+  "blackBrick": true,
+  "headingCoreUsesPaper": true,
+  "passed": true
+}

@@ -1,0 +1,55 @@
+{
+  "romSHA256": "c6a7d872681ba746e3c761f9f2f4927ac992f96b9fbd1c08392877f6ba76a592",
+  "physicalRAM": 65536,
+  "reports": [
+    {
+      "mode": 0,
+      "entireRGBFieldPreserved": true,
+      "screenResets": 0,
+      "menuPaletteSwitches": 0,
+      "musicEventsPerChannel": [
+        3,
+        3,
+        3
+      ],
+      "musicSeconds": 0.958212,
+      "eventToFirstToneMs": 5.552,
+      "gameOverVisibleSeconds": 5.094548,
+      "stackBytes": 44,
+      "passed": true
+    },
+    {
+      "mode": 1,
+      "entireRGBFieldPreserved": true,
+      "screenResets": 0,
+      "menuPaletteSwitches": 0,
+      "musicEventsPerChannel": [
+        3,
+        3,
+        3
+      ],
+      "musicSeconds": 0.958212,
+      "eventToFirstToneMs": 5.552,
+      "gameOverVisibleSeconds": 5.094548,
+      "stackBytes": 44,
+      "passed": true
+    },
+    {
+      "mode": 2,
+      "entireRGBFieldPreserved": true,
+      "screenResets": 0,
+      "menuPaletteSwitches": 0,
+      "musicEventsPerChannel": [
+        3,
+        3,
+        3
+      ],
+      "musicSeconds": 0.9582093333333334,
+      "eventToFirstToneMs": 2.986666666666667,
+      "gameOverVisibleSeconds": 5.114230666666667,
+      "stackBytes": 44,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

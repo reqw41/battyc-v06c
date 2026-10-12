@@ -698,4 +698,3 @@ mono_remove_skip:
 
  INCLUDE "routines/mono_composite_bat.asm"
  INCLUDE "routines/mono_pair_clear.asm"
- INCLUDE "routines/hud_core_body.asm"

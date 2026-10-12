@@ -17,15 +17,15 @@ for(const chars of [Array.from({length:16},(_,i)=>i),Array.from({length:16},(_,i
  }
  E.cpu.set_rp(2,msg);call('print_line');
  const expected=Buffer.from(dilation.map((v,i)=>v&~core[i]));{const got=read(0x8000,8192);if(!got.equals(expected)){const i=got.findIndex((v,i)=>v!==expected[i]);throw Error(JSON.stringify({chars,i,col:i>>8,row:i&255,got:got[i],want:expected[i],core:core[i],dilation:dilation[i],pass:E.rd(E.L.UiStencilPass)}));}}
- for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(Buffer.from(bg[p].map((v,i)=>v&~core[i]))),'glyph core is not black in background plane '+p);
+ for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(bg[p]),'text changed background plane '+p);
  assert.equal(E.rd(E.L.UiStencilPass),0,'stencil pass leaked');textCases++;characters+=chars.length;
 }
 // Digits are a distinct legacy source: white = coverage minus the ink core.
 let digitCases=0;
 for(let d=0;d<10;d++){
- call('planes_reset');const dst=0x7800+232;word(E.L.score_screen_ptr,dst);E.cpu.set_a(d*16);call('NativePrintDigit');const want=Buffer.alloc(8192);
+ call('planes_reset');const digitBG=background();putBG(digitBG);const dst=0x7800+232;word(E.L.score_screen_ptr,dst);E.cpu.set_a(d*16);call('NativePrintDigit');const want=Buffer.alloc(8192);
  for(let r=0;r<8;r++){const src=E.L.spr_score_digits+2+d*16+r*2;assert.equal(E.rd(src+1)&~E.rd(src),0);want[8*256+((224-232-r)&255)]=E.rd(src)^E.rd(src+1);}
- assert(read(0x8000,8192).equals(want),'outlined score digit '+d);digitCases++;
+ assert(read(0x8000,8192).equals(want),'outlined score digit '+d);for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(digitBG[p]),'digit changed background plane '+p);digitCases++;
 }
 // Moving dots must touch the sprite plane only. Repainting the paddle must
 // also remove every old hole, including across byte boundaries and resize.
@@ -52,4 +52,4 @@ for(const mode of ['normal','wide','gun','split','double'])for(let t=0;t<32;t++)
  for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(bg[p]),'dot left a background trail '+mode+' plane '+p);
  dotFrames++;
 }
-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),textCases,characters,digitCases,dotFrames,whiteContourBlackCore:true,backgroundUnchangedByDots:true,oldDotHolesRestored:true,maxStack:E.L.stack-minSP,passed:true};fs.writeFileSync('outputs/batty-white-outline-and-dots.json',JSON.stringify(result,null,2));console.log(result);
+const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),textCases,characters,digitCases,dotFrames,whiteContourBackgroundCore:true,textAndDigitsPreserveRGB:true,backgroundUnchangedByDots:true,oldDotHolesRestored:true,maxStack:E.L.stack-minSP,passed:true};fs.writeFileSync('outputs/batty-white-outline-and-dots.json',JSON.stringify(result,null,2));console.log(result);

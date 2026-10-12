@@ -271,7 +271,7 @@ NativeStaticScoreCheck:
  jp nz,NativeStaticBackground
  ld a,l
  cp e
- jp z,NativeOutlinedHeading
+ jp z,plane_static_object
 NativeStaticBackground:
  ld hl,(IXobj)
  ld a,(hl)
@@ -356,7 +356,6 @@ NativeDigitRow:
  ld b,(hl)
  inc hl
  ld a,(hl)
- ld c,a
  xor b
  ld b,a
  inc hl
@@ -367,12 +366,6 @@ NativeDigitRow:
  sub $40
  ld d,a
  ld a,b
- ld (de),a
- ld a,d
- add a,$60
- ld d,a
- ld a,c
- cpl
  ld (de),a
  inc l
  ld (NativeDest),hl
