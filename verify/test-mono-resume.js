@@ -1,4 +1,3 @@
-const {cleanVideo,field}=require('./three_plane_test_helpers');
 const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
 const root=process.env.BATTY_TEST_BASE||'.',legacy=process.env.BATTY_COMPARE_FULL==='1',reports=[];
 for(const scene of [{mode:0,other:0,name:'one-player'},{mode:2,other:3,name:'double-play'},{mode:1,other:0,name:'second-player-out'},{mode:1,other:3,name:'player-change'}]){
@@ -15,13 +14,13 @@ for(const scene of [{mode:0,other:0,name:'one-player'},{mode:2,other:3,name:'dou
    // same texture/brick map would otherwise reproduce identical pixels.
    w(0xa700,0x55);w(0xc700,0xa5);
   }
-  if(pc===E.L.live_dec){assert(death);atLoss=true;lossCycles=cycles;background=field(E);attrs=range(E.L.NativeAttrs,E.L.NativeAttrBytes||1024);map=range(level,180);magnets=range(E.L.NativeMagnetOverlayFlags,4);score=range(E.L.current_score_1up,3);}
+  if(pc===E.L.live_dec){assert(death);atLoss=true;lossCycles=cycles;background=range(0xa000,24576);attrs=range(E.L.NativeAttrs,E.L.NativeAttrBytes||1024);map=range(level,180);magnets=range(E.L.NativeMagnetOverlayFlags,4);score=range(E.L.current_score_1up,3);}
   if(atLoss){if(pc===E.L.game_screen_draw_to_buffer)draws++;if(pc===E.L.planes_reset)resets++;if(pc===E.L.ResumeLife)resumes++;if(pc===E.L.MusicStart)music++;}
   inst();cycles+=this.vcycles;
  };
  try{for(let frame=0;frame<2400;frame++){if(frame===100)E.key(48,1);if(frame===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='done')throw e;}
  assert(done,scene.name+' did not resume');const same=scene.mode!==1||scene.other===0;
- if(same&&!legacy){assert.equal(draws,0);assert.equal(resets,0);assert.equal(resumes,1);assert.equal(music,0);assert(background.equals(field(E,range(0xa000,24576))),'background repainted '+scene.name);assert(attrs.equals(range(E.L.NativeAttrs,E.L.NativeAttrBytes||1024)));assert(map.equals(range(level,180)));assert(magnets.equals(range(E.L.NativeMagnetOverlayFlags,4)));assert(score.equals(range(E.L.current_score_1up,3)));assert.equal(E.rd(E.L.lives_1up),2);assert.equal(E.rd(E.L.balls_quantity),1);assert.equal(E.rd(E.L.object_ball_1),2);assert.equal(E.rd(E.L.object_bat_1),1);assert.equal(E.rd(E.L.object_bat_2),scene.mode===2?1:0);assert.equal(E.rd(E.L.object_bonus),0);assert.equal(E.rd(E.L.object_enemy),0);
+ if(same&&!legacy){assert.equal(draws,0);assert.equal(resets,0);assert.equal(resumes,1);assert.equal(music,0);assert(background.equals(range(0xa000,24576)),'background repainted '+scene.name);assert(attrs.equals(range(E.L.NativeAttrs,E.L.NativeAttrBytes||1024)));assert(map.equals(range(level,180)));assert(magnets.equals(range(E.L.NativeMagnetOverlayFlags,4)));assert(score.equals(range(E.L.current_score_1up,3)));assert.equal(E.rd(E.L.lives_1up),2);assert.equal(E.rd(E.L.balls_quantity),1);assert.equal(E.rd(E.L.object_ball_1),2);assert.equal(E.rd(E.L.object_bat_1),1);assert.equal(E.rd(E.L.object_bat_2),scene.mode===2?1:0);assert.equal(E.rd(E.L.object_bonus),0);assert.equal(E.rd(E.L.object_enemy),0);
   assert.equal(E.rd(E.L.SUCount),0,'old moving sprites remain');for(const bank of [word(E.L.mono_old_base+1),word(E.L.mono_new_base+1)])for(let i=0;i<11;i++)assert.equal(E.rd(bank+7*i+2),0,'old sprite geometry remains');
   assert.equal(E.rd(E.L.SUDropped),0,'save-under capacity');
   // Oracle uses the original row pairs, independently of the ROM transpose.

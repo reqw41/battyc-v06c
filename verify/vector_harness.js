@@ -67,8 +67,11 @@ function make(romPath,symPath){
     const out=new Uint32Array(W_*H_);
     const pal=v06c.filler?v06c.filler.palette:io.Palette;
     const bytes=memory.bytes;
+    // Batty has separate menu/game scroll settings; use its current setting.
+    // This affects completed-screen previews only, not beam timing helpers.
+    const scroll=L.ScreenScroll===undefined?VS:rd(L.ScreenScroll);
     for(let r=0;r<256;r++){
-      const lo=(VS-r)&255;
+      const lo=(scroll-r)&255;
       const sy=r+16;                       // FIRST_VISIBLE_LINE=24, картинка с 40 => 40-24=16
       for(let col=0;col<32;col++){
         const a=0x8000+col*256+lo;

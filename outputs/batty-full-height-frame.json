@@ -1,0 +1,12 @@
+{
+  "romSHA256": "cf7ee4b8d20e40934287c4b0775ff8618cfb2b848532d4a15da47a2a30187c36",
+  "sourceArchiveSHA256": "af74cf90f14bcf91bbe0daef29671afaf6158ec1fadfc152f8b17cd890f48f2b",
+  "sourcePixelComparisons": 5424,
+  "videoBytesCompared": 32768,
+  "overlayUntouched": true,
+  "bottomOpen": true,
+  "sideWallsEndAtScreenRow": 255,
+  "oneTimeDrawTicks": 145100,
+  "oneTimeDrawMs": 48.36666666666667,
+  "passed": true
+}

@@ -35,7 +35,7 @@ CpcFrameSide:
  ex de,hl
  ld (CpcFrameSideSource+1),hl
  ex de,hl
- ld b,184
+ ld b,FieldHeight-8
 CpcFrameSideRow:
 CpcFrameSideSource:
  ld de,0

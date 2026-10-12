@@ -10,10 +10,13 @@ UiGlyphBackground:
  ld (hl),a
  jp UiMonoDone
 
+ ; Save is completed before replacing each byte of the temporary panel.
 MonoWindowSaveByte:
  ld a,h
- cp $a0
- ret nc
- xor a
+ cp $e0
+ ld a,0
+ jp c,MonoWindowDarkByte
+ dec a
+MonoWindowDarkByte:
  ld (hl),a
  ret

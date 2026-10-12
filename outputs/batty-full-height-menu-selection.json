@@ -1,0 +1,10 @@
+{
+  "romSHA256": "cf7ee4b8d20e40934287c4b0775ff8618cfb2b848532d4a15da47a2a30187c36",
+  "menuLoops": 80,
+  "togglesPerPlayer": 2,
+  "keyboardJoystickToggleVerified": true,
+  "highScoreRows": 10,
+  "rankAndScoreBaselinesMatch": true,
+  "rowSpacing": 17,
+  "passed": true
+}

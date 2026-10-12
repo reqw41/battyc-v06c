@@ -14,6 +14,12 @@ start_bin:
 
 ; Адрес начала окна ZX-экрана на экране Вектора
 zx_scr EQU $C0E0
+; Keep the upper HUD position; carry the background and walls to screen row 255.
+FieldScroll EQU 5
+FieldBottomLo EQU FieldScroll+1
+FieldHeight EQU $e0-FieldBottomLo+1
+FieldTexturePhase EQU (FieldBottomLo-$21)&15
+FieldTextureTiles EQU (FieldHeight+FieldTexturePhase)/16
 
 ;sound_port EQU $ff03
 
@@ -160,10 +166,16 @@ nk_left:
 nk_space:
   ld a,(KeyLine7)
   rla
-  jp c,nk_joystick
+  jp c,nk_keyboard_done
   ld a,b
   or $10
   ld b,a
+nk_keyboard_done:
+  ld a,b
+  ld (ctrl_btns_pressed),a
+  ret
+NativeJoystickState:
+  ld b,$0c
 nk_joystick:
   ld a,(JoystickP)
   cpl
@@ -278,10 +290,10 @@ next_double_digit:
 	DEFB $04,$03,$47,$04,$03,$00
 
 coord_ctrl_1up:
-	DEFW $6C28		; Координаты (X,Y) указателя игрока 1
+	DEFW $8228		; Координаты (X,Y) указателя игрока 1
 
 coord_ctrl_2up:
-	DEFW $6CB8		; Координаты (X,Y) указателя игрока 2
+	DEFW $82B8		; Координаты (X,Y) указателя игрока 2
 
 ; Указатели управления игроков
   INCLUDE "./gfx/sprites_no_masks_1.asm"
@@ -312,7 +324,7 @@ pointer_game_mode_text:
 ; +00 - координата Y
 ; +01 - указатель на текущий атрибут в таблице
 current_game_mode_line_prop:
-	DEFB $2F,$00
+	DEFB $29,$00
 
 	DEFB $67,$08		; Мусор?
 
@@ -1612,141 +1624,13 @@ get_control_state_1up:
 ; This entry point is used by the routine at get_right_player_ctrl_state.
 ; Опрос управления
 get_control_state:
-	AND A
-	JP Z,keyboard_ctrl
-	DEC A
-	JP Z,kempston_ctrl
-	DEC A
-	JP Z,cursor_ctrl
-
-interface_ii_ctrl:
-;		xor a
-;		ld c,a
-;		ld a,#82
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)	; Проверка ряда цифр
-;		and %01000000
-;		jp nz,LA1DB_7	; Уходим, если ни одна цифровая клавиша не нажата
-;
-;		ld a,#91
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-;
-;		ld a,%10111111	; Для исключения блокировки при нажатии на другие клавиши
-;		ld (kb_port_1),a
-;
-;		ld a,(kb_port_0)	; Проверка столбцов с клавишами пробел, влево и вправо
-;		cpl
-;		ld b,a
-;		rra
-;		rra
-;		rra
-;		rra
-;		and %11
-;		ld c,a
-;		ld a,b
-;		rla
-;		rla
-;		rla
-;		and %10000
-;		or c
-		xor a ;DEBUG
-		jp LA1DB_71
-
-cursor_ctrl:
-;		ld c,a			; Обунляем С
-;		ld a,#82
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)	; Проверка нижнего ряда
-;		and %00000100
-;		jp nz,LA1DB_7	; Уходим, если ни одна клавиша нижнего ряда не нажата
-;		ld a,#91
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-;
-;		ld a,%11111011	; Для исключения блокировки при нажатии на другие клавиши
-;		ld (kb_port_1),a
-;
-;		ld a,(kb_port_0)	; Проверка столбцов с клавишами пробел, влево и вправо
-;		cpl
-;		and %00110100
-;		jp z,LA1DB_7
-;		rra
-;		ld c,a 			; C = %0001 1010
-;		rra
-;		ld b,a 			; B = %0000 1101
-;		rra				; A = %0000 0110
-;		or b
-;		and %00011
-;		ld b,a
-;		ld a,c
-;		and %10000
-;		or b
-;		and %10011
-	xor a ;DEBUG
-	JP LA1DB_71
-
-kempston_ctrl:
-	; Заглушка для Kempston джойстика
-	JP LA1DB_71
-
+ and 1
+ jp z,keyboard_ctrl
+ jp NativeJoystickState
 keyboard_ctrl:
-;		ld c,a					; Обунляем С
-;		ld a,#82
-;		ld (kb_port_3),a			; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)
-;		cpl
-;		ld h,a
-;		and %00010000			; Проверка ряда ФЫВАПРОЛДЖЭ
-;		jp z,keyboard_ctrl_2	; Уходим, если ни одна клавиша ряда не нажата
-;
-;		; Опрос ВПРАВО
-;		ld a,#91
-;		ld (kb_port_3),a			; Переключаем ВВ55 на чтение столбцов
-;
-;		ld a,%11101111			; Без этого дополнения при нажатии на Огонь, не срабатывают направления
-;		ld (kb_port_1),a
-;
-;		ld a,(kb_port_2)			; Проверка столбцов ФЫВА
-;		cpl
-;		ld d,a
-;		and %00000101
-;		ld b,a
-;		ld a,(kb_port_0)			; Проверка столбцов ПРОЛДЖЭ
-;		cpl
-;		ld e,a
-;		and %01010101
-;		or b
-;		jp z,keyboard_ctrl_1
-;		inc c
-;
-;keyboard_ctrl_1:
-;		; Опрос ВЛЕВО
-;		ld a,d
-;		and %00001010
-;		ld b,a
-;		ld a,e
-;		and %10101010
-;		or b
-;		jp z,keyboard_ctrl_2
-;		ld a,c
-;		or %00010
-;		ld c,a
-;
-;keyboard_ctrl_2:
-;		; Опрос ОГОНЬ
-;		ld a,h					; Проверка рядов ЙЦУК и ЯЧСМ
-;		and %00101000
-;		jp z,LA1DB_7
-;		ld a,c
-;		or %10000
-;		ld c,a
-;
 LA1DB_7:
-;  LD A,C
-  ;ld a,$10 ;DEBUG
 LA1DB_71:
-	jp read_keyboard
-	;LD (ctrl_btns_pressed),A
-	;RET
+ jp read_keyboard
 
 LA270:
 	DEFB $00,$00,$00,$00
@@ -5861,9 +5745,7 @@ current_score_1up:
 
 ; Тип управления первого игрока:
 ; $00 - Keyboard
-; $FF ($01) - Kempston
-; $FE ($02) - Cursor
-; $FD ($03) - Interface II
+; $01 - native Vector joystick
 ctrl_type_1up:
 	DEFB $00
 
@@ -6480,6 +6362,7 @@ ResumeLife:
 ; Жизней не осталось
 LBC10_6:
  call MonoRemove ; retain the playfield; retire the last particles
+ call DrawGameOverPanel
 	LD A,(player_number)
 	INC A
 	LD (txt_player_0+$0C),A		; Номер игрока для надписи GAME OVER PLAYER X
@@ -6890,7 +6773,7 @@ scr_score_need_upd:
 SetPaletteLevel:
  ld a,3
  ld (BorderColor),a
- ld a,5 ; Field row 37: complete composition spans rows 13..242.
+ ld a,FieldScroll ; Field starts at row 37; texture and side walls end at 255.
  ld (ScreenScroll),a
  ld a,(current_level_number_1up)
  and 3
@@ -6947,6 +6830,8 @@ LBE8B_9:
  INCLUDE "routines/cheat_keys.asm"
  INCLUDE "routines/cpc_field_frame.asm"
  INCLUDE "routines/cpc_bricks.asm"
+ INCLUDE "routines/menu_controls.asm"
+ INCLUDE "routines/game_over_panel.asm"
 
 
 BATTYCODE_END:
@@ -6996,8 +6881,8 @@ table_shifts EQU $7200
 RCBoundary:
 ClearShapeFlags:
  ret
-LevelPaperColors: db $c0,$10,$81,$03
-LevelTextureColors: db $80,$20,$c1,$05
+LevelPaperColors: db $80,$10,$81,$03
+LevelTextureColors: db $c0,$20,$c1,$05
  INCLUDE "routines/mono_cache_address.asm"
  INCLUDE "routines/mono_zero_column.asm"
  INCLUDE "routines/game_over_score.asm"

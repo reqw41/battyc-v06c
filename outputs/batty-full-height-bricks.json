@@ -1,0 +1,38 @@
+{
+  "romSHA256": "cf7ee4b8d20e40934287c4b0775ff8618cfb2b848532d4a15da47a2a30187c36",
+  "physicalRAM": 65536,
+  "individualCases": 370,
+  "saveUnderRetiredBeforeWrite": true,
+  "sequentialCases": 370,
+  "compared": "All three A/C/E planes across all 32 columns, Y=0..218, including the CPC frame, against a fresh draw of the same level and magnet state",
+  "reports": [
+    {
+      "level": 1,
+      "texture": 0,
+      "individualBricks": 78,
+      "sequentialBricks": 78
+    },
+    {
+      "level": 2,
+      "texture": 1,
+      "individualBricks": 92,
+      "sequentialBricks": 92
+    },
+    {
+      "level": 3,
+      "texture": 2,
+      "individualBricks": 72,
+      "sequentialBricks": 72
+    },
+    {
+      "level": 4,
+      "texture": 3,
+      "individualBricks": 128,
+      "sequentialBricks": 128
+    }
+  ],
+  "destructionMeanMs": 20.694117117117106,
+  "destructionMinMs": 12.384,
+  "destructionMaxMs": 35.58133333333333,
+  "passed": true
+}

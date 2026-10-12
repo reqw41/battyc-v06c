@@ -6,14 +6,15 @@ disp_main_menu_and_wait_keys:
 ;	ld a,c43
 ;	ld (color_port),a	; Фиолетовый цвет
 	call draw_frame
+ call NormalizeMenuControls
 
 ;	ld a,c47
 ;	ld (color_port),a	; Белый цвет
-	ld HL,$4718		; Адрес на экране
+	ld HL,$6518		; Адрес на экране
 	ld DE,spr_press_a
 	call print_sprite	; Press A
 
-	ld HL,$47C8		; Адрес на экране
+	ld HL,$65C8		; Адрес на экране
 	ld DE,spr_press_b
 	call print_sprite	; Press B
 
@@ -25,7 +26,7 @@ disp_main_menu_and_wait_keys:
 	CALL score_to_text
 
 	LD DE,txt_main_menu
-	LD B,$0F		; Количество строк в сообщении
+	LD B,$0D		; Количество строк в сообщении
 	CALL print_message
 
 ;  	ld a,c47
@@ -101,10 +102,12 @@ L93F8_3:
 	LD A,E
 	LD (game_mode),A
 	ADD A,A
+	LD D,A
 	ADD A,A
 	ADD A,A
 	ADD A,A
-	ADD A,$2F
+	ADD A,D
+	ADD A,$29
 	LD E,A
 	LD D,$00
 	EX HL,DE
@@ -134,16 +137,13 @@ L93F8_5:
 ; Нажата клавиша 'A'
 	LD A,(ctrl_type_1up)
 	INC A
-	AND $03
+	AND $01
 	LD (ctrl_type_1up),A
 	LD HL,(coord_ctrl_1up)
 	LD DE,spr_pointer_empty
 	CALL print_sprite
-	LD A,(coord_ctrl_1up+1)
-	ADD A,$10
-	CP $A0
-	JP C,L93F8_6
-	LD A,$6C
+	LD A,(ctrl_type_1up)
+ call MenuControlPointerRow
 L93F8_6:
 	LD (coord_ctrl_1up+1),A
 ;	ld a,c47
@@ -170,16 +170,13 @@ L93F8_8:
 ; Нажата клавиша 'B'
 	LD A,(ctrl_type_2up)
 	INC A
-	AND $03
+	AND $01
 	LD (ctrl_type_2up),A
 	LD HL,(coord_ctrl_2up)
 	LD DE,spr_pointer_empty
 	CALL print_sprite
-	LD A,(coord_ctrl_2up+1)
-	ADD A,$10
-	CP $A0
-	JP C,L93F8_9
-	LD A,$6C
+	LD A,(ctrl_type_2up)
+ call MenuControlPointerRow
 L93F8_9:
 	LD (coord_ctrl_2up+1),A
 ;	ld a,c47

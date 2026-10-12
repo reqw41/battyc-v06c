@@ -14,5 +14,5 @@ for(const [frame,name,x] of [[1,'spr_1up',28],[2,'spr_2up',204],[3,'spr_hi',120]
 // The white cross contour with the background in its core is tested on a patterned background, then the
 // round-window save restores all four planes, including its last 64 bytes.
 for(let p=0;p<4;p++)for(let i=0;i<8192;i++)w(0x8000+p*8192+i,(i*13+p*41)&255);
-call('MonoReset');const before=read(0x8000,32768);call('show_window_round_number');assert(read(0xa000,24576).equals(before.subarray(8192)),'text changed the RGB background');call('win_bg_recovery');assert(read(0x8000,32768).equals(before),'outlined window did not restore all planes');
-const result={cases,scoreHeadings:true,outlinedWindowRestoresFourPlanes:true,passed:true};fs.writeFileSync('outputs/batty-transform-hud.json',JSON.stringify(result,null,2));console.log(result);
+call('MonoReset');const before=read(0x8000,32768);call('show_window_round_number');const panel=Buffer.from(before.subarray(8192));for(let p=0;p<3;p++)for(let c=11;c<21;c++)for(let y=129;y<169;y++)panel[p*8192+c*256+224-y]=p===2?255:0;assert(read(0xa000,24576).equals(panel),'round panel changes pixels outside its saved rectangle');call('win_bg_recovery');assert(read(0x8000,32768).equals(before),'outlined window did not restore all planes');
+const result={cases,scoreHeadings:true,darkRoundPanel:true,outlinedWindowRestoresFourPlanes:true,passed:true};fs.writeFileSync('outputs/batty-transform-hud.json',JSON.stringify(result,null,2));console.log(result);

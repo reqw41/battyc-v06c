@@ -217,9 +217,9 @@ draw_frame:			; Vector 8080 ready
 	;call clear_screen_attrib
 	call clear_screen_pix
 ; Рисуются боковины
-	ld HL,zx_scr-$bf	; Адрес в экранной области $98DF
-	ld DE,zx_scr+$1f00-$bf	; Адрес в экранной области $B7DF
-	ld B,$C0
+	ld HL,$c000	; Left edge, all 256 visible rows
+	ld DE,$df00	; Right edge
+	ld B,0		; 256 iterations
 draw_frame_0:
 	ld a,$C0
 	call UiPixelWrite
@@ -232,8 +232,8 @@ draw_frame_0:
 	dec B
 	jp nz,draw_frame_0
 ; Рисуется верх и низ
-	ld HL,zx_scr		; Адрес в экранной области $98DE
-	ld DE,zx_scr-$be	; Адрес в экранной области $9820
+	ld HL,$c0ff		; Top, menu scroll FF
+	ld DE,$c000	; Bottom
 	ld B,$20
 	ld A,$FF
 draw_frame_1:
@@ -244,11 +244,11 @@ draw_frame_1:
 	ex de,hl
 	call UiPixelWrite
 	ex de,hl
-	dec E			; поправлено направление для Вектора
+	inc E			; bottom second row
 	ex de,hl
 	call UiPixelWrite
 	ex de,hl
-	inc E
+	dec E
 	inc H
 	inc D
 	dec B

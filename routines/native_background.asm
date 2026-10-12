@@ -516,10 +516,10 @@ NativeFillTexture:
  ld de,16
  add hl,de
  ld (NativeTextureRight+1),hl
- ld hl,$c021
+ ld hl,$c000+FieldBottomLo
  ld b,32
 NativeTextureColumn:
- ld c,12
+ ld c,FieldTextureTiles
 NativeTextureTile:
  ld a,h
  and 1
@@ -530,7 +530,15 @@ NativeTextureLeft:
 NativeTextureRight:
  ld de,0
 NativeTextureData:
+ ld a,c
+ cp FieldTextureTiles
  ld a,16
+ jp nz,NativeTextureByte
+ ; Partial first tile keeps the existing pattern phase above the extension.
+ DUP FieldTexturePhase
+ inc de
+ EDUP
+ ld a,16-FieldTexturePhase
 NativeTextureByte:
  push af
  ld a,(de)
@@ -554,7 +562,7 @@ MonoTextureField:
  jp nz,NativeTextureByte
  dec c
  jp nz,NativeTextureTile
- ld l,$21
+ ld l,FieldBottomLo
  inc h
  dec b
  jp nz,NativeTextureColumn

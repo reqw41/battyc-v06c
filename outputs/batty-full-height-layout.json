@@ -1,0 +1,14 @@
+{
+  "romSHA256": "cf7ee4b8d20e40934287c4b0775ff8618cfb2b848532d4a15da47a2a30187c36",
+  "textureCases": 4,
+  "paletteCases": 4,
+  "firstThemeColoursSwapped": true,
+  "otherThemesUnchanged": true,
+  "oldTexturePhasePreserved": true,
+  "textureEndsAtScreenRow": 255,
+  "menuFramePixels": 65536,
+  "inputCases": 32,
+  "keyboardAndJoystickAreDistinct": true,
+  "twoMenuControlChoices": true,
+  "passed": true
+}
