@@ -282,6 +282,13 @@ hs_wait:
  cpl
  and 1
  jp nz,CheatStartNormal
+ ld a,(JoystickP)
+ ld b,a
+ ld a,(JoystickP2)
+ and b
+ cpl
+ and $c0
+ jp nz,JoystickMenuStart
  dec hl
  ld a,h
  or l

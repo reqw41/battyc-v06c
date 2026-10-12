@@ -5,8 +5,40 @@
 ; На выходе в DE адрес спрайта
 
 sprite_search:
+ ld a,(balls_quantity)
+ cp 3
+ jp nc,SpriteSearchOrdinary
 ; HL = object pointer. BC is preserved; DE = selected sprite.
 ; Walk the object through DE while indexing the two pointer tables in HL.
+ ld a,(hl)
+ cp 2
+ jp nz,SpriteSearchOrdinary
+ inc hl
+ ld a,(hl)
+ dec hl
+ cp 8
+ jp nc,SpriteSearchOrdinary
+ push hl
+ ld de,20
+ add hl,de
+ ld a,(hl)
+ or a
+ pop hl
+ ld a,0
+ jp nz,BallRotationSelect
+ ld a,(counter_misc)
+ rrca
+ rrca
+ and 3
+BallRotationSelect:
+ add a,a
+ ld hl,BallRotationFrames
+ call hl_add_a
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ ret
+SpriteSearchOrdinary:
  ex de,hl
  ld a,(de)
  add a,a

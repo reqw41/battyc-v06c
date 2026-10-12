@@ -1,0 +1,12 @@
+{
+  "romSHA256": "4be81da1e4982868aa3112de54645e3a3380b57e524ab8249de30a736a3bbb04",
+  "cases": 32,
+  "drawnFrames": 64,
+  "rotationOverlapAndRestorationVerified": true,
+  "distinctPhases": 4,
+  "periodGameplaySteps": 16,
+  "attachedBallStationary": true,
+  "threeBallsKeepFastOriginalSprites": true,
+  "smashUnchanged": true,
+  "passed": true
+}

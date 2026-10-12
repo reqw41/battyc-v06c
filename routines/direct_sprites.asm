@@ -48,6 +48,23 @@ not_smash:
 	LD (object_bat_2+$14),A	; применённый к объекту бонус
 
 obj_processing:
+ ld a,(balls_quantity)
+ cp 3
+ jp nc,obj_processing_1
+ ld hl,(IXobj)
+ ld a,(hl)
+ cp 2
+ jp nz,obj_processing_1
+ inc hl
+ ld a,(hl)
+ cp 8
+ jp nc,obj_processing_1
+ ld (hl),0
+ ld de,20
+ add hl,de
+ ld a,(hl)
+ and $7f
+ ld (hl),a
 obj_processing_1:
  ret
 

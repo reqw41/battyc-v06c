@@ -32,9 +32,9 @@ MonoWindowCopy:
  ld hl,(MonoDrawSource)
  ex de,hl
  ld hl,(MonoDrawVideo)
- ld b,10
+ ld b,16
 mono_window_col:
- ld c,40
+ ld c,25
 mono_window_row:
 mono_window_mode:
  ld a,0
@@ -58,17 +58,17 @@ mono_window_buffer_ready:
  dec c
  jp nz,mono_window_row
  ld a,l
- add a,40
+ add a,25
  ld l,a
  inc h
  dec b
  jp nz,mono_window_col
  ld a,h
- add a,$16
+ add a,$10
  ld h,a
  ld a,(NativeLeft)
  dec a
  ld (NativeLeft),a
- ld b,10
+ ld b,16
  jp nz,mono_window_col
  ret

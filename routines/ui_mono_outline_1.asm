@@ -1,31 +1,17 @@
-; First pass adds the white cross contour; second pass reveals the background in its core.
-; The whole line is outlined before any glyph interior is cut.
+; Same solid glyph bitmap as the menu, in the white sprite plane only.
 UiMonoOutline:
  pop af
- push af
  push hl
  push bc
- push de
- ld c,a
- ld a,(UiStencilPass)
- or a
- jp nz,UiGlyphBackground
+ ld b,a
  ld a,h
- add a,$20
+ sub $40
  ld h,a
- ld a,c
- or a
- rra
- ld b,a
- ld a,c
- add a,a
+ ld a,(hl)
  or b
- or c
- ld b,a
- call UiOutlineByte
- ld b,c
- inc l
- call UiOutlineByte
- dec l
- dec l
- jp UiMonoOutlineTail
+ ld (hl),a
+ ld a,1
+ ld (OverlayActive),a
+ pop bc
+ pop hl
+ ret

@@ -1,0 +1,13 @@
+{
+  "romSHA256": "4be81da1e4982868aa3112de54645e3a3380b57e524ab8249de30a736a3bbb04",
+  "textCases": 5,
+  "characters": 57,
+  "digitCases": 10,
+  "dotFrames": 160,
+  "solidMenuGlyphs": true,
+  "textAndDigitsPreserveRGB": true,
+  "backgroundUnchangedByDots": true,
+  "oldDotHolesRestored": true,
+  "maxStack": 16,
+  "passed": true
+}

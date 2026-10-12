@@ -14,23 +14,6 @@ UiOutlineByte:
 UiStencilPass EQU $71e6
  ASSERT UiStencilPass == MonoPairActive+1
  ASSERT UiStencilPass < PreparedCover
-; Ordinary coloured menu text retains its original single pass.
+; All text uses the same solid menu glyphs; gameplay writes white only.
 PrintOutlinedLine:
- ld a,(UiActive)
- or a
- jp nz,PrintLineBody
- push bc
- push de
- push hl
- xor a
- ld (UiStencilPass),a
- call PrintLineBody
- pop hl
- pop de
- pop bc
- ld a,1
- ld (UiStencilPass),a
- call PrintLineBody
- xor a
- ld (UiStencilPass),a
- ret
+ jp PrintLineBody

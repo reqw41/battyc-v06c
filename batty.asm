@@ -59,6 +59,7 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
 
 ; Знакогенератор
   INCLUDE "./gfx/font.asm"
+ INCLUDE "routines/ball_rotation.asm"
 
 ; Графика: элементы обрамления экрана
   INCLUDE "./gfx/cpc_frame.asm"
@@ -177,9 +178,27 @@ nk_keyboard_done:
   ld (ctrl_btns_pressed),a
   ret
 NativeJoystickState:
-  ld b,$0c
+ ld a,(game_mode)
+ cp 2
+ jp z,NativeJoystickFirst
+ ld a,(player_number)
+ or a
+ jp nz,NativeJoystickState2
+NativeJoystickFirst:
+ ld a,(game_mode)
+ or a
+ jp nz,NativeJoystickFirstRead
+ ld a,(SoloJoystick2)
+ or a
+ jp nz,NativeJoystickState2
+NativeJoystickFirstRead:
+ ld a,(JoystickP)
+ jp NativeJoystickDecode
+NativeJoystickState2:
+ ld a,(JoystickP2)
+NativeJoystickDecode:
+ ld b,$0c
 nk_joystick:
-  ld a,(JoystickP)
   cpl
   ld c,a
   and $c0
@@ -1500,124 +1519,41 @@ bullet:
 ; Used by the routine at game_restart.
 ; Опрос управления левого игрока
 get_left_player_ctrl_state:
-	LD A,(game_mode)
-	CP $02
-	JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если не два игрока одновременно
-; Режим Double Play
-	LD A,(ctrl_type_1up)
-	AND A
-	JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если у первого игрока не клавиатура
-	LD A,(ctrl_type_2up)
-	AND A
-	JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если у второго игрока не клавиатура
-	; Опрос клавиатуры для двух игроков одновременно
-;  LD C,A		; Обнуляем С
-;
-;		ld a,#82
-;		ld (kb_port_3),a			; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)
-;		ld d,a
-;		and %00010000			; Проверка ряда ФЫВАП
-;		jp nz,get_left_player_ctrl_state_1
-;
-;		; Вправо
-;		ld a,#91
-;		ld (kb_port_3),a			; Переключаем ВВ55 на чтение столбцов
-;
-;		ld a,%11101111			; Без этого дополнения при нажатии на Огонь, не срабатывают направления
-;		ld (kb_port_1),a
-;
-;		ld a,(kb_port_2)			; Проверка столбцов ФЫВА
-;		cpl
-;		ld b,a
-;		and %0101				; Проверка Ы и А
-;		jp z,get_left_player_ctrl_state_2
-;		inc c
-;
-;get_left_player_ctrl_state_2:
-;		; Влево
-;		ld a,b
-;		and %1010				; Проверка Ф и В
-;		jp z,get_left_player_ctrl_state_1
-;		ld a,c
-;		or %00010
-;		ld c,a
-;
-;get_left_player_ctrl_state_1:
-;		; Огонь
-;		ld a,d
-;		and %00100000			; Проверка Й, Ц, У и К
-;		jp nz,LA161_2
-;		ld a,c
-;		or %10000
-;		ld c,a
-
-LA161_2:
-	LD A,C
-	jp read_keyboard
-	;LD (ctrl_btns_pressed),A
-	;RET
-
-; Used by the routine at game_restart.
-; Опрос управления правого игрока
+ ld a,(game_mode)
+ cp 2
+ jp nz,get_control_state_1up
+ ld a,(ctrl_type_1up)
+ or a
+ jp nz,NativeJoystickFirst
+ jp NativeKeyboardLeft
 get_right_player_ctrl_state:
-	AND A
-	JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
-	LD A,(game_mode)
-	CP $02
-	LD A,(ctrl_type_2up)
-	JP NZ,get_control_state	; Уходим, если не два игрока одновременно
-; Режим Double Play
-	LD A,(ctrl_type_1up)
-	AND A
-	LD A,(ctrl_type_2up)
-	JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
-;  LD C,A
-;
-;		ld a,#82
-;		ld (kb_port_3),a			; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)
-;		ld d,a
-;		and %00010000			; Проверка ФЫВАП
-;		jp nz,get_right_player_ctrl_state_1
-;
-;		; Вправо
-;		ld a,#91
-;		ld (kb_port_3),a			; Переключаем ВВ55 на чтение столбцов
-;
-;		ld a,%11101111			; Без этого дополнения при нажатии на Огонь, не срабатывают направления
-;		ld (kb_port_1),a
-;
-;		ld a,(kb_port_0)			; Проверка столбцов ФЫВА
-;		cpl
-;		ld b,a
-;		and %0101				; Проверка Ж и >
-;		jp z,get_right_player_ctrl_state_2
-;		inc c
-;
-;get_right_player_ctrl_state_2:
-;		; Влево
-;		ld a,b
-;		and %1010				; Проверка Д и Э
-;		jp z,get_left_player_ctrl_state_1
-;		ld a,c
-;		or %00010
-;		ld c,a
-;
-;get_right_player_ctrl_state_1:
-;		; Огонь
-;		ld a,d
-;		and %00100000			; Проверка ЕНГШЩЗХ*
-;		jp nz,LA19E_2
-;		ld a,c
-;		or %10000
-;		ld c,a
-
-LA19E_2:
-	;LD A,C
-	jp read_keyboard
-	;LD (ctrl_btns_pressed),A
-	;RET
+ and 1
+ jp z,read_keyboard
+ jp NativeJoystickState2
+; Double Play keyboard: A/D movement, F fire. Right player uses arrows/Space.
+NativeKeyboardLeft:
+ ld a,(KeyLine4)
+ cpl
+ ld c,a
+ ld b,$0c
+ and $10
+ jp z,NativeLeftKey
+ inc b
+NativeLeftKey:
+ ld a,c
+ and 2
+ or b
+ ld b,a
+ ld a,c
+ and $40
+ jp z,NativeLeftKeyDone
+ ld a,b
+ or $10
+ ld b,a
+NativeLeftKeyDone:
+ ld a,b
+ ld (ctrl_btns_pressed),a
+ ret
 
 ; Used by the routines at input_new_record_name and get_left_player_ctrl_state.
 ; Опрос управления первого игрока

@@ -7,7 +7,7 @@ CheatMenuKeys:
  jp z,CheatStartEnabled
  ld a,(KeyLine2)
  rrca
- jp c,L93F8_0
+ jp c,JoystickMenuStart
 CheatStartNormal:
  xor a
  ld (CheatEnabled),a
@@ -53,3 +53,30 @@ CheatNoGodEdge:
  ret z
  scf
  ret
+
+SoloJoystick2: db 0
+; Fire starts a normal game and selects the firing device's control column.
+JoystickMenuStart:
+ ld a,(JoystickP)
+ cpl
+ and $c0
+ jp z,JoystickMenuSecond
+ ld a,1
+ ld (ctrl_type_1up),a
+ xor a
+ ld (SoloJoystick2),a
+ jp CheatStartNormal
+JoystickMenuSecond:
+ ld a,(JoystickP2)
+ cpl
+ and $c0
+ jp z,L93F8_0
+ ld a,1
+ ld (SoloJoystick2),a
+ ld (ctrl_type_2up),a
+ ld a,(game_mode)
+ or a
+ jp nz,CheatStartNormal
+ ld a,1
+ ld (ctrl_type_1up),a
+ jp CheatStartNormal

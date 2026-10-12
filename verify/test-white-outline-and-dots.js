@@ -16,7 +16,7 @@ for(const chars of [Array.from({length:16},(_,i)=>i),Array.from({length:16},(_,i
   const x=x0+c*8+b,y=y0-r;coreBit(core,x,y);for(const [dx,dy] of [[0,0],[-1,0],[1,0],[0,-1],[0,1]])coreBit(dilation,x+dx,y+dy);
  }
  E.cpu.set_rp(2,msg);call('print_line');
- const expected=Buffer.from(dilation.map((v,i)=>v&~core[i]));{const got=read(0x8000,8192);if(!got.equals(expected)){const i=got.findIndex((v,i)=>v!==expected[i]);throw Error(JSON.stringify({chars,i,col:i>>8,row:i&255,got:got[i],want:expected[i],core:core[i],dilation:dilation[i],pass:E.rd(E.L.UiStencilPass)}));}}
+ const expected=Buffer.from(core);{const got=read(0x8000,8192);if(!got.equals(expected)){const i=got.findIndex((v,i)=>v!==expected[i]);throw Error(JSON.stringify({chars,i,col:i>>8,row:i&255,got:got[i],want:expected[i],core:core[i],dilation:dilation[i],pass:E.rd(E.L.UiStencilPass)}));}}
  for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(bg[p]),'text changed background plane '+p);
  assert.equal(E.rd(E.L.UiStencilPass),0,'stencil pass leaked');textCases++;characters+=chars.length;
 }
@@ -24,13 +24,13 @@ for(const chars of [Array.from({length:16},(_,i)=>i),Array.from({length:16},(_,i
 let digitCases=0;
 for(let d=0;d<10;d++){
  call('planes_reset');const digitBG=background();putBG(digitBG);const dst=0x7800+232;word(E.L.score_screen_ptr,dst);E.cpu.set_a(d*16);call('NativePrintDigit');const want=Buffer.alloc(8192);
- for(let r=0;r<8;r++){const src=E.L.spr_score_digits+2+d*16+r*2;assert.equal(E.rd(src+1)&~E.rd(src),0);want[8*256+((224-232-r)&255)]=E.rd(src)^E.rd(src+1);}
+ for(let r=0;r<8;r++){const src=E.L.spr_score_digits+2+d*16+r*2;assert.equal(E.rd(src+1)&~E.rd(src),0);want[8*256+((224-232-r)&255)]=r<6?E.rd(E.L.font+d*6+r):0;}
  assert(read(0x8000,8192).equals(want),'outlined score digit '+d);for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(digitBG[p]),'digit changed background plane '+p);digitCases++;
 }
 // Moving dots must touch the sprite plane only. Repainting the paddle must
 // also remove every old hole, including across byte boundaries and resize.
 const bg=background();call('planes_reset');putBG(bg);for(let i=0;i<242;i++)w(E.L.object_ball_1+i,0);
-function object(o,x,f,width){w(o,1);w(o+1,f);w(o+2,x);w(o+4,173);w(o+12,width);w(o+20,255);w(o+21,0);}
+function object(o,x,f,width){w(o,1);w(o+1,f);w(o+2,x);w(o+4,E.L.BatHomeY);w(o+12,width);w(o+20,255);w(o+21,0);}
 function oracle(){const out=Buffer.alloc(8192);for(const o of [E.L.object_bat_1,E.L.object_bat_2,E.L.object_bat_temp]){
  if(!E.rd(o))continue;const x=E.rd(o+2),y=E.rd(o+4),phase=x&7;word(E.L.IXobj,o);E.cpu.set_rp(4,o);call('sprite_search');const src=E.cpu.de(),cols=E.rd(src),height=E.rd(src+1);
  for(let c=0;c<cols;c++)for(let r=0;r<height;r++)for(let b=0;b<8;b++)if(E.rd(src+3+2*(c*height+r))&(128>>b))coreBit(out,x+c*8+b,y+r);
@@ -45,11 +45,11 @@ for(const mode of ['normal','wide','gun','split','double'])for(let t=0;t<32;t++)
  word(E.L.counter_misc,t+1);const expected=oracle();call('DrawMovingObjects');assert(read(0x8000,8192).equals(expected),'old dot hole survived paddle repaint '+mode);
  for(const [o,phase] of [[E.L.object_bat_1,(t%12)+9],...(mode==='double'?[[E.L.object_bat_2,(t%8)+10]]:[])]){
   w(E.L.running_dot_frame_1up,phase);const px=E.rd(o+2),width=E.rd(o+12),p=((width-phase)&255)>=9?phase:width-11;
-  for(const dx of [p,width-p-1])expected[((px+dx)>>3)*256+0x2d]&=~bit(px+dx);
+  for(const dx of [p,width-p-1])expected[((px+dx)>>3)*256+((224-E.rd(o+4)-6)&255)]&=~bit(px+dx);
   E.cpu.set_rp(4,o+2);call('running_dot');
  }
  assert(read(0x8000,8192).equals(expected),'moving dot pixels '+mode);
  for(let p=0;p<3;p++)assert(read(0xa000+p*8192,8192).equals(bg[p]),'dot left a background trail '+mode+' plane '+p);
  dotFrames++;
 }
-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),textCases,characters,digitCases,dotFrames,whiteContourBackgroundCore:true,textAndDigitsPreserveRGB:true,backgroundUnchangedByDots:true,oldDotHolesRestored:true,maxStack:E.L.stack-minSP,passed:true};fs.writeFileSync('outputs/batty-white-outline-and-dots.json',JSON.stringify(result,null,2));console.log(result);
+const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),textCases,characters,digitCases,dotFrames,solidMenuGlyphs:true,textAndDigitsPreserveRGB:true,backgroundUnchangedByDots:true,oldDotHolesRestored:true,maxStack:E.L.stack-minSP,passed:true};fs.writeFileSync('outputs/batty-white-outline-and-dots.json',JSON.stringify(result,null,2));console.log(result);

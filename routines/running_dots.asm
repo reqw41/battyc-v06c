@@ -16,12 +16,21 @@ running_dot_frame_swap:
 running_dot:
   ld A,(HL)		; Координата X для печати
   ld (running_dot_batx),A
+  inc hl
+  inc hl
+  ld a,224
+  sub (hl)
+  sub 6
+  ld (running_dot_row+1),a
+  dec hl
+  dec hl
   ld DE,$000A	; переходим к IX+$0C
   add HL,DE
   ld A,(HL)		; ширина объекта
   ld (running_dot_batw),A
 
-  LD DE,$802d ; $F060 - адрес строки в буфере, где бегают точки по каретке
+running_dot_row:
+  LD DE,$8000 ; Row follows the paddle, including the lowered home position.
   LD A,(running_dot_frame_1up)
   AND $7F
   LD B,A

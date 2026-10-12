@@ -22,6 +22,7 @@
 	EXPORT KeyLine4
 	EXPORT KeyLine7
 	EXPORT JoystickP
+ EXPORT JoystickP2
 	EXPORT BorderColor
 	EXPORT ScreenScroll
 	;EXPORT LDIR8080
@@ -70,10 +71,14 @@ RestartInt:
 ; Joystick init
 	ld a,83h		; control byte
 	out (4),a		; initialize the I/O controller
-	ld a,9Fh		; bits to check Joystick-P, both P1 and P2
+	ld a,0BFh		; select Joystick-P device 1
 	out (5),a		; set Joystick-P query bits
 	in a,(6)		; read Joystick-P initial value
-	ld (KEYINT_J+1),a	; store as xra instruction parameter
+	ld (KEYINT_J+1),a
+ ld a,0DFh
+ out (5),a
+ in a,(6)
+ ld (KEYINT_J2+1),a
 
 ; Start BATTY
 	; ei
@@ -147,12 +152,21 @@ KEYINT:
 	out (3),a
 	in a,(2)
 	ld (KeyLine7),A
-; Joystick scan
+; Joystick-P: read the two devices separately.
+ ld a,0BFh
+ out (5),a
 	in A,(6)		; read Joystick-P
 KEYINT_J:
 	xor 0			; XOR with initial value - mutable param!
 	cpl
-	ld (JoystickP),A	; save to analyze later
+	ld (JoystickP),A
+ ld a,0DFh
+ out (5),a
+ in a,(6)
+KEYINT_J2:
+ xor 0
+ cpl
+ ld (JoystickP2),a
 
 ; Scrolling, screen mode, border
 	ld A,88h
@@ -188,6 +202,7 @@ KeyLine2:	db 11111111b	;   7   6   5   4   3   2   1   0
 KeyLine4:	db 11111111b	;   G   F   E   D   C   B   A   @
 KeyLine7:	db 11111111b	;  SPC  ^   ]   \   [   Z   Y   X
 JoystickP:	db 11111111b
+JoystickP2: db $ff
 
 BorderColor:	db 0		; border color number 0..15
 ScreenScroll: db $ff

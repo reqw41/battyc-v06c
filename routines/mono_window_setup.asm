@@ -1,5 +1,5 @@
 MonoWindowSetup:
- ld hl,$8158
+ ld hl,$8740
  call screen_addr_calc
  ld a,h
  sub $40

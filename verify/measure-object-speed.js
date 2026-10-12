@@ -1,7 +1,7 @@
 "use strict";
 const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
 const p=process.env.BATTY_BENCH_BASE||'.',reports=[];
-for(const sc of [{name:'one_ball',balls:1},{name:'ball_bonus',balls:1,bonus:true},{name:'ball_ufo',balls:1,enemy:8},{name:'ball_bird',balls:1,enemy:9},{name:'three_balls',balls:3},{name:'three_balls_bonus_enemy',balls:3,bonus:true,enemy:8},{name:'three_balls_enemy_bomb',balls:3,bonus:true,bonusFrame:10,enemy:8},{name:'wide_transform',balls:3,bonus:true,enemy:8,resize:true}]){
+for(const sc of [{name:'one_ball',balls:1},{name:'ball_bonus',balls:1,bonus:true},{name:'ball_ufo',balls:1,enemy:8},{name:'ball_bird',balls:1,enemy:9},{name:'two_balls_bonus_enemy',balls:2,bonus:true,enemy:8},{name:'two_balls_wide_transform',balls:2,bonus:true,enemy:8,resize:true},{name:'three_balls',balls:3},{name:'three_balls_bonus_enemy',balls:3,bonus:true,enemy:8},{name:'three_balls_enemy_bomb',balls:3,bonus:true,bonusFrame:10,enemy:8},{name:'wide_transform',balls:3,bonus:true,enemy:8,resize:true}]){
  if(process.env.BATTY_BENCH_SCENE&&process.env.BATTY_BENCH_SCENE!==sc.name)continue;
  const E=make(p+'/batty.rom',p+'/batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);
  const control=E.memory.control_write.bind(E.memory);E.memory.control_write=v=>{assert.equal(v,0,'RAM disk mapping');control(v);};

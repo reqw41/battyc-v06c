@@ -17,7 +17,7 @@ for(const mode of[0,1,2]){
     const msg=E.L[name],x0=E.rd(msg),y0=E.rd(msg+1),count=E.rd(msg+3)&63;
     for(let c=0;c<count;c++)for(let r=0;r<6;r++)for(let b=0;b<8;b++)if(E.rd(E.L.font+E.rd(msg+4+c)*6+5-r)&(128>>b)){const x=x0+c*8+b;core[(x>>3)*256+((224-y0+r)&255)]|=128>>(x&7);}
    }
-   const expected=Buffer.from(before);for(let p=0;p<3;p++)for(let c=8;c<25;c++)for(let y=64;y<113;y++)expected[p*8192+c*256+224-y]=p===2?255:0;
+   const expected=Buffer.from(before);for(let p=0;p<3;p++)for(let c=8;c<24;c++)for(let y=135;y<160;y++)expected[p*8192+c*256+224-y]=p===2?255:0;
    const now=range(0xa000,24576);for(let p=0;p<3;p++)for(let i=0;i<8192;i++)assert.equal(now[p*8192+i],expected[p*8192+i],'game-over changed pixels outside its panel '+JSON.stringify({mode,p,i}));vramCompared=true;
    if(mode===0)E.pngFrom(E.idealBmp(),'outputs/batty-vector-colors-game-over.png');
   }

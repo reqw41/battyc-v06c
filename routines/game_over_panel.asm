@@ -1,10 +1,10 @@
-; Dark level paper behind both loss-message lines: X=64..199, Y=64..112.
+; Dark level paper behind both loss-message lines: X=64..191, Y=135..159.
 ; It is drawn once after removing moving objects; keep the rest of the field.
 DrawGameOverPanel:
- ld hl,$c8a0
- ld b,17
+ ld hl,$c859
+ ld b,16
 GameOverPanelColumn:
- ld c,49
+ ld c,25
 GameOverPanelRow:
  xor a
  ld (hl),a
@@ -28,7 +28,7 @@ GameOverPanelRow:
  dec l
  dec c
  jp nz,GameOverPanelRow
- ld l,$a0
+ ld l,$59
  inc h
  dec b
  jp nz,GameOverPanelColumn
