@@ -10,7 +10,7 @@ for(let level=0;level<4;level++){
  const read=(m,a)=>m[E.memory.tobank(a&65535)],lev=word(E.L.current_level_addr);
  // Canonical full draw starts with clean pixels and attributes, as game_restart does.
  call('planes_reset');call('game_screen_draw_to_buffer');let saved=E.memory.bytes.slice();const indices=Array.from({length:180},(_,i)=>i).filter(i=>!(read(saved,lev+i)&128));
- const field=m=>Buffer.from(Array.from({length:3*30*107},(_,i)=>{const p=Math.floor(i/(30*107)),r=i%107,c=1+Math.floor((i%(30*107))/107);return read(m,0xa000+p*8192+c*256+224-29-r);}));
+ const field=m=>Buffer.from(Array.from({length:3*32*192},(_,i)=>{const p=Math.floor(i/(32*192)),r=i%192,c=Math.floor((i%(32*192))/192);return read(m,0xa000+p*8192+c*256+224-r);}));
  const reference=(state,index)=>{
   E.memory.bytes.set(state);if(index!==null)w(lev+index,E.rd(lev+index)|128);
   const flags=Array.from({length:4},(_,i)=>E.rd(E.L.NativeMagnetOverlayFlags+i));
@@ -32,5 +32,5 @@ for(let level=0;level<4;level++){
  reports.push({level:level+1,texture:level,individualBricks:tested,sequentialBricks:tested});
  if(level===0){E.memory.bytes.set(state);w(0xf0,0xc3);w(0xf1,0xf0);w(0xf2,0);E.cpu.pc=0xf0;E.cpu.iff=false;E.run(2);E.png('outputs/batty-three-plane-background.png');}
 }
-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync(root+'/batty.rom')).digest('hex'),physicalRAM:65536,individualCases:cases,saveUnderRetiredBeforeWrite:true,sequentialCases:sequential,compared:'All three A/C/E planes across all 30 playfield columns, Y=29..135, against a fresh draw of the same level and magnet state',reports,destructionMeanMs:duration.reduce((a,b)=>a+b,0)/duration.length,destructionMinMs:Math.min(...duration),destructionMaxMs:Math.max(...duration),passed:true};
+const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync(root+'/batty.rom')).digest('hex'),physicalRAM:65536,individualCases:cases,saveUnderRetiredBeforeWrite:true,sequentialCases:sequential,compared:'All three A/C/E planes across all 32 columns, Y=0..191, including the CPC frame, against a fresh draw of the same level and magnet state',reports,destructionMeanMs:duration.reduce((a,b)=>a+b,0)/duration.length,destructionMinMs:Math.min(...duration),destructionMaxMs:Math.max(...duration),passed:true};
 fs.writeFileSync(process.env.BATTY_TEST_OUT||'outputs/batty-three-plane-bricks.json',JSON.stringify(result,null,2));console.log(result);

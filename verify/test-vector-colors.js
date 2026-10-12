@@ -2,6 +2,8 @@
 const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
 const E=make('batty.rom','batty.sym'),B=make('../../outputs/batty-three-plus-one-transform.rom','../../outputs/batty-three-plus-one-transform.sym');
 for(const Q of[E,B]){Q.memory.bytes=Q.memory.bytes.slice(0,65536);Q.run(100);}
+// The old painter is compared using the current attribute-to-ink mapping.
+write(B,B.L.background_colors+2,E.rd(E.L.background_colors+2));
 function write(Q,a,v){Q.memory.write(a,v);}function ptr(Q,a,v){write(Q,a,v);write(Q,a+1,v>>8);}
 function call(Q,n){Q.cpu.pc=Q.L[n];Q.cpu.sp=Q.L.stack-2;ptr(Q,Q.cpu.sp,256);Q.cpu.iff=false;let k=0,t=0;while(Q.cpu.pc!==256 && !(n==='SetPaletteLevel' && Q.cpu.pc===Q.L.SetPaletteGame)){assert(++k<2e6,n);Q.cpu.instruction();Q.io.commit();t+=Q.cpu.vcycles;}return t;}
 const video=Q=>Buffer.from(Array.from({length:24576},(_,i)=>Q.rd(0xa000+i)));let magnets=0,magnetTicks=0,oldMagnetTicks=0;
@@ -19,6 +21,15 @@ for(const frame of[6,7])for(let phase=0;phase<8;phase++)for(const y of[48,51,55,
  }}
  magnetTicks+=call(E,'NativeStaticObject');assert(video(E).equals(want),'centre-only magnet colour '+JSON.stringify({frame,phase,y,h}));magnets++;
 }
+// Recolouring must select actual A/C ink bits, independently of E.
+const attr8=E.rd(E.L.background_colors+8);let recolourCases=0;
+for(let ink=0;ink<8;ink++){
+ call(E,'planes_reset');write(E,E.L.background_colors+8,ink);write(E,E.L.NativeAttrs+8*24+7,0x80);
+ for(let r=0;r<8;r++){const v=(r*37+0x55)&255;write(E,0xc800+224-56-r,v);write(E,0xe800+224-56-r,v^255);}
+ E.cpu.set_rp(4,0x78c7);call(E,'NativeRecolorCell');
+ for(let r=0;r<8;r++){const v=(r*37+0x55)&255,a=0x800+224-56-r;assert.equal(E.rd(0xa000+a),ink&4?v:0,'recolour A '+ink);assert.equal(E.rd(0xc000+a),ink&2?v:0,'recolour C '+ink);assert.equal(E.rd(0xe000+a),ink&1?255:v^255,'recolour E '+ink);}recolourCases++;
+}
+write(E,E.L.background_colors+8,attr8);
 // Every menu ink uses all four planes, on paper index 1.
 let menuCases=0;
 for(let color=0;color<16;color++)for(const glyph of[0,1,0x55,0x80,0xff]){
@@ -39,10 +50,10 @@ for(let theme=0;theme<4;theme++){
 }
 // Additional ordinary brick shade uses native bright green without changing toughness.
 assert.equal(E.rd(E.L.briks_colors+3),0x60);assert.equal(E.rd(E.L.background_colors+6),5);assert.equal(E.rd(E.L.PaletteGame+5),0x38);
-assert.equal(E.rd(E.L.briks_colors+4),0xf0);assert.equal(E.rd(E.L.background_colors+15),0);assert.equal(E.rd(E.L.PaletteGame),0);
-// A real type-5 brick must render ink index 0 and paper index 1.
+assert.equal(E.rd(E.L.briks_colors+4),0xf0);assert.equal(E.rd(E.L.background_colors+15),0);assert.equal(E.rd(E.L.PaletteGame),0xff);assert.equal(E.rd(E.L.PaletteGame+3),0xad);assert.equal(E.rd(E.L.background_colors+2),3);
+// A real type-5 brick must render white ink index 0 and paper index 1.
 call(E,'planes_reset');write(E,0x6d00,0x15);ptr(E,E.L.cur_level_ptr,0x6d00);ptr(E,E.L.brik_attr_buf,0x7ac8);E.cpu.set_rp(4,0x7a38);call(E,'NativePrintBrick');
-const blackPaper=Buffer.alloc(8192,255);
-for(let r=0;r<8;r++)for(let c=0;c<2;c++)blackPaper[(10+c)*256+224-56-r]=E.rd(E.L.spr_brik_1+r*2+c)^255;
-for(let i=0;i<8192;i++){assert.equal(E.rd(0xa000+i),0,'black brick A');assert.equal(E.rd(0xc000+i),0,'black brick C');assert.equal(E.rd(0xe000+i),blackPaper[i],'black brick E');}
-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetMeanTicks:magnetTicks/magnets,previousMagnetMeanTicks:oldMagnetTicks/magnets,colourOverheadMeanTicks:(magnetTicks-oldMagnetTicks)/magnets,magnetCenterOn:6,magnetCenterOff:7,ringMatchesPreviousROM:true,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,blackBrick:true,headingCoreUsesPaper:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);
+const brickPaper=Buffer.alloc(8192,255);
+for(let r=0;r<8;r++)for(let c=0;c<2;c++)brickPaper[(10+c)*256+224-56-r]=E.rd(E.L.spr_brik_1+r*2+c)^255;
+for(let i=0;i<8192;i++){assert.equal(E.rd(0xa000+i),0,'white brick A');assert.equal(E.rd(0xc000+i),0,'white brick C');assert.equal(E.rd(0xe000+i),brickPaper[i],'white brick E');}
+const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetMeanTicks:magnetTicks/magnets,previousMagnetMeanTicks:oldMagnetTicks/magnets,colourOverheadMeanTicks:(magnetTicks-oldMagnetTicks)/magnets,magnetCenterOn:6,magnetCenterOff:7,ringMatchesPreviousROM:true,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,whiteBrick:true,grayFrameIndex:3,recolourCases,headingCoreUsesPaper:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);

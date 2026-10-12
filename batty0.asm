@@ -81,6 +81,8 @@ RestartInt:
 
 ; Set game palette
 SetPaletteMenu:
+ xor a
+ ld (BorderColor),a
 	ld a,$ff
 	ld (ScreenScroll),a
 	ld hl,PaletteMenu+15
@@ -203,7 +205,7 @@ PaletteMenu:
  db $49,$c0,$38,$f8,$1f,$c7,$3f,$ff
 PaletteGame:
  ; 8000 is the white sprite override.
- db $00,$c0,$80,$40,$07,$38,$3f,$f8
+ db $ff,$c0,$80,$ad,$07,$38,$3f,$f8
  db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
 
 ;----------------------------------------------------------------------------

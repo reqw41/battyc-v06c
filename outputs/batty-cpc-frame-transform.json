@@ -1,0 +1,8 @@
+{
+  "romSHA256": "6d71b17135d895b2482c3de4768898d651c981644a123558ce2e721ebd2c71a3",
+  "magnetCases": 80,
+  "composites": 128,
+  "oldMagnetMeanTicks": 274944.25,
+  "newMagnetMeanTicks": 89139.55,
+  "passed": true
+}

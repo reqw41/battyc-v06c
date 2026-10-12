@@ -1,7 +1,6 @@
 ; A/C/E = eight background colours; 8000 = white overlay.
 planes_reset:
  xor a
- ld (BorderColor),a
  ld hl,0
  add hl,sp
  ld (pr_restore+1),hl
@@ -104,7 +103,7 @@ bw_e:
  ret
 background_color: db 0
 background_pixel: db 0
-background_colors: db 6,4,5,6,7,4,5,6,7,4,5,6,7,2,6,0
+background_colors: db 6,4,3,6,7,4,5,6,7,4,5,6,7,2,6,0
 planes_begin:
  ld hl,plane_old
  ld (plane_slot),hl

@@ -192,6 +192,7 @@ NativeRecolorCell:
  ld (background_color),a
  ld d,0
  ld e,0
+ rra ; skip E; the next two bits select C and A
  rra
  jp nc,NativeRecolorA
  ld d,$ff
@@ -485,6 +486,11 @@ NativeBrickZero:
  pop hl
  ret
 NativeBrickEdge:
+ ld a,h
+ cp $c0
+ ret z
+ cp $df
+ ret z
  ld b,8
 NativeBrickEdgeRow:
  ld a,(hl)

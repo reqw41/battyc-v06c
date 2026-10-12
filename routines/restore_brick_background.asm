@@ -225,37 +225,8 @@ NativeRestoreNotFirstRow:
  jp nz,NativeRestoreWriteRow
  ld hl,NativeRestoreBottomMask
  and (hl)
+; The CPC wall is outside the 30 field columns; no old ZX shadow stripes.
 NativeRestoreWriteRow:
- ld c,a
- ld a,d
- cp $c1
- jp z,NativeRestoreBorderLeft
- cp $de
- ld a,c
- jp nz,NativeRestoreStorePixel
- ld a,$fe
- jp NativeRestoreBorderRow
-NativeRestoreBorderLeft:
- ld a,$7f
-NativeRestoreBorderRow:
- ld (NativeRestoreBorderMask+1),a
- ld a,$e0
- sub e
- cp 50
- jp c,NativeRestoreKeepBorder
- cp 78
- jp c,NativeRestoreApplyBorder
- cp 106
- jp c,NativeRestoreKeepBorder
- cp 134
- jp nc,NativeRestoreKeepBorder
-NativeRestoreApplyBorder:
- ld a,c
-NativeRestoreBorderMask:
- and $ff
- jp NativeRestoreStorePixel
-NativeRestoreKeepBorder:
- ld a,c
 NativeRestoreStorePixel:
  ld c,a
 NativeRestoreClipPixel:

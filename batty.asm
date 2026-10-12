@@ -53,7 +53,7 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
   INCLUDE "./gfx/font.asm"
 
 ; Графика: элементы обрамления экрана
-  INCLUDE "./gfx/sprites_color_1.asm"
+  INCLUDE "./gfx/cpc_frame.asm"
 
 ; Список уровней и их структура
   INCLUDE "./gfx/levels.asm"
@@ -6648,155 +6648,6 @@ game_screen_draw_to_buffer:
 
 	CALL NativeFillTexture
 
-;-----------------------------------
-; Рисуем обрамление игрового поля. Всего 7 полос, чередуются широкая/узкая
-; (широкая первая): Ш,У,Ш,У,Ш,У,Ш - 4 широких + 3 узких.
-; В оригинале для этого чередования использовался EXX (два набора регистров,
-; общий счётчик B DJNZ гулял между банками через PUSH/POP при каждом EXX).
-; На i8080 нет EXX, поэтому здесь используется явный флаг чередования и
-; отдельные HL для узкой/широкой полосы, хранящиеся в памяти между итерациями.
-	LD HL,$9F00
-	LD (LBE8B_thin_hl),HL
-	LD HL,$BF00
-	LD (LBE8B_bold_hl),HL
-	XOR A
-	LD (LBE8B_toggle),A	; 0 = сейчас рисуем широкую полосу
-	LD B,$07
-LBE8B_1:
-	PUSH BC
-	LD A,(LBE8B_toggle)
-	AND A
-	JP NZ,LBE8B_thin_draw
-LBE8B_bold_draw:
-	LD HL,(LBE8B_bold_hl)
-	LD DE,spr_bord_left_bold
-	LD L,$00		; Координата X левого края
-	CALL print_sprite_pix
-	CALL print_sprite_attrib
-	LD DE,spr_bord_left_bold
-	LD L,$F8		; Координата X правого края
-	CALL print_sprite_pix
-	CALL print_sprite_attrib
-	LD A,$C8
-	ADD A,H
-	LD H,A
-	LD (LBE8B_bold_hl),HL
-	JP LBE8B_toggle_flip
-LBE8B_thin_draw:
-	LD HL,(LBE8B_thin_hl)
-	LD DE,spr_bord_left_thin
-	LD L,$00		; Координата X левого края
-	CALL print_sprite_pix
-	CALL print_sprite_attrib
-	LD DE,spr_bord_left_thin
-	LD L,$F8		; Координата X правого края
-	CALL print_sprite_pix
-	CALL print_sprite_attrib
-	LD A,$C8
-	ADD A,H
-	LD H,A
-	LD (LBE8B_thin_hl),HL
-LBE8B_toggle_flip:
-	LD A,(LBE8B_toggle)
-	XOR $01
-	LD (LBE8B_toggle),A
-	POP BC
-	dec B
-	jp nz,LBE8B_1
-	jp LBE8B
-
-LBE8B_bold_hl:
-	DEFW $0000
-LBE8B_thin_hl:
-	DEFW $0000
-LBE8B_toggle:
-	DEFB $00
-
-LBE8B:
-;-------------------------
-; Рисование дополнительной обводки бордюра толщиной в пиксель слева и справа с внутренней стороны
-; Эта процедура считает, что вначале идёт буфер атрибутов, а СРАЗУ за ним - буфер пикселей
-	LD HL,scr_buff+$1FA		; Используется нахлёст на атрибуты
-	LD C,$04
-LBE8B_2:
-	LD B,$1C
-	PUSH HL
-LBE8B_3:
- call NativeReadHL
-	and %01111111	; RES 7,(HL)	; Слева
- call NativeWriteHL
-	inc l
-	dec B
-	jp nz,LBE8B_3
-	POP HL
-	PUSH HL
-	LD A,H
-	ADD A,$1D
-	LD H,A
-	LD B,$1C
-LBE8B_4:
- call NativeReadHL
-	and %11111110	; RES 0,(HL)	; Справа
- call NativeWriteHL
-	inc l
-	dec B
-	jp nz,LBE8B_4
-	POP HL
-	LD B,$07
-	ld a,l
-	add $38
-	ld l,a
-	DEC C
-	JP NZ,LBE8B_2
-
-; При такой организации буфера для Специалиста возможно не требуется данное восстановление
-;-------------------------
-; Копируются атрибуты из 30-го в 31-й (из 32) столбец в нижних 6 строках
-; Восстанавливаются атрибуты, которые портятся на предыдущем шаге. Это видно на голубом и белом фонах.
-	; LD DE,$0020
-	; LD B,$06
-	; LD HL,attr_buff+$25E
-	; LD A,(attr_buff+$25D)
-; LBE8B_5:
-	; LD (HL),A
-	; ADD HL,DE
-	; dec B
-	; jp nz,LBE8B_5
-
-;-------------------------
-; Рисование верхней части бордюра
-	LD HL,set_border_horizontal
-	push HL		; EXX
-	LD HL,$0700
-LBE8B_6:
-	ex (SP),HL	; EXX
-	LD E,(HL)
-	INC HL
-	LD D,(HL)
-	INC HL
-	ex (SP),HL	; EXX
-	CALL print_sprite_pix
-	CALL print_sprite_attrib
-	LD A,$20
-	ADD A,L
-	LD L,A
-	JP NC,LBE8B_6
-	pop HL			; освободжаем стек
-
-;----------------------------
-; Рисование дополнительной обводки толщиной в пиксель бордюра сверху с внутренней стороны
-	LD HL,scr_buff+$108
-	LD DE,border_horizontal_addon
-	LD B,$1E
-LBE8B_7:
- call NativeReadDE
- call NativeAndHL
- call NativeWriteHL
-	INC H
-	INC DE
-	dec B
-	jp nz,LBE8B_7
-
 ;-----------------------------------------
 ; Рисуем индикаторы количества жизней
 	CALL DrawLifeIcons
@@ -6895,24 +6746,7 @@ LBE8B_11:
 ; 	jp nz,LBFCF_1
 ;   ENDIF
 
-	ret
-
-; Последовательность спрайтов в горизонтали рамки
-set_border_horizontal:
-	DEFW spr_bord_horiz_left_edge
-	DEFW spr_bord_horiz_left_thin
-	DEFW spr_bord_horiz_left_bold
-	DEFW spr_bord_horiz_left_thin
-	DEFW spr_bord_horiz_right_thin
-	DEFW spr_bord_horiz_right_bold
-	DEFW spr_bord_horiz_right_thin
-	DEFW spr_bord_horiz_right_edge
-
-; Дополнительная линия для горизонтальной части рамки
-border_horizontal_addon:
-	DEFB $00,$00,$03,$FF,$FF,$FF,$C0,$00,$00,$00
-	DEFB $03,$FF,$FF,$FF,$C0,$03,$FF,$FF,$FF,$C0
-	DEFB $00,$00,$00,$03,$FF,$FF,$FF,$C0,$00,$00
+ jp DrawCpcFieldFrame
 
 ; Графика текстуры уровня 1
   INCLUDE "./gfx/sprites_color_3.asm"
@@ -7052,6 +6886,8 @@ scr_score_need_upd:
  INCLUDE "./routines/native_background.asm"
 ; A dedicated background color follows the original four-level cycle.
 SetPaletteLevel:
+ ld a,3
+ ld (BorderColor),a
  ld a,5 ; Field row 37: complete composition spans rows 13..242.
  ld (ScreenScroll),a
  ld a,(current_level_number_1up)
@@ -7107,6 +6943,7 @@ LBE8B_9:
  INCLUDE "routines/mono_cache_reset.asm"
  INCLUDE "routines/magnet_center_draw.asm"
  INCLUDE "routines/cheat_keys.asm"
+ INCLUDE "routines/cpc_field_frame.asm"
 
 
 BATTYCODE_END:

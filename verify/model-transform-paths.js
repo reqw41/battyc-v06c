@@ -2,6 +2,8 @@
 const assert=require('assert'),fs=require('fs'),{make}=require('./vector_harness');
 const before=make(process.env.BATTY_TRANSFORM_BEFORE_ROM||'../../outputs/batty-three-plus-one-fast-paced.rom',process.env.BATTY_TRANSFORM_BEFORE_SYM||'../../outputs/batty-three-plus-one-fast-paced.sym'),after=make('batty.rom','batty.sym');
 for(const E of [before,after]){E.memory.bytes=E.memory.bytes.slice(0,65536);E.run(100);}
+// Recolouring the frame changes one attribute mapping, not the painter contract.
+before.memory.write(before.L.background_colors+2,after.rd(after.L.background_colors+2));
 function call(E,name){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;E.memory.write(E.cpu.sp,0);E.memory.write(E.cpu.sp+1,1);E.cpu.iff=false;let cycles=0,n=0;while(E.cpu.pc!==256){assert(++n<2e6,name);E.cpu.instruction();E.io.commit();cycles+=E.cpu.vcycles;}return cycles;}
 const pixels=E=>Buffer.from(Array.from({length:24576},(_,i)=>E.rd(0xa000+i)));
 function centreColour(buf,E,frame,x,y){
