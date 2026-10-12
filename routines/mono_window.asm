@@ -42,8 +42,7 @@ mono_window_mode:
  jp nz,mono_window_restore
  ld a,(hl)
  ld (de),a
- xor a
- ld (hl),a
+ call MonoWindowSaveByte
  jp mono_window_next
 mono_window_restore:
  ld a,(de)

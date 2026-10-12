@@ -1,0 +1,42 @@
+{
+  "romSHA256": "f54de0bb598184f985c47145609ffa9fed30de5569fb95ffacc8a5916e62313e",
+  "strict64KB": true,
+  "reports": [
+    {
+      "scene": "normal-locked",
+      "enabled": 0,
+      "ticks": 60,
+      "losses": 0,
+      "levels": [
+        0
+      ],
+      "normalStartResetsSession": true,
+      "passed": true
+    },
+    {
+      "scene": "g-toggle-loss",
+      "enabled": 1,
+      "ticks": 62,
+      "losses": 2,
+      "levels": [
+        0
+      ],
+      "normalStartResetsSession": true,
+      "passed": true
+    },
+    {
+      "scene": "l-edge",
+      "enabled": 1,
+      "ticks": 59,
+      "losses": 0,
+      "levels": [
+        0,
+        1,
+        2
+      ],
+      "normalStartResetsSession": true,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

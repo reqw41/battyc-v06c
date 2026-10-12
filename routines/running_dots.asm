@@ -118,17 +118,12 @@ running_dot_frame_1up:
 running_dot_frame_2up:
   DEFB $0E
 
-; Black is E=0,C=0 for either A value. Leave the background A untouched.
+; The paddle is a white overlay. Cut the two moving dots only in 8000;
+; background A/C/E must stay intact so paddle motion cannot leave trails.
 ; Preserve B (animation phase). Each point rebuilds D before writing.
 running_dot_black:
  ld a,(hl)
  ld c,a
- ld a,(de)
- and c
- ld (de),a
- ld a,d
- add a,$60
- ld d,a
  ld a,(de)
  and c
  ld (de),a

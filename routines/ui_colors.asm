@@ -1,8 +1,8 @@
-; UI uses eight colors in A/C/E, ignoring the occupied 8000 plane.
+; Menus use all four planes and their own sixteen-entry Vector palette.
 UiActive: db 1
 UiColor: db 7
 UiPixel: db 0
-UiColorMap: db 7,6,7,7,3,2,7,7,5,4,7,7,7,0,7,7
+UiColorMap: db 15,14,15,15,13,14,15,15,11,10,15,15,15,0,15,15
 ; Legacy Specialist color code -> native Vector RGB color index.
 UiSetColor:
  push hl
@@ -55,11 +55,10 @@ UiWriteA:
  ld h,a
  ld a,(UiColor)
  and 1
- ld a,0
- jp z,UiWriteE
+ ld a,$ff
+ jp nz,UiWriteE
  ld a,(UiPixel)
+ cpl
 UiWriteE:
  ld (hl),a
- pop hl
- pop af
- ret
+ jp UiMenuOverlay

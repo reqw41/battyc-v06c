@@ -274,11 +274,14 @@ disp_hs_table_and_wait_keys:
 hs_wait:
  push hl
  call WaitVideoFrame
+ pop hl
+ ld a,(KeyLine1)
+ and $28
+ jp z,CheatStartEnabled
  ld a,(KeyLine2)
  cpl
  and 1
- pop hl
- ret nz
+ jp nz,CheatStartNormal
  dec hl
  ld a,h
  or l

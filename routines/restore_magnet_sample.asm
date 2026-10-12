@@ -93,6 +93,7 @@ NativeSampleLocate:
 NativeSampleStrideReady:
  ex de,hl
  ld (NativeSamplePreviousStride+1),hl
+ ld (NativeSampleCenterStride+1),hl
  ex de,hl
  ld hl,(NativeSampleSprite)
  inc hl
@@ -159,6 +160,7 @@ NativeSamplePreviousStride:
  or c
  ld (NativeSamplePixel),a
 NativeSampleMerge:
+ call MagnetSampleAccent
  ld a,(NativeSampleMask)
  cpl
  ld b,a

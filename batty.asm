@@ -227,16 +227,15 @@ next_round_number:
 	LD A,(player_number)
 	INC A
 	LD (txt_player_x+11),A
-	LD DE,txt_player_x
-; Печатаем сообщение поверх чёрного окна
-	LD B,$02
-	CALL print_message
-
-	LD A,(game_mode)
-	CP $02
-	RET NZ
-	LD DE,txt_game_on
-	JP print_line
+ ld de,txt_player_x
+ ld a,(game_mode)
+ cp 2
+ jp nz,RoundFirstLine
+ ld de,txt_game_on
+RoundFirstLine:
+ call print_line
+ ld de,txt_round_xx
+ jp print_line
 
   INCLUDE "./txt/txt_player_x.asm"
   INCLUDE "./txt/txt_round_xx.asm"
@@ -323,7 +322,7 @@ fill_color_current_game_mode:
  ; Re-render the selected text at a frame-based blink rate.
  ld a,(IntCount)
  and $10
- ld a,c00
+ ld a,c06
  jp z,UiFlashReady
  ld a,c47
 UiFlashReady:
@@ -4343,7 +4342,7 @@ print_one_brik_buf:
 
 ; Цвета кирпичей
 briks_colors:
-	DEFB $50,$C0,$40,$90,$10	; Цвета обычных кирпичей
+	DEFB $50,$C0,$40,$60,$10	; Цвета обычных кирпичей
 	DEFB $00,$50,$40,$C0		; Цвета трудновыбиваемых кирпичей
 	DEFB $D0			; Не используется
 	DEFB $00,$50,$C0,$40		; Цвета невыбиваемых кирпичей
@@ -5241,29 +5240,21 @@ print_line:			; Specialist ready
 	LD B,(HL)
 	INC HL
 
-	LD A,LB551/256
-	LD (symbol_call_jump+$02),A
-	LD A,LB551%256
-	LD (symbol_call_jump+$01),A 	; Переход на LB551
-	LD A,B
-	and %10000000	;  BIT 7,B
-	JP Z,print_line_0
-	LD A,B
-	and %1000000	;  BIT 6,B
-	JP NZ,print_line_0
-
-	LD A,LB55D/256		; Адрес процедуры удвоения символов по высоте при печати
-	LD (symbol_call_jump+$02),A
-	LD A,LB55D%256
-	LD (symbol_call_jump+$01),A 	; Переход на LB55D
-
-	JP print_line_0
 
 print_line_0:
+ jp PrintOutlinedLine
+PrintLineBody:
 	EX DE,HL
 	push bc
 	CALL screen_addr_calc
 	pop bc
+ ld a,(UiActive)
+ or a
+ jp nz,PrintLineKeepPixels
+ ld a,(UiStencilPass)
+ or a
+ call z,ClearOutlinedLine
+PrintLineKeepPixels:
 	LD A,B
 	AND $3F
 	LD B,A
@@ -5303,7 +5294,7 @@ print_symbol:		; Specialist ready
 ; DE - адрес символа в знакогенераторе
 ; B - $06
 symbol_call_jump:
-	JP symbol_call_jump
+	JP LB551
 
 LB551:
 	LD A,(DE)
@@ -5312,25 +5303,6 @@ LB551:
 	inc l		; поправлено направление для Вектора
 	DEC B
 	JP NZ,LB551
-	POP HL
-	INC H
-	POP DE
-	RET
-
-;--------------------------------------
-; Routine at B55D
-; Нигде неиспользуемый код. Мусор?
-; Удвоение по высоте символов при печати
-LB55D:
-	LD A,(DE)
-	CALL UiPixelWrite
-	DEC HL
-	LD A,(DE)
-	CALL UiPixelWrite
-	inc L		; изменение направления для Вектора
-	DEC DE
-	DEC B
-	JP NZ,LB55D
 	POP HL
 	INC H
 	POP DE
@@ -5807,7 +5779,6 @@ print_message:		; Specialist ready
 
 ; Data block at B79E
 ; Мусор?
-	DEFB $08,$07,$44,$04,$01,$26,$1E,$19
 
 ;--------------------------
 ; Данные для первого игрока
@@ -5820,7 +5791,6 @@ score_1up_in_game:
 ;--------------------------
 
 ; Мусор?
-	DEFB $78,$07,$43,$02,$11,$12
 
 hi_score_in_game:
 	DEFW $0F68	; Адрес в буфере (на старте игры вычисляется по координатам $F068)
@@ -5831,7 +5801,6 @@ hi_score:
 	DEFB $00,$00,$10
 
 ; Мусор?
-	DEFB $00,$00,$00,$D8,$07,$44,$04,$02
 	DEFB $26,$1E,$19
 
 ;--------------------------
@@ -6145,6 +6114,8 @@ LB9E8_1:
 
 ; This entry point is used by the routine at LBAED.
 LB9E8_2:
+ call CheatPoll
+ jp c,LBBFB_0
 	LD A,(random_number_1)
 	CP $99
 	CALL Z,print_one_magnet
@@ -6258,6 +6229,7 @@ LBAED_8:
 	LD (sounds_queue),A
 	XOR A
 	LD (counter_misc),A
+ ld (SfxCooldown),a
 	JP LBB97_0
 
 LBB97:
@@ -6505,19 +6477,15 @@ ResumeLife:
 
 ; Жизней не осталось
 LBC10_6:
-	LD B,$02
-	CALL pause_clear_screen_attrib
-	;CALL clear_screen_attrib
-	CALL clear_screen_pix
+ call MonoRemove ; retain the playfield; retire the last particles
 	LD A,(player_number)
 	INC A
 	LD (txt_player_0+$0C),A		; Номер игрока для надписи GAME OVER PLAYER X
 	LD DE,txt_game_over
-	LD B,$02
-	CALL print_message
-	LD A,(game_mode)
-	CP $02
-	CALL Z,print_txt_players_1_and_2
+ call print_line
+ call GameOverPlayerLine
+ ld hl,GameOverScore
+ call MusicStartScore
 	LD B,$0C
 	CALL pause_clear_screen_attrib
 	CALL hi_score_update
@@ -6550,7 +6518,6 @@ print_txt_players_1_and_2:
   INCLUDE "./txt/txt_players_1_and_2.asm"
 
 ; Мусор????
-  DEFB $10,$02,$46
 
 ; Used by the routine at game_restart.
 ;--------------------------------------------------
@@ -7138,6 +7105,8 @@ LBE8B_9:
  INCLUDE "routines/mono_draw_bare.asm"
  INCLUDE "routines/mono_shift_draw.asm"
  INCLUDE "routines/mono_cache_reset.asm"
+ INCLUDE "routines/magnet_center_draw.asm"
+ INCLUDE "routines/cheat_keys.asm"
 
 
 BATTYCODE_END:
@@ -7187,14 +7156,11 @@ table_shifts EQU $7200
 RCBoundary:
 ClearShapeFlags:
  ret
-LevelThemeColors: db $3f,$38,$f8,$ff
-LevelEnemyColors: db $07,$c7,$3f,$c0
 LevelPaperColors: db $c0,$10,$81,$03
 LevelTextureColors: db $80,$20,$c1,$05
-FastEraseOld:
- jp plane_erase_dual
  INCLUDE "routines/mono_cache_address.asm"
  INCLUDE "routines/mono_zero_column.asm"
+ INCLUDE "routines/game_over_score.asm"
  ASSERT $ <= $6ba0
 StackFloor EQU $6ba0
 ; Exactly 180 level bytes are copied/swapped; the remaining 76 bytes are code.
@@ -7233,7 +7199,7 @@ MonoDrawWhite:
  ORG $7144
  INCLUDE "routines/mono_composite_build.asm"
  INCLUDE "routines/native_static_masks.asm"
- INCLUDE "routines/native_rotate.asm"
+ INCLUDE "routines/magnet_sample_color.asm"
  ASSERT $ <= SpriteCacheOriginal
  DS $7200-$,0
  ORG $7200

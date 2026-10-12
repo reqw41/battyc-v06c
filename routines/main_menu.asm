@@ -194,9 +194,4 @@ L93F8_9:
 L93F8_10:
 	LD DE,current_game_mode_line_prop
 	CALL fill_color_current_game_mode
-	ld A,(KeyLine2)		; Проверка ряда цифр '0'..'7'
-	cpl
-	and %00000001		; Проверка клавиши '0'
-	ret nz			; Выход из общей процедуры (запуск игры), если нажат '0'
-	;ret ;DEBUG
-	JP L93F8_0
+ jp CheatMenuKeys

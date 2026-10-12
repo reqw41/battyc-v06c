@@ -7,10 +7,11 @@ MusicInit:
  ld (MusicActive),a
  jp MusicMute
 MusicStart:
+ ld hl,MusicScore
+MusicStartScore:
  xor a
  ld (MusicActive),a
  ld (MusicWait),a
- ld hl,MusicScore
  ld (MusicPointer),hl
  ld a,1
  ld (MusicActive),a

@@ -255,9 +255,6 @@ mono_draw_all:
  ld c,(hl)
  inc hl
  ld b,(hl)
- inc hl
- ld a,(hl)
- ld (MonoDrawBat),a
  ex de,hl
  ld (MonoDrawVideo),hl
  ld h,b
@@ -308,11 +305,6 @@ mono_erase_all:
  inc hl
  ld a,(hl)
  ld (MonoRows),a
- inc hl
- inc hl
- inc hl
- ld a,(hl)
- ld (MonoOldBat),a
 mono_pace_old_call:
  call PaceAccountOld
  ld hl,(MonoRegionPtr)
@@ -452,9 +444,6 @@ mono_union_object:
  ld e,(hl)
  inc hl
  ld d,(hl)
- inc hl
- ld a,(hl)
- ld (MonoNewBat),a
  ex de,hl
  ld (MonoSource),hl
  ld a,(MonoNewTop)
@@ -693,11 +682,6 @@ mono_remove_old:
  ld (hl),0
  inc hl
  ld c,(hl)
- inc hl
- inc hl
- inc hl
- ld a,(hl)
- ld (MonoOldBat),a
  ld a,b
  or a
  jp z,mono_remove_skip
@@ -714,3 +698,4 @@ mono_remove_skip:
 
  INCLUDE "routines/mono_composite_bat.asm"
  INCLUDE "routines/mono_pair_clear.asm"
+ INCLUDE "routines/hud_core_body.asm"

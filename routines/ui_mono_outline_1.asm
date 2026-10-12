@@ -1,5 +1,5 @@
-; White glyphs with the original cross-shaped one-pixel black contour.
-; The overlay byte is replaced, so reprinting does not accumulate strokes.
+; First pass adds the white cross contour; second pass cuts its black core.
+; The whole line is outlined before any glyph interior is cut.
 UiMonoOutline:
  pop af
  push af
@@ -7,13 +7,11 @@ UiMonoOutline:
  push bc
  push de
  ld c,a
+ ld a,(UiStencilPass)
+ or a
+ jp nz,UiGlyphBlack
  ld a,h
- sub $40
- ld h,a
- ld a,c
- ld (hl),a
- ld a,h
- add a,$60
+ add a,$20
  ld h,a
  ld a,c
  or a

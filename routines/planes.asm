@@ -5,7 +5,7 @@ planes_reset:
  ld hl,0
  add hl,sp
  ld (pr_restore+1),hl
- ld de,0
+ ld de,$ffff
  di
  out ($10),a
  ld hl,0
@@ -18,8 +18,7 @@ pr_fill:
  EDUP
  dec b
  jp nz,pr_fill
- dec c
- jp nz,pr_fill
+ jp PaperPlaneNextBlock
 pr_restore:
  ld sp,0
  ei
@@ -185,12 +184,9 @@ plane_object:
  ld a,(direct_rows)
  ld (MonoDrawRows),a
  xor a
- ld (MonoDrawBat),a
  ld (MonoFastDraw),a
  jp MonoDraw
 color_valid: db 0
-color_height: db 0
-color_enemy: db 0
 WarmStart:
  ld sp,stack
  jp game_start

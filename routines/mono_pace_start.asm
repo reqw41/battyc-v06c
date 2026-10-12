@@ -13,3 +13,5 @@ PaceStartBody:
  ld (PaceWork),hl
  ret
 PacePairs: db 0,0,4,12,24,40,60,84,112,144,180,220
+
+ INCLUDE "routines/game_over_player_line.asm"

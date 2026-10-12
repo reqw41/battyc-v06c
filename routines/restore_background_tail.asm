@@ -33,6 +33,7 @@ NativeRestoreMagnetSample:
  push de
  push hl
  ld (NativeSampleValue),a
+ call MagnetAccentReset
  ld a,d
  sub $c0
  ld (NativeSampleColumn),a

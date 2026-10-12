@@ -1,8 +1,12 @@
 'use strict';
 const fs=require('fs'),assert=require('assert'),{make}=require('./vector_harness');
 const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const w=(a,v)=>E.memory.write(a,v),inst=E.cpu.instruction.bind(E.cpu);
+const output=E.io.realoutput.bind(E.io);let sweepContext=false,low=null,rocketDivisors=[];
+E.io.realoutput=(p,v)=>{if(p===8&&v===0x36)low=null;if(sweepContext&&p===11){if(low===null)low=v;else {rocketDivisors.push(low+256*v);low=null;}}output(p,v);};
 let ticks=0,started=false,injected=false,caught=false,completed=false,rocketFrames=new Set(),minSP=E.L.stack;
 E.cpu.instruction=function(){
+ if(this.pc===E.L.SfxTone){const slot=E.rd(E.L.snd_slot_ptr)+256*E.rd(E.L.snd_slot_ptr+1);sweepContext=E.rd(slot)===5&&E.rd(E.L.object_rocket)===6;}
+ if(this.pc===E.L.MusicStart)sweepContext=false;
  if(started){assert(this.pc<0x8000,'execution entered video');assert(this.pc!==0&&this.pc!==256,'unexpected restart');assert.equal(E.rd(E.L.spr_bonus_rocket_1+1),27,'rocket column pitch mutated');if(this.sp>=0x6900&&this.sp<=E.L.stack){minSP=Math.min(minSP,this.sp);assert(this.sp>=E.L.StackFloor);}}
  if(this.pc===E.L.handling_rocket){caught=true;rocketFrames.add(E.rd(E.L.object_rocket+1));}
  if(this.pc===E.L.LB9E8_2){started=true;ticks++;
@@ -20,4 +24,5 @@ E.cpu.instruction=function(){
 };
 try{for(let f=0;f<2400;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='done')throw e;}
 assert(completed&&caught,'rocket bonus did not advance level '+JSON.stringify({ticks,injected,caught,rocketFrames:[...rocketFrames],level:E.rd(E.L.current_level_number_1up)}));assert(rocketFrames.has(0)&&rocketFrames.has(1),'rocket animation lost a phase');
-const r={romSHA256:require('crypto').createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),caught,completed,nextLevel:1,rocketFrames:[...rocketFrames],immutableSourceHeight:27,stackBytes:E.L.stack-minSP,passed:true};fs.writeFileSync('outputs/batty-transform-rocket.json',JSON.stringify(r,null,2));console.log(r);
+assert(new Set(rocketDivisors).size>=8,'rocket sweep missing');assert(rocketDivisors.every((v,i)=>!i||v<=rocketDivisors[i-1]),'rocket pitch did not rise');
+const r={rocketToneEvents:rocketDivisors.length,rocketDivisors,romSHA256:require('crypto').createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),caught,completed,nextLevel:1,rocketFrames:[...rocketFrames],immutableSourceHeight:27,stackBytes:E.L.stack-minSP,passed:true};fs.writeFileSync('outputs/batty-transform-rocket.json',JSON.stringify(r,null,2));console.log(r);

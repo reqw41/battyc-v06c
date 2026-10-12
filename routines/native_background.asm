@@ -271,7 +271,7 @@ NativeStaticScoreCheck:
  jp nz,NativeStaticBackground
  ld a,l
  cp e
- jp z,plane_static_object
+ jp z,NativeOutlinedHeading
 NativeStaticBackground:
  ld hl,(IXobj)
  ld a,(hl)
@@ -289,8 +289,6 @@ NativeStaticBackground:
  ld hl,(IXobj)
  call sprite_search
  ex de,hl
- ld a,(hl)
- ld (NativeWidth),a
  inc hl
  ld a,(hl)
  ld (NativeHeight),a
@@ -337,16 +335,9 @@ NativeStaticShift:
  INCLUDE "routines/native_static_columns.asm"
 NativeSource: dw 0
 NativeDest: dw 0
-NativeWidth: db 0
 NativeHeight: db 0
 NativeShift: db 0
 NativeLeft: db 0
-NativeMask: db 0
-NativePixel: db 0
-NativeNextMask: db 0
-NativeNextPixel: db 0
-NativeCarryMask: db 0
-NativeCarryPixel: db 0
 
 NativePrintDigit:
  ld hl,spr_score_digits+2
@@ -362,8 +353,12 @@ NativeDigitSourceReady:
  ld (NativeHeight),a
 NativeDigitRow:
  ld hl,(NativeSource)
- inc hl
  ld b,(hl)
+ inc hl
+ ld a,(hl)
+ ld c,a
+ xor b
+ ld b,a
  inc hl
  ld (NativeSource),hl
  ld hl,(NativeDest)
@@ -372,6 +367,12 @@ NativeDigitRow:
  sub $40
  ld d,a
  ld a,b
+ ld (de),a
+ ld a,d
+ add a,$60
+ ld d,a
+ ld a,c
+ cpl
  ld (de),a
  inc l
  ld (NativeDest),hl

@@ -8,3 +8,5 @@ MonoWindowSetup:
  ld hl,$7a00
  ld (MonoDrawSource),hl
  ret
+
+ INCLUDE "routines/magnet_sample_center.asm"

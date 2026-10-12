@@ -2,7 +2,7 @@
 ; Neighbor outlines are derived from the level map, never from video pixels.
 ; Retire save-under first, then restore A/C/E; preserve intact brick animation.
 NativeRestoreBrick:
- call SUInvalidate
+ call MagnetAccentReset
  ld hl,(LB28F+1)
  ld a,l
  sub 16
@@ -270,8 +270,14 @@ NativeRestoreClipPixel:
  ld l,a
  ld a,(NativeRestoreClip+1)
  ld h,a
+ push bc
+ ld a,(NativeSampleAccentE)
+ and c
+ ld b,a
  ld a,c
  cpl
+ or b
+ pop bc
  and h
  or l
  ld (de),a
@@ -294,6 +300,10 @@ NativeRestoreClip:
  ld d,a
  ld a,(de)
  and h
+ ld l,a
+ ld a,(NativeSampleAccentA)
+ and c
+ or l
  ld (de),a
  ld a,d
  add a,$20

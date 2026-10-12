@@ -14,6 +14,7 @@ UiMonoOutlineTail:
  rrca
  ld b,a
  call UiOutlineByte
+UiMonoDone:
  ld a,1
  ld (OverlayActive),a
  pop de
@@ -21,3 +22,5 @@ UiMonoOutlineTail:
  pop hl
  pop af
  ret
+
+ INCLUDE "routines/magnet_center_source.asm"

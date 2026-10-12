@@ -13,3 +13,5 @@ pace_dispatch_ready:
  ex de,hl
  ld (mono_pace_old_call+1),hl
  jp PaceStartBody
+
+ INCLUDE "routines/magnet_center_setup.asm"

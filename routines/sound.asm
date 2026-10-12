@@ -111,14 +111,8 @@ sound_bat_resize_2 	EQU $0C
 play_sound_normall_brik:
   LD DE,$0844
   CALL sound_beep_cont_d
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
-  DEC (HL)		; IX+$01
-  LD HL,(snd_slot_ptr)
-  LD (HL),$00	; IX+$00
-  RET
+  JP sound_event_done
 
-; Routine at C101
 play_sound_metal_brik:
   LD D,$18
   LD E,$30
@@ -133,7 +127,6 @@ play_sound_metal_brik:
 
 ; Routine at C116
 play_sound_ball_start:
-  LD C,$09
   LD E,$14
   CALL play_sound_LC122
 sound_event_done:
@@ -145,13 +138,8 @@ sound_event_done:
 play_sound_LC122:
  ld d,1
  jp SfxTone
-sound_beep2:
- jp SfxTone
 play_sound_choose_ctrl:
  ld de,$0240
- jp SfxTone
-play_sound_magnet:
- ld de,$0118
  jp SfxTone
 play_sound_choose_letter:
  ld de,$01e0
@@ -163,14 +151,24 @@ play_sound_confirm_letter:
 play_sound_bat_beat:
   LD DE,$0466
   CALL sound_beep_cont_d
-  LD HL,(snd_slot_ptr)
-  LD (HL),$00	; IX+$00
-  RET
+  JP sound_event_done
 
 play_sound_05:
-  LD DE,$0118
-  CALL sound_beep_cont_d
-  JP sound_event_done
+ ld a,(object_rocket)
+ or a
+ jp z,sound_event_done
+ ld a,(counter_misc)
+ cp $80
+ jp c,RocketPitchReady
+ ld a,$80
+RocketPitchReady:
+ ld b,a
+ ld a,$a0
+ sub b
+ ld e,a
+ ld d,1
+ call SfxTone
+ ret ; keep this event queued throughout the rocket ascent
 
 ;-----------------------------
 ; НЕИСПОЛЬЗУЕМЫЙ В ИГРЕ КОД!
@@ -212,8 +210,6 @@ play_sound_06:
   LD E,A
   LD D,$01
   CALL sound_beep_cont_d
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
   LD A,(HL)		; IX+$01
   ADD A,$08
   LD (HL),A		; IX+$01
@@ -221,12 +217,10 @@ play_sound_06:
   JP Z,play_sound_06_0
   CP $60
   RET NZ
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
   LD (HL),$21	; IX+$01
   RET
 play_sound_06_0:
-  LD HL,(snd_slot_ptr)
+  DEC HL
   LD (HL),$00	; IX+$00
   RET
 
@@ -236,20 +230,16 @@ play_sound_live_add:
   LD A,(HL)		; IX+$01
   AND $03
   JP NZ,play_sound_07_0
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
   LD A,(HL)		; IX+$01
   ADD A,$14
   LD E,A
   LD D,$03
   CALL sound_beep_cont_d
 play_sound_07_0:
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
   DEC (HL)		; IX+$01
   DEC (HL)		; IX+$01
   RET NZ
-  LD HL,(snd_slot_ptr)
+  DEC HL
   LD (HL),$00	; IX+$00
   RET
 
@@ -267,14 +257,12 @@ play_sound_bat_resize_1:
   LD E,(HL)		; IX+$01
   LD D,$01
   CALL sound_beep_cont_d
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
   LD A,(HL)		; IX+$01
   SUB $0B
   LD (HL),A		; IX+$01
   CP $10
   RET NC
-  LD HL,(snd_slot_ptr)
+  DEC HL
   LD (HL),$00	; IX+$00
   RET
 
@@ -284,32 +272,25 @@ play_sound_triple_ball:
   LD E,(HL)		; IX+$01
   LD D,$01
   CALL sound_beep_cont_d
-  LD HL,(snd_slot_ptr)
-  INC HL		; +$01
   LD A,(HL)		; IX+$01
   ADD A,$0B
   LD (HL),A		; IX+$01
   CP $C1
   RET C
-  LD HL,(snd_slot_ptr)
+  DEC HL
   LD (HL),$00	; IX+$00
   RET
 
 play_sound_shot:
-  LD C,$04
   LD E,$0F
   CALL play_sound_LC122
-  LD HL,(snd_slot_ptr)
-  LD (HL),$00	; IX+$00
-  RET
+  JP sound_event_done
 
 play_sound_bat_resize_2:
   LD E,$30
   LD D,$0A
   CALL sound_beep_cont_de
-  LD HL,(snd_slot_ptr)
-  LD (HL),$00	; IX+$00
-  RET
+  JP sound_event_done
 
 ; Used by the routines at sound_beep_cont_d and sound_beep_cont_de.
 sound_beep:

@@ -17,3 +17,5 @@ pad_add:
  add hl,de
  ld (PaceWork),hl
  ret
+
+ INCLUDE "routines/magnet_center_guard.asm"

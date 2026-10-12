@@ -1,0 +1,36 @@
+{
+  "romSHA256": "f54de0bb598184f985c47145609ffa9fed30de5569fb95ffacc8a5916e62313e",
+  "musicVoices": 3,
+  "musicNotes": 8,
+  "musicSeconds": 1.0860893333333332,
+  "launchEventToToneMs": 1.056,
+  "launchToneMs": 28.250666666666667,
+  "phaseTests": [
+    {
+      "phase": 0,
+      "injectPhase": 0,
+      "durationMs": 20.134666666666668
+    },
+    {
+      "phase": 15000,
+      "injectPhase": 15000,
+      "durationMs": 35.102666666666664
+    },
+    {
+      "phase": 30000,
+      "injectPhase": 30000,
+      "durationMs": 30.102666666666668
+    },
+    {
+      "phase": 45000,
+      "injectPhase": 45000,
+      "durationMs": 25.102666666666668
+    },
+    {
+      "phase": 59000,
+      "injectPhase": 59000,
+      "durationMs": 20.436
+    }
+  ],
+  "passed": true
+}

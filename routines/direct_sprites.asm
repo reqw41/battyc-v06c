@@ -117,7 +117,6 @@ pd_height:
  or a
  ret z
  ld (direct_rows),a
- ld (color_height),a
  ld a,1
  ld (color_valid),a
  inc hl
@@ -150,16 +149,9 @@ pd_cols:
  ld a,32
  sub c
  cp b
- ld a,0
  jp nc,pd_unclipped
- inc a
- ld b,32
- ld a,b
- sub c
  ld b,a
- ld a,1
 pd_unclipped:
- ld (direct_clipped),a
  ld a,b
  ld (direct_columns),a
  ld a,(plane_y)
@@ -195,33 +187,10 @@ direct_source: dw 0
 direct_width: db 0
 direct_rows: db 0
 direct_shift: db 0
-direct_clipped: db 0
 direct_columns: db 0
-direct_left: db 0
-direct_bitmap: db 0
 
 ; Draw a falling bonus before the wide paddle blit. Clearing at frame start
 ; and drawing it last could put its entire lifetime behind the raster beam.
 ; Temporarily remove it from the ordinary loop to keep one draw/erase slot.
 DrawMovingObjects:
  jp MonoRender
-DrawMovingObjectsLegacy:
- ld hl,object_bonus
- ld a,(hl)
- add a,a
- jp z,dmo_all
- ld (IXobj),hl
- call print_obj_from_buf_to_scr
- ld a,(object_bonus)
- ld (dmo_restore+1),a
- xor a
- ld (object_bonus),a
- ld hl,print_obj_from_buf_to_scr
- call call_hl_for_all_obj
-dmo_restore:
- ld a,0
- ld (object_bonus),a
- ret
-dmo_all:
- ld hl,print_obj_from_buf_to_scr
- jp call_hl_for_all_obj

@@ -4,16 +4,20 @@
 	EXPORT SetPaletteMenu
 	EXPORT IntCount
 	EXPORT MusicStart
+	EXPORT MusicStartScore
 	EXPORT MusicStop
 	EXPORT MusicActive
 	EXPORT MusicWait
 	EXPORT MusicPointer
 	EXPORT SfxTone
+	EXPORT SfxCooldown
 	EXPORT SfxWait
 	EXPORT PaletteGame
 	EXPORT MusicTick
 	EXPORT MusicScore
 	EXPORT KeyLine0
+	EXPORT KeyLine1
+	EXPORT KeyLine5
 	EXPORT KeyLine2
 	EXPORT KeyLine4
 	EXPORT KeyLine7
@@ -121,6 +125,10 @@ KEYINT:
 	out (3),a
 	in a,(2)
 	ld (KeyLine0),a
+ ld a,$fd
+ out (3),a
+ in a,(2)
+ ld (KeyLine1),a
 	ld a,0FBh
 	out (3),a
 	in a,(2)
@@ -129,6 +137,10 @@ KEYINT:
 	out (3),a
 	in a,(2)
 	ld (KeyLine4),a
+ ld a,$df
+ out (3),a
+ in a,(2)
+ ld (KeyLine5),a
 	ld a,07Fh
 	out (3),a
 	in a,(2)
@@ -167,6 +179,8 @@ KEYINT_J:
 IntCount: db 0 ; keep interrupt counter outside the sprite plane
 
 KeyLineEx:	db 11111111b
+KeyLine1: db $ff
+KeyLine5: db $ff
 KeyLine0:	db 11111111b
 KeyLine2:	db 11111111b	;   7   6   5   4   3   2   1   0
 KeyLine4:	db 11111111b	;   G   F   E   D   C   B   A   @
@@ -184,8 +198,9 @@ ColorText equ 10111111b    ; Color for $C000-$DFFF - blue
 ColorBoth equ 00000111b    ; Color for both planes - red
 ; Palette colors, game
 PaletteMenu:
- db $00,$c0,$07,$c7,$38,$f8,$3f,$ff
- db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
+ ; Native 16-entry menu palette: navy paper, muted border, bright accents.
+ db $00,$40,$20,$a0,$03,$83,$1b,$9b
+ db $49,$c0,$38,$f8,$1f,$c7,$3f,$ff
 PaletteGame:
  ; 8000 is the white sprite override.
  db $00,$c0,$80,$40,$07,$38,$3f,$f8

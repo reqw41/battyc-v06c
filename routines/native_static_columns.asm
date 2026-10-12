@@ -1,6 +1,8 @@
 ; Static graphics use native pairs too. Build shifted columns once, then
 ; program the three colour masks once per attribute block and POP rows.
 NativeStaticColumns:
+ ld hl,(NativeDest)
+ ld (MagnetCenterDest),hl
  ld a,(NativeHeight)
  ld (SpriteCacheHeight),a
  ld (nsc_height+1),a
@@ -125,4 +127,5 @@ nsc_top:
  ld hl,NativeLeft
  dec (hl)
  jp nz,nsc_column
+ call MagnetCenterDraw
  jp SpriteCacheReset
