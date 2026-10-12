@@ -33,10 +33,10 @@ disp_main_menu_and_wait_keys:
 ;	ld (color_port),a	; Белый цвет
 	LD HL,(coord_ctrl_1up)
 	LD DE,spr_pointer_1
-	CALL print_sprite
+	CALL MenuPointerSprite
 	LD HL,(coord_ctrl_2up)
 	LD DE,spr_pointer_2
-	CALL print_sprite
+	CALL MenuPointerSprite
 
 	LD HL,300
 	LD (counter_misc),HL
@@ -150,7 +150,7 @@ L93F8_6:
 ;	ld (color_port),a	; Белый цвет
 	LD HL,(coord_ctrl_1up)
 	LD DE,spr_pointer_1
-	CALL print_sprite
+	CALL MenuPointerSprite
 	LD A,10
 	LD (back_counters),A
 	CALL play_sound_choose_ctrl
@@ -183,10 +183,17 @@ L93F8_9:
 ;	ld (color_port),a	; Белый цвет
 	LD HL,(coord_ctrl_2up)
 	LD DE,spr_pointer_2
-	CALL print_sprite
+	CALL MenuPointerSprite
 	LD A,10
 	LD (back_counters+1),A
 	CALL play_sound_choose_ctrl
+ jp L93F8_10
+
+; The control pointers are always yellow, whatever text colour was used last.
+MenuPointerSprite:
+ ld a,14
+ ld (UiColor),a
+ jp print_sprite
 
 L93F8_10:
 	LD DE,current_game_mode_line_prop

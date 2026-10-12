@@ -289,6 +289,25 @@ hs_wait:
  cpl
  and $c0
  jp nz,JoystickMenuStart
+ ; Any other key returns to the menu (the cheat row is left alone, and
+ ; the first second is skipped so that a key still held does not count).
+ ld a,h
+ or a
+ jp nz,hs_no_key
+ push hl
+ ld hl,KeyLine0
+ ld a,(KeyLine2)
+ and (hl)
+ ld hl,KeyLine4
+ and (hl)
+ ld hl,KeyLine5
+ and (hl)
+ ld hl,KeyLine7
+ and (hl)
+ pop hl
+ inc a
+ jp nz,disp_main_menu_and_wait_keys
+hs_no_key:
  dec hl
  ld a,h
  or l

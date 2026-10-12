@@ -732,7 +732,6 @@ mono_draw_restore:
  ld sp,0
  ei
  ret
-MonoComposeColumn EQU MonoClearColumn
 MonoZeroRange EQU RCBegin
 ; Outlined round text saves/restores its 10x40 rectangle in all four planes.
 ; Active moving objects have already been removed at the round transition.

@@ -3,16 +3,20 @@
 ;   P1 = grey ring + cyan body of the on picture (its planes C and E),
 ;   P2 = cyan body + red arrows and core of the on picture (its plane A),
 ;   marks-off = grey marks of the off picture (plane C);
-; then 2x8 bytes of the off-state ball (planes A and C).
+; then 2x8 bytes of the ball in the middle. A last pass recolours it:
+; plane C is set over the ball (on: red -> yellow; off, with plane A: cyan),
+; then planes A and C are cleared in a small glint (on: white, off: paper).
 ; The disc is P1|P2, the ring is P1&~P2.
-;   on  = grey ring (C+E), cyan body (A+C+E), red arrows and core (A);
+;   on  = grey ring (C+E), cyan body (A+C+E), red arrows (A), yellow core;
 ;   off = grey ring and marks (C+E) on paper (E), cyan ball (A+C+E).
 ; The slot is rebuilt whenever the round window returns this RAM.
 MagRows EQU 24
 MagCacheSlots: dw $7a00,$7b30,$7c60,$7d90
  ASSERT $7d90+304 <= $7ec8
 MagCacheMeta: ds 8,0 ; plane A column, top row
-MagnetCoreOff: db $1c,$26,$4f,$5f,$5f,$7f,$3e,$1c
+MagnetCoreOff: db $1c,$3e,$7f,$7f,$7f,$7f,$3e,$1c ; the ball, rows 8..15
+MagnetGlintOn: db $00,$08,$1c,$1c,$08 ; rows 9..13: white centre of the yellow core
+MagnetGlintOff: db $18,$30,$20,$20,$00 ; glint of the cyan ball
 MCIndex: db 0
 MCBase: dw 0
 
@@ -396,7 +400,14 @@ mp_cols:
 mp_off:
  ld a,0
  or a
- ret z
+ ld a,0 ; on: plane A already holds the core (NOP)
+ ld hl,MagnetGlintOn
+ jp z,mp_core
+ ld a,$12 ; off: LD (DE),A
+ ld hl,MagnetGlintOff
+mp_core:
+ ld (mp_core_a),a
+ ld (mp_glint+1),hl
  ld a,(MCIndex)
  add a,a
  ld hl,MagCacheMeta
@@ -407,6 +418,7 @@ mp_off:
  ld a,(hl)
  sub 8
  ld e,a
+ push de
  ld hl,(MCBase)
  ld bc,MagRows*12
  add hl,bc
@@ -417,7 +429,8 @@ mp_core_col:
 mp_core_row:
  ld a,(de)
  or (hl)
- ld (de),a
+mp_core_a:
+ nop
  ld a,d
  add a,$20
  ld d,a
@@ -435,6 +448,58 @@ mp_core_row:
  inc d
  dec b
  jp nz,mp_core_col
+ pop de
+ dec e
+ ld a,(MCIndex)
+ rlca
+ rlca
+ rlca
+ rlca
+ ld hl,magnet_properties+2
+ call hl_add_a
+ ld a,(hl)
+ sub 5
+ and 7
+ ld hl,NativeShift
+ ld b,(hl)
+ push bc
+ ld (hl),a
+mp_glint:
+ ld hl,0
+ ld b,5
+mp_glint_row:
+ push bc
+ ld a,(hl)
+ inc hl
+ call NativeSampleShift
+ call mp_glint_byte
+ inc d
+ ld a,c
+ call mp_glint_byte
+ dec d
+ dec e
+ pop bc
+ dec b
+ jp nz,mp_glint_row
+ pop bc
+ ld a,b
+ ld (NativeShift),a
+ ret
+mp_glint_byte: ; clear the bits of A in planes A and C
+ cpl
+ ld b,a
+ ld a,(de)
+ and b
+ ld (de),a
+ ld a,d
+ add a,$20
+ ld d,a
+ ld a,(de)
+ and b
+ ld (de),a
+ ld a,d
+ sub $20
+ ld d,a
  ret
 
 PaceStartExtended:
