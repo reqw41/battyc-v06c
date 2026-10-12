@@ -20,6 +20,7 @@ def pixel(x,y):
     c=ink if b else pap
     if c==0:return BG
     if x>=222 and 54<=y<72:return BG      # the artist's "M.C." signature is left out
+    if (x>=252 or x<=3) and 80<=y<136:return BG   # slivers of the side walls cut by the screen edge
     col=zxcol(c,br)
     if y<72:                       # logo: per-row stripes instead of attribute cells
         r=y>>3
@@ -27,6 +28,7 @@ def pixel(x,y):
             col=[None,None,None,None,MAG,RED,ORA,YEL,YEL][min(r,8)] or col
             if r==8 and (y&7)>=4:col=ORA
     elif y<104 or (y<136 and (x<36 or x>219)):   # pipe and side walls
+        if col==CYAN and y>=104:col=LGREY        # attribute clash at the wall corner
         if col in(WHITE,LGREY):
             if 36<=x<=219 and y<97:col=LGREY
             else:col=GREY

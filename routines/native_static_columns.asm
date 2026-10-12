@@ -1,7 +1,7 @@
 ; The only static picture left in the RGB planes is the Double Play
 ; separator (magnets have their own cache, HUD and lives use the sprite
 ; plane). Build its shifted columns once, then POP rows: lit pixels become
-; yellow (A+C), covered unlit pixels paper (E), the rest is left alone.
+; white (no plane), covered unlit pixels paper (E), the rest is left alone.
 NativeStaticColumns:
  xor a
  ld hl,MonoTags+44
@@ -74,15 +74,13 @@ nsc_row:
  pop de ; E=~cover, D=lit
  ld a,(hl)
  and e
- or d
- ld (hl),a ; A: lit
+ ld (hl),a ; A: cleared under the cover
  ld a,h
  add a,$20
  ld h,a
  ld a,(hl)
  and e
- or d
- ld (hl),a ; C: lit
+ ld (hl),a ; C: cleared under the cover
  ld a,h
  add a,$20
  ld h,a
