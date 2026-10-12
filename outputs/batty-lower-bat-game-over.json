@@ -1,0 +1,58 @@
+{
+  "romSHA256": "5abba2716fed245cad5200879149710a9e4a6816a4cd25e8e6c0294b625fd86a",
+  "physicalRAM": 65536,
+  "reports": [
+    {
+      "mode": 0,
+      "RGBOutsideMessagePanelPreserved": true,
+      "darkMessagePanel": true,
+      "screenResets": 0,
+      "menuPaletteSwitches": 0,
+      "musicEventsPerChannel": [
+        3,
+        3,
+        3
+      ],
+      "musicSeconds": 0.958212,
+      "eventToFirstToneMs": 14.372,
+      "gameOverVisibleSeconds": 5.143850666666666,
+      "stackBytes": 38,
+      "passed": true
+    },
+    {
+      "mode": 1,
+      "RGBOutsideMessagePanelPreserved": true,
+      "darkMessagePanel": true,
+      "screenResets": 0,
+      "menuPaletteSwitches": 0,
+      "musicEventsPerChannel": [
+        3,
+        3,
+        3
+      ],
+      "musicSeconds": 0.958212,
+      "eventToFirstToneMs": 14.372,
+      "gameOverVisibleSeconds": 5.143850666666666,
+      "stackBytes": 38,
+      "passed": true
+    },
+    {
+      "mode": 2,
+      "RGBOutsideMessagePanelPreserved": true,
+      "darkMessagePanel": true,
+      "screenResets": 0,
+      "menuPaletteSwitches": 0,
+      "musicEventsPerChannel": [
+        3,
+        3,
+        3
+      ],
+      "musicSeconds": 0.9582093333333334,
+      "eventToFirstToneMs": 11.966666666666667,
+      "gameOverVisibleSeconds": 5.1635333333333335,
+      "stackBytes": 38,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

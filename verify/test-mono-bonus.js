@@ -16,7 +16,7 @@ let reports=[]; for(const mode of ['normal','wide','gun'])for(let id=0;id<10;id+
  for(let t=0;t<160;t++){
   ptr(E.L.counter_misc,t);w(E.L.ctrl_btns_pressed,id===1&&t>80?16:0);
   ptr(E.L.IXobj,bat);call('handling_bat');
-  if(E.rd(E.L.object_bullet_1)||E.rd(E.L.object_bullet_2))shots++;
+  if(E.rd(E.L.object_bullet_1)||E.rd(E.L.object_bullet_2))shots++;for(const b of[E.L.object_bullet_1,E.L.object_bullet_2])if(E.rd(b))assert.equal(E.rd(b+4),180,'bullet is not above the lowered paddle');
   const type=E.rd(bonus);if(type===4||type===11){ptr(E.L.IXobj,bonus);call(type===4?'handling_bonus':'handling_400pts');}
   if(E.rd(bonus)===11)caught=true;
   call('planes_begin');call('DrawMovingObjects');
@@ -27,7 +27,7 @@ assert(caught,mode+' '+id+' not caught');
  else if(id!==6)assert.equal(E.rd(bat+12),28,mode+' shrink '+id);
  if(id===1){assert([10,11].includes(E.rd(bat+1)),mode+' gun sprite');assert(shots>0,mode+' did not fire');assert([7,8,9].every(v=>frames.includes(v)),mode+' skipped gun transformation');}
  if(id===2){assert.equal(E.rd(E.L.balls_quantity),3);for(const b of [E.L.object_ball_1,E.L.object_ball_2,E.L.object_ball_3])assert.equal(E.rd(b),2);}
- if(id===3){const o=E.L.object_ball_1;w(o+2,E.rd(bat+2)+12);w(o+4,171);w(o+15,168);ptr(E.L.IXobj,o);call('LAB1F');assert.equal(E.rd(o+20),0xb0,mode+' hand did not attach ball');w(E.L.ctrl_btns_pressed,0);call('handling_ball');assert.equal(E.rd(o+4),0xa7);}
+ if(id===3){const o=E.L.object_ball_1;w(o+2,E.rd(bat+2)+12);w(o+4,179);w(o+15,176);ptr(E.L.IXobj,o);call('LAB1F');assert.equal(E.rd(o+20),0xb0,mode+' hand did not attach ball');w(E.L.ctrl_btns_pressed,0);call('handling_ball');assert.equal(E.rd(o+4),0xaf);}
  if(id===4)assert.equal(E.rd(E.L.object_ball_1+7),2);
  if(id===5)assert.equal(E.rd(E.L.lives_1up),4);
  if(id===6)assert.equal(E.rd(E.L.object_rocket),6);

@@ -348,36 +348,26 @@ NativePrintDigit:
  inc h
 NativeDigitSourceReady:
  ld (NativeSource),hl
+ push hl
  ld hl,(score_screen_ptr)
  ld (NativeDest),hl
- ld a,8
- ld (NativeHeight),a
-NativeDigitRow:
- ld hl,(NativeSource)
- ld b,(hl)
- inc hl
- ld a,(hl)
- xor b
- ld b,a
- inc hl
- ld (NativeSource),hl
- ld hl,(NativeDest)
  call NativePixelAddress
  ld a,d
  sub $40
  ld d,a
- ld a,b
+ pop hl
+ ld b,8
+NativeDigitRow:
+ ld c,(hl)
+ inc hl
+ ld a,(hl)
+ xor c
+ inc hl
  ld (de),a
- inc l
- ld (NativeDest),hl
- ld a,(NativeHeight)
- dec a
- ld (NativeHeight),a
+ dec e
+ dec b
  jp nz,NativeDigitRow
  ld hl,(NativeDest)
- ld a,l
- sub 8
- ld l,a
  inc h
  ld (score_screen_ptr),hl
  ret

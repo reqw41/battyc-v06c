@@ -1,0 +1,15 @@
+{
+  "romSHA256": "5abba2716fed245cad5200879149710a9e4a6816a4cd25e8e6c0294b625fd86a",
+  "paddleY": 181,
+  "heldBallY": 175,
+  "launchAnchorY": 177,
+  "firstLaunchedFrameY": 174,
+  "lossBoundaryY": 200,
+  "lossCases": 2,
+  "levelCellsUnchanged": 180,
+  "ballSpeedUnchanged": true,
+  "paddleBounceVerified": true,
+  "scoreOutsideFrameRestored": true,
+  "stackBytes": 8,
+  "passed": true
+}

@@ -72,7 +72,7 @@ pd_visible:
  inc hl
  ld a,(hl)
 pd_visible_limit:
- cp $c0
+ cp FieldSpriteLimit
  jp c,pd_position_valid
  ; Retire objects beyond the selected field/HUD limit.
  ld hl,(IXobj)
@@ -104,12 +104,12 @@ pd_position_valid:
  ld a,(plane_y)
  add a,b
 pd_height_compare:
- cp $c1
+ cp FieldSpriteLimit+1
  jp c,pd_height
  ld a,(plane_y)
  ld b,a
 pd_height_limit:
- ld a,$c0
+ ld a,FieldSpriteLimit
  sub b
  ld b,a
 pd_height:

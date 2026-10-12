@@ -15,6 +15,8 @@ start_bin:
 ; Адрес начала окна ZX-экрана на экране Вектора
 zx_scr EQU $C0E0
 ; Keep the upper HUD position; carry the background and walls to screen row 255.
+FieldSpriteLimit EQU $c8
+BatHomeY EQU $b5
 FieldScroll EQU 5
 FieldBottomLo EQU FieldScroll+1
 FieldHeight EQU $e0-FieldBottomLo+1
@@ -644,49 +646,49 @@ print_obj_to_buff:
 
 ; Свойства объекта шарик
 object_ball_1:
-  DEFB $02,$00,$84,$00,$A0,$00,$38,$02
+  DEFB $02,$00,$84,$00,$A8,$00,$38,$02
   DEFB $02,$0C,$00,$00,$08,$07,$00,$00
   DEFB $00,$00,$00,$00,$00,$80
 
 ; Свойства объекта шарик 2
 object_ball_2:
-  DEFB $00,$00,$84,$00,$A0,$00,$38,$02
+  DEFB $00,$00,$84,$00,$A8,$00,$38,$02
   DEFB $02,$0C,$00,$00,$08,$07,$00,$00
   DEFB $00,$00,$00,$00,$00,$80
 
 ; Свойства объекта шарик 3
 object_ball_3:
-  DEFB $00,$00,$84,$00,$A0,$00,$38,$02
+  DEFB $00,$00,$84,$00,$A8,$00,$38,$02
   DEFB $02,$0C,$00,$00,$08,$07,$00,$00
   DEFB $00,$00,$00,$00,$00,$80
 
 ; Свойства объекта пуля 1
 object_bullet_1:
-  DEFB $00,$00,$84,$00,$A0,$00,$30,$01
+  DEFB $00,$00,$84,$00,$A8,$00,$30,$01
   DEFB $01,$08,$00,$00,$04,$08,$00,$00
   DEFB $00,$00,$00,$00,$00,$80
 
 ; Свойства объекта пуля 2
 object_bullet_2:
-  DEFB $00,$00,$84,$00,$A0,$00,$30,$01
+  DEFB $00,$00,$84,$00,$A8,$00,$30,$01
   DEFB $01,$08,$00,$00,$04,$08,$00,$00
   DEFB $00,$00,$00,$00,$00,$80
 
 ; Свойства объекта каретка 2
 object_bat_2:
-  DEFB $00,$00,$74,$00,$AD,$00,$00,$00
+  DEFB $00,$00,$74,$00,BatHomeY,$00,$00,$00
   DEFB $04,$0D,$00,$00,$1C,$0A,$00,$00
   DEFB $00,$00,$F0,$00,$FF,$80
 
 ; Свойства объекта каретка 1
 object_bat_1:
-  DEFB $01,$00,$74,$00,$AD,$00,$00,$00
+  DEFB $01,$00,$74,$00,BatHomeY,$00,$00,$00
   DEFB $04,$0D,$00,$00,$1C,$0A,$00,$00
   DEFB $00,$00,$F0,$00,$00,$80
 
 ; Свойства объекта каретка 3
 object_bat_temp:
-  DEFB $00,$03,$84,$00,$AD,$00,$00,$00
+  DEFB $00,$03,$84,$00,BatHomeY,$00,$00,$00
   DEFB $03,$0D,$00,$00,$1B,$0A,$00,$00
   DEFB $00,$00,$00,$00,$00,$00
 
@@ -1464,7 +1466,7 @@ free_bullet_2:
 	LD HL,(IYobj)
 	LD DE,$0004
 	ADD HL,DE
-	LD (HL),$AC		; IY+$04 192 - координата Y объекта
+	LD (HL),$B4		; IY+$04: выстрел над битой, Y=180
 	POP HL
 	PUSH HL
 	LD HL,(IYobj)
@@ -1893,7 +1895,7 @@ LA27E_14:
 	LD HL,(IXobj)
 	LD DE,$0004
 	ADD HL,DE
-	LD (HL),$A7	; IX+$04
+	LD (HL),$AF	; IX+$04
 	CALL check_margins
 	JP LA27E_25
 LA27E_15:
@@ -1904,7 +1906,7 @@ LA27E_15:
 	LD HL,(IXobj)
 	LD DE,$0004
 	ADD HL,DE
-	LD (HL),$A9	; IX+$04
+	LD (HL),$B1	; IX+$04
 	LD A,(object_bat_1+$14)
 	RLA
 	JP NC,LA27E_16
@@ -1936,7 +1938,7 @@ LA27E_17:
 	LD HL,(IXobj)
 	LD DE,$0004
 	ADD HL,DE
-	LD (HL),$A6	; IX+$04
+	LD (HL),$AE	; IX+$04
 	LD HL,(IXobj)
 	LD DE,$0012
 	ADD HL,DE
@@ -1968,7 +1970,7 @@ LA27E_19:
 	LD HL,(IXobj)
 	LD DE,$0004
 	ADD HL,DE
-	LD (HL),$A9	; IX+$04
+	LD (HL),$B1	; IX+$04
 	LD A,(object_bat_2+$14)
 	RLA
 	JP NC,LA27E_16
@@ -2072,7 +2074,7 @@ LA27E_25:
   INC HL
   INC HL
   LD A,(HL)
-  CP $C0
+  CP FieldSpriteLimit
   RET C
   LD HL,(LA27C)
   LD (HL),$00
@@ -2199,7 +2201,7 @@ handling_bonus_1:
 	LD DE,$0004
 	ADD HL,DE
 	LD A,(HL)		; IX+$04
-	CP $A0
+	CP $A8
 	CALL NC,get_bonus
 	LD DE,$0008
 	LD B,$02
@@ -2236,7 +2238,7 @@ handling_bonus_5:
 	LD A,L
 	LD (LA559),A
 	LD A,H
-	CP $C0
+	CP FieldSpriteLimit
 	RET C
 handling_bonus_6:
 	ld HL,(IXobj)
@@ -2968,7 +2970,7 @@ LA902_2:
 	LD DE,$0004
 	ADD HL,DE
 	LD A,(HL)		; IX+$04
-	CP $C0
+	CP FieldSpriteLimit
 	JP C,LA902_3
 	ld HL,(IXobj)
 	ld A,(HL)		; IX+$00
@@ -3036,7 +3038,7 @@ bomb_appear:
 	ADD HL,DE
 	LD A,(HL)		; IX+$04 координата Y каретки?
 	ADD A,$08
-	CP $C0
+	CP FieldSpriteLimit
 	RET NC			; Возвращаемся, если пролетела
 
 	LD (object_bonus+$04),A	; координата Y объекта
@@ -3096,7 +3098,7 @@ LA9BC_2:
 	LD DE,$0004
 	ADD HL,DE
 	LD A,(HL)		; IX+$04
-	CP $C0
+	CP FieldSpriteLimit
 	JP C,LA9BC_3
 	LD HL,(IXobj)
 	ld A,(HL)		; IX+$00
@@ -3390,13 +3392,13 @@ LAB1F:
   LD DE,$0004
   ADD HL,DE
   LD A,(HL)		; IX+$04
-  CP $98
+  CP $A0
   RET C
   LD HL,(IXobj)
   LD DE,$000F
   ADD HL,DE
   LD A,(HL)		; IX+$0F
-  CP $AA
+  CP $B2
   RET NC
   LD HL,object_bat_1
   LD (IYobj),HL
@@ -3475,13 +3477,13 @@ LAB1F_3:
   LD HL,(IXobj)
   LD DE,$0004
   ADD HL,DE
-  LD (HL),$A7		; IX+$04
+  LD (HL),$AF		; IX+$04
   RET
 LAB1F_4:
   LD HL,(IXobj)
   LD DE,$0004
   ADD HL,DE
-  LD (HL),$A6		; IX+$04
+  LD (HL),$AE		; IX+$04
   LD HL,(IXobj)
   LD DE,$0012
   ADD HL,DE
@@ -6602,6 +6604,7 @@ LBE8B_11:
 	LD (score_screen_ptr),HL
 	LD HL,hi_score+2
 	CALL print_score_in_game
+
 
 	CALL print_magnets
 

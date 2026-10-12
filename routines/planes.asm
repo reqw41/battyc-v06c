@@ -155,7 +155,7 @@ plane_static_object:
  inc a
  ld (pd_height_compare+1),a
  call plane_object
- ld a,$c0
+ ld a,FieldSpriteLimit
  ld (pd_visible_limit+1),a
  ld (pd_height_limit+1),a
  inc a
