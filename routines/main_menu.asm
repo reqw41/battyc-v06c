@@ -140,8 +140,8 @@ L93F8_5:
 	AND $01
 	LD (ctrl_type_1up),A
 	LD HL,(coord_ctrl_1up)
-	LD DE,spr_pointer_empty
-	CALL print_sprite
+	LD DE,spr_pointer_1
+	CALL MenuPointerErase
 	LD A,(ctrl_type_1up)
  call MenuControlPointerRow
 L93F8_6:
@@ -173,8 +173,8 @@ L93F8_8:
 	AND $01
 	LD (ctrl_type_2up),A
 	LD HL,(coord_ctrl_2up)
-	LD DE,spr_pointer_empty
-	CALL print_sprite
+	LD DE,spr_pointer_2
+	CALL MenuPointerErase
 	LD A,(ctrl_type_2up)
  call MenuControlPointerRow
 L93F8_9:
@@ -192,6 +192,11 @@ L93F8_9:
 ; The control pointers are always yellow, whatever text colour was used last.
 MenuPointerSprite:
  ld a,14
+ jp MenuPointerColour
+; Erase: the same picture in the paper colour (index 1 writes only plane E).
+MenuPointerErase:
+ ld a,1
+MenuPointerColour:
  ld (UiColor),a
  jp print_sprite
 

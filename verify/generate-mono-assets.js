@@ -17,10 +17,10 @@ for(const m of text.matchAll(/^(spr_\w+):([\s\S]*?)(?=^spr_\w+:|$(?![\s\S]))/gm)
   // (the wider ZX ring of the off picture, 9.2..10.8, is dropped to leave more room inside).
   // On: mask plane = grey ring + cyan body (plane C and E), lit plane = cyan body; the rest of the disc
   // (the arrows and the core) is red.
-  const isOn=m[1].endsWith('_on'),coreOn=[0x1c,0x3e,0x7f,0x7f,0x7f,0x7f,0x3e,0x1c]; // the whole ball: red here, recoloured by the core pass
+  const isOn=m[1].endsWith('_on'),coreOn=[0x00,0x1c,0x3e,0x3e,0x3e,0x3e,0x1c,0x00]; // red here; the core pass turns it yellow with a white centre
   // Off: mask = the disc, lit = the grey marks; the ring comes from the on picture. The wide ZX ring of the
   // off picture is dropped whole: it is the 4-connected lit region that reaches the new ring zone.
-  const coreOff=coreOn,oldRing=new Set();
+  const coreOff=[0x1c,0x3e,0x7f,0x7f,0x7f,0x7f,0x3e,0x1c],oldRing=new Set();
   if(!isOn){const far=(r,x)=>Math.hypot(x-12,(r-11.5)*25/24)>10.8,queue=[];for(let r=0;r<24;r++)for(let x=0;x<25;x++)if(lit(r,x)&&far(r,x)){oldRing.add(r*32+x);queue.push([r,x]);}
    while(queue.length){const [r,x]=queue.pop();for(const [dr,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const rr=r+dr,xx=x+dx;if(rr>=0&&rr<24&&xx>=0&&xx<25&&lit(rr,xx)&&!oldRing.has(rr*32+xx)){oldRing.add(rr*32+xx);queue.push([rr,xx]);}}}}
   for(let r=0;r<onH;r++)for(let c=0;c<4;c++){let mask=0,pixel=0;for(let b=0;b<8;b++){const x=c*8+b,cov=r<24&&x<25&&magnetDisc[Math.min(r,23-r)][Math.min(x,24-x)];if(cov){

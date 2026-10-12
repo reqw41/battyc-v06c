@@ -9,7 +9,14 @@ ALPHABET = "0123456789АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬ
 LATIN = str.maketrans("ABEKMHOPCTX", "АВЕКМНОРСТХ")
 
 
+# Заголовки меню: восемь ячеек знаков $30-$39, «ИГРОК n» со сдвигом на 4 точки (см. gfx/font.asm)
+HEADINGS = {"\u2460": [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37],
+            "\u2461": [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x38, 0x39]}
+
+
 def enc(text):
+    if text in HEADINGS:
+        return HEADINGS[text]
     return [ALPHABET.index(ch) for ch in text.translate(LATIN)]
 
 
@@ -36,7 +43,7 @@ def table():
 
 
 FILES = {
-    "txt_main_menu": [msg(0x0C, 0x01, "c07", "ИГРОК 1"), msg(0xBC, 0x01, "c07", "ИГРОК 2")],
+    "txt_main_menu": [msg(0x08, 0x01, "c07", "\u2460"), msg(0xB8, 0x01, "c07", "\u2461")],
     "txt_score_1up": [msg(0x10, 0x09, "c07", "000000")],
     "txt_score_2up": [msg(0xC0, 0x09, "c07", "000000")],
     "txt_1_player": [msg(0x50, 0x29, "c44", "1 - 1 ИГРОК")],

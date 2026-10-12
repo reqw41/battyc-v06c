@@ -13,14 +13,15 @@ const video=Q=>Buffer.from(Array.from({length:24576},(_,i)=>Q.rd(0xa000+i)));let
 // Off: grey marks (3) on paper (1), cyan ball (7); the wide ZX ring of the off picture is dropped.
 const sprite=name=>{const b=[];for(const line of fs.readFileSync('gfx/sprites_no_shadows_2.asm','utf8').match(new RegExp('^'+name+':([\\s\\S]*?)(?=^spr_\\w+:)','m'))[1].split('\n')){const m=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(m)for(const v of m[1].split(','))b.push(parseInt(v.trim().slice(1),16));}const w=b[0];return{cover:(r,x)=>r<b[1]&&x<8*w?b[2+2*(r*w+(x>>3))]>>(7-(x&7))&1:0,lit:(r,x)=>r<b[1]&&x<8*w?(b[2+2*(r*w+(x>>3))]&b[3+2*(r*w+(x>>3))])>>(7-(x&7))&1:0};};
 const magnetOn=sprite('spr_magnet_circle_on'),magnetOff=sprite('spr_magnet_circle_off'),disc=(r,x)=>r<24&&x<25&&magnetOn.cover(Math.min(r,23-r),Math.min(x,24-x));
-const ball=[0x1c,0x3e,0x7f,0x7f,0x7f,0x7f,0x3e,0x1c],coreOn=ball,coreOff=ball,glintOn=[0,0,0x08,0x1c,0x1c,0x08,0,0],glintOff=[0,0x18,0x30,0x20,0x20,0,0,0],core=(t,r,x)=>r>=8&&r<16&&x>=8&&x<16&&t[r-8]>>(15-x)&1;
+const ball=[0x1c,0x3e,0x7f,0x7f,0x7f,0x7f,0x3e,0x1c],coreOn=[0x00,0x1c,0x3e,0x3e,0x3e,0x3e,0x1c,0x00],coreOff=ball,glintOn=[0,0,0x08,0x1c,0x1c,0x08,0,0],glintOff=[0,0x18,0x30,0x20,0x20,0,0,0],core=(t,r,x)=>r>=8&&r<16&&x>=8&&x<16&&t[r-8]>>(15-x)&1;
 
 const far=(r,x)=>Math.hypot(x-12,(r-11.5)*25/24)>10.8,ringAt=(r,x)=>r>=0&&x>=0&&disc(r,x)&&far(r,x);
 const oldRing=new Set();{const queue=[];for(let r=0;r<24;r++)for(let x=0;x<25;x++)if(magnetOff.lit(r,x)&&far(r,x)){oldRing.add(r*32+x);queue.push([r,x]);}
  while(queue.length){const [r,x]=queue.pop();for(const [dr,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const rr=r+dr,xx=x+dx;if(rr>=0&&rr<24&&xx>=0&&xx<25&&magnetOff.lit(rr,xx)&&!oldRing.has(rr*32+xx)){oldRing.add(rr*32+xx);queue.push([rr,xx]);}}}}
 function magnetIndex(frame,r,x){
  if(ringAt(r,x))return 3;
- if(core(ball,r,x))return frame===6?(core(glintOn,r,x)?0:6):(core(glintOff,r,x)?1:7); // yellow core with a white centre / cyan ball with a glint
+ if(frame===6&&core(coreOn,r,x))return core(glintOn,r,x)?0:6; // yellow core with a white centre
+ if(frame===7&&core(ball,r,x))return core(glintOff,r,x)?1:7; // cyan ball with a glint
  if(frame===6){const fr=Math.min(r,23-r),fx=Math.min(x,24-x);if(fx===5&&fr===6)return 4;if(fx===5&&fr===7)return 7; // straightened diagonal tips
   let near=false;for(let dr=-1;dr<=1;dr++)for(let dx=-1;dx<=1;dx++)if(ringAt(r+dr,x+dx))near=true;return !near&&(!magnetOn.lit(r,x)||core(coreOn,r,x))?4:7;}
  return magnetOff.lit(r,x)&&!oldRing.has(r*32+x)?3:1;
@@ -39,8 +40,8 @@ for(const frame of[6,7])for(let phase=0;phase<8;phase++)for(const y of[48,51,55,
   const px=x+px0,at=(px>>3)*256+224-y-r,m=128>>(px&7);
   for(const [plane,bit]of[[0,4],[8192,2],[16384,1]])if(index&bit)want[plane+at]|=m;else want[plane+at]&=~m;
  }
- // A partial repaint still runs the whole core pass: plane C (and A when off) is set over the ball, then the glint is cleared in A and C.
- for(let r=8;r<16;r++)for(let px0=8;px0<16;px0++)if(core(ball,r,px0)){const px=x+px0,at=(px>>3)*256+224-y-r,m=128>>(px&7);want[8192+at]|=m;if(frame===7)want[at]|=m;if(core(frame===6?glintOn:glintOff,r,px0)){want[at]&=~m;want[8192+at]&=~m;}}
+ // A partial repaint still runs the whole core pass: plane C is set over the core (on) or A and C over the ball (off), then the glint is cleared in A and C.
+ for(let r=8;r<16;r++)for(let px0=8;px0<16;px0++)if(core(frame===6?coreOn:ball,r,px0)){const px=x+px0,at=(px>>3)*256+224-y-r,m=128>>(px&7);want[8192+at]|=m;if(frame===7)want[at]|=m;if(core(frame===6?glintOn:glintOff,r,px0)){want[at]&=~m;want[8192+at]&=~m;}}
  const ticks=callA('MagnetPaint',0,first<<8|rows);if(rows===24)magnetTicks+=ticks;assert(video(E).equals(want),'magnet colours '+JSON.stringify({frame,phase,y,first,rows}));magnets++;
 }
 savedProps.forEach((v,i)=>write(E,E.L.magnet_properties+i,v));write(E,E.L.magnets_quantity,savedCount);

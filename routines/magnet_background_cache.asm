@@ -3,8 +3,9 @@
 ;   P1 = grey ring + cyan body of the on picture (its planes C and E),
 ;   P2 = cyan body + red arrows and core of the on picture (its plane A),
 ;   marks-off = grey marks of the off picture (plane C);
-; then 2x8 bytes of the ball in the middle. A last pass recolours it:
-; plane C is set over the ball (on: red -> yellow; off, with plane A: cyan),
+; then 2x8 bytes of the off-state ball. A last pass finishes the middle:
+; off: planes A and C are set over the ball (cyan); on: plane C is set over
+; the smaller core (red -> yellow, the arrow heads around it stay red);
 ; then planes A and C are cleared in a small glint (on: white, off: paper).
 ; The disc is P1|P2, the ring is P1&~P2.
 ;   on  = grey ring (C+E), cyan body (A+C+E), red arrows (A), yellow core;
@@ -15,7 +16,8 @@ MagCacheSlots: dw $7a00,$7b30,$7c60,$7d90
  ASSERT $7d90+304 <= $7ec8
 MagCacheMeta: ds 8,0 ; plane A column, top row
 MagnetCoreOff: db $1c,$3e,$7f,$7f,$7f,$7f,$3e,$1c ; the ball, rows 8..15
-MagnetGlintOn: db $00,$08,$1c,$1c,$08 ; rows 9..13: white centre of the yellow core
+MagnetCoreOn: db $1c,$3e,$3e,$3e,$3e,$1c ; rows 9..14: the yellow core of the on picture
+MagnetGlintOn: db $00,$08,$1c,$1c,$08 ; rows 9..13: its white centre
 MagnetGlintOff: db $18,$30,$20,$20,$00 ; glint of the cyan ball
 MCIndex: db 0
 MCBase: dw 0
@@ -399,15 +401,7 @@ mp_cols:
  jp nz,mp_col
 mp_off:
  ld a,0
- or a
- ld a,0 ; on: plane A already holds the core (NOP)
- ld hl,MagnetGlintOn
- jp z,mp_core
- ld a,$12 ; off: LD (DE),A
- ld hl,MagnetGlintOff
-mp_core:
- ld (mp_core_a),a
- ld (mp_glint+1),hl
+ ld (mp_core_state+1),a
  ld a,(MCIndex)
  add a,a
  ld hl,MagCacheMeta
@@ -419,6 +413,10 @@ mp_core:
  sub 8
  ld e,a
  push de
+mp_core_state:
+ ld a,0
+ or a
+ jp z,mp_core_done ; on: no ball
  ld hl,(MCBase)
  ld bc,MagRows*12
  add hl,bc
@@ -429,8 +427,7 @@ mp_core_col:
 mp_core_row:
  ld a,(de)
  or (hl)
-mp_core_a:
- nop
+ ld (de),a
  ld a,d
  add a,$20
  ld d,a
@@ -448,8 +445,9 @@ mp_core_a:
  inc d
  dec b
  jp nz,mp_core_col
+mp_core_done:
  pop de
- dec e
+ dec e ; row 9
  ld a,(MCIndex)
  rlca
  rlca
@@ -464,26 +462,61 @@ mp_core_a:
  ld b,(hl)
  push bc
  ld (hl),a
+ ld hl,MagnetGlintOff
+ ld a,(mp_core_state+1)
+ or a
+ jp nz,mp_glint
+ ld hl,mp_set_c_byte
+ ld (mp_row_op+1),hl
+ ld (mp_row_op2+1),hl
+ ld hl,MagnetCoreOn
+ ld b,6
+ call mp_rows
+ ld hl,MagnetGlintOn
 mp_glint:
- ld hl,0
+ push hl
+ ld hl,mp_glint_byte
+ ld (mp_row_op+1),hl
+ ld (mp_row_op2+1),hl
+ pop hl
  ld b,5
-mp_glint_row:
+ call mp_rows
+ pop bc
+ ld a,b
+ ld (NativeShift),a
+ ret
+; HL=row table, B=rows, DE=plane A address of the first row (kept).
+mp_rows:
+ push de
+mp_rows_row:
  push bc
  ld a,(hl)
  inc hl
  call NativeSampleShift
- call mp_glint_byte
+mp_row_op:
+ call 0
  inc d
  ld a,c
- call mp_glint_byte
+mp_row_op2:
+ call 0
  dec d
  dec e
  pop bc
  dec b
- jp nz,mp_glint_row
- pop bc
- ld a,b
- ld (NativeShift),a
+ jp nz,mp_rows_row
+ pop de
+ ret
+mp_set_c_byte: ; set the bits of A in plane C
+ ld b,a
+ ld a,d
+ add a,$20
+ ld d,a
+ ld a,(de)
+ or b
+ ld (de),a
+ ld a,d
+ sub $20
+ ld d,a
  ret
 mp_glint_byte: ; clear the bits of A in planes A and C
  cpl
