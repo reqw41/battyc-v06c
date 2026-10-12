@@ -1,0 +1,894 @@
+{
+  "romSHA256": "d7aaeb54825140ea787354940548bdb15f0ceedda7b37e3b45652bc9d877d2d9",
+  "cpu": "i8080 3MHz, physical64KB",
+  "method": "One-time native release/catch of Triple and Smash with enemy appearance governed by the normal brick-count gate. Thereafter only arrow/Space input; positions, timers, random values and shots are not reinjected. Natural motion, brick hits, enemy shots, audio, IRQ and raster run normally. Timing is draw-to-draw including IRQ entries; transitions are excluded. Raster compares completed poses from the preceding five and following three raster intervals, including lookahead when the renderer was in progress; partial images can mean tearing or motion, blank images mean disappearance within the tracked pose window. This metric is not a proof of tear-free output.",
+  "reports": [
+    {
+      "run": 0,
+      "initialSP": 27648,
+      "captureCount": 64,
+      "startFrame": 100,
+      "ticks": 486,
+      "shots": 2,
+      "smashRasterFrames": 287,
+      "threeBallRasterFrames": 296,
+      "heavyRasterSamples": 110,
+      "bestTargets": {
+        "run": 0,
+        "frame": 232,
+        "bomb": true,
+        "targets": {
+          "ball1": 1,
+          "ball2": 1,
+          "ball3": 1,
+          "enemy": 1
+        }
+      },
+      "finalState": {
+        "balls": 0,
+        "smash": false,
+        "enemy": 0,
+        "bomb": false,
+        "bricks": 12
+      }
+    },
+    {
+      "run": 1,
+      "initialSP": 27648,
+      "captureCount": 0,
+      "startFrame": 137,
+      "ticks": 459,
+      "shots": 1,
+      "smashRasterFrames": 215,
+      "threeBallRasterFrames": 299,
+      "heavyRasterSamples": 42,
+      "bestTargets": null,
+      "finalState": {
+        "balls": 1,
+        "smash": false,
+        "enemy": 0,
+        "bomb": false,
+        "bricks": 22
+      }
+    },
+    {
+      "run": 2,
+      "initialSP": 27648,
+      "captureCount": 0,
+      "startFrame": 174,
+      "ticks": 625,
+      "shots": 2,
+      "smashRasterFrames": 296,
+      "threeBallRasterFrames": 306,
+      "heavyRasterSamples": 79,
+      "bestTargets": null,
+      "finalState": {
+        "balls": 1,
+        "smash": false,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 19
+      }
+    },
+    {
+      "run": 3,
+      "initialSP": 27648,
+      "captureCount": 0,
+      "startFrame": 211,
+      "ticks": 527,
+      "shots": 1,
+      "smashRasterFrames": 226,
+      "threeBallRasterFrames": 900,
+      "heavyRasterSamples": 45,
+      "bestTargets": null,
+      "finalState": {
+        "balls": 3,
+        "smash": false,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 23
+      }
+    },
+    {
+      "run": 4,
+      "initialSP": 27648,
+      "captureCount": 64,
+      "startFrame": 248,
+      "ticks": 584,
+      "shots": 2,
+      "smashRasterFrames": 292,
+      "threeBallRasterFrames": 301,
+      "heavyRasterSamples": 114,
+      "bestTargets": {
+        "run": 4,
+        "frame": 229,
+        "bomb": true,
+        "targets": {
+          "ball1": 1,
+          "ball2": 1,
+          "ball3": 1,
+          "enemy": 1
+        }
+      },
+      "finalState": {
+        "balls": 1,
+        "smash": false,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 8
+      }
+    },
+    {
+      "run": 5,
+      "initialSP": 27648,
+      "captureCount": 0,
+      "startFrame": 285,
+      "ticks": 581,
+      "shots": 1,
+      "smashRasterFrames": 237,
+      "threeBallRasterFrames": 297,
+      "heavyRasterSamples": 65,
+      "bestTargets": null,
+      "finalState": {
+        "balls": 1,
+        "smash": false,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 22
+      }
+    }
+  ],
+  "heavy": {
+    "samples": 243,
+    "minCycles": 78260,
+    "meanCycles": 107115.2757201646,
+    "p99Cycles": 177252,
+    "maxCycles": 178544,
+    "over40ms": 66,
+    "overTwoRasters": 66
+  },
+  "heavyWithBomb": {
+    "samples": 66,
+    "minCycles": 87408,
+    "meanCycles": 109701.27272727272,
+    "p99Cycles": 156132,
+    "maxCycles": 156132,
+    "over40ms": 21,
+    "overTwoRasters": 21
+  },
+  "worst": [
+    {
+      "run": 3,
+      "tick": 104,
+      "frame": 183,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 40
+      },
+      "logic": 112164,
+      "render": 65500,
+      "wait": 156,
+      "tail": 724,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 64468
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 796
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 104380
+        },
+        "NativeRestoreBrick": {
+          "calls": 2,
+          "cycles": 68148
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 96
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1848
+        }
+      },
+      "cycles": 178544,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 38
+      }
+    },
+    {
+      "run": 5,
+      "tick": 104,
+      "frame": 174,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 40
+      },
+      "logic": 111820,
+      "render": 64608,
+      "wait": 156,
+      "tail": 724,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 63576
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 796
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 104052
+        },
+        "NativeRestoreBrick": {
+          "calls": 2,
+          "cycles": 69032
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 96
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1848
+        }
+      },
+      "cycles": 177308,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 38
+      }
+    },
+    {
+      "run": 1,
+      "tick": 104,
+      "frame": 175,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 40
+      },
+      "logic": 111968,
+      "render": 64404,
+      "wait": 156,
+      "tail": 724,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 63372
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 796
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 104500
+        },
+        "NativeRestoreBrick": {
+          "calls": 2,
+          "cycles": 70004
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 96
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1532
+        }
+      },
+      "cycles": 177252,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 38
+      }
+    },
+    {
+      "run": 0,
+      "tick": 104,
+      "frame": 179,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 40
+      },
+      "logic": 112380,
+      "render": 63800,
+      "wait": 156,
+      "tail": 724,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 62768
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 796
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 104596
+        },
+        "NativeRestoreBrick": {
+          "calls": 2,
+          "cycles": 69892
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 96
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1848
+        }
+      },
+      "cycles": 177060,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 38
+      }
+    },
+    {
+      "run": 2,
+      "tick": 104,
+      "frame": 189,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 40
+      },
+      "logic": 111880,
+      "render": 64224,
+      "wait": 156,
+      "tail": 724,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 63192
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 796
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 104412
+        },
+        "NativeRestoreBrick": {
+          "calls": 2,
+          "cycles": 70004
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 96
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1532
+        }
+      },
+      "cycles": 176984,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 38
+      }
+    },
+    {
+      "run": 4,
+      "tick": 104,
+      "frame": 180,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 40
+      },
+      "logic": 112012,
+      "render": 63980,
+      "wait": 156,
+      "tail": 724,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 62948
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 796
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 104544
+        },
+        "NativeRestoreBrick": {
+          "calls": 2,
+          "cycles": 70004
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 96
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1532
+        }
+      },
+      "cycles": 176872,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 38
+      }
+    },
+    {
+      "run": 4,
+      "tick": 164,
+      "frame": 289,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 30
+      },
+      "logic": 83580,
+      "render": 71888,
+      "wait": 156,
+      "tail": 508,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 70820
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 832
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "NativeRestoreBrick": {
+          "calls": 1,
+          "cycles": 48888
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 72444
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 2836
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1584
+        }
+      },
+      "cycles": 156132,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 29
+      }
+    },
+    {
+      "run": 0,
+      "tick": 164,
+      "frame": 285,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 30
+      },
+      "logic": 81924,
+      "render": 71072,
+      "wait": 156,
+      "tail": 508,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 70004
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 832
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "NativeRestoreBrick": {
+          "calls": 1,
+          "cycles": 49804
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 71920
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 2880
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1268
+        }
+      },
+      "cycles": 153660,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 29
+      }
+    },
+    {
+      "run": 4,
+      "tick": 161,
+      "frame": 282,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 33
+      },
+      "logic": 75188,
+      "render": 72056,
+      "wait": 156,
+      "tail": 212,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 71004
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 816
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "NativeRestoreBrick": {
+          "calls": 1,
+          "cycles": 43676
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 65148
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 2600
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1584
+        }
+      },
+      "cycles": 147612,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 32
+      }
+    },
+    {
+      "run": 0,
+      "tick": 161,
+      "frame": 278,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 33
+      },
+      "logic": 74920,
+      "render": 70484,
+      "wait": 156,
+      "tail": 212,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 69432
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 816
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "NativeRestoreBrick": {
+          "calls": 1,
+          "cycles": 43700
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 64844
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 2636
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1584
+        }
+      },
+      "cycles": 145772,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": true,
+        "bricks": 32
+      }
+    },
+    {
+      "run": 2,
+      "tick": 115,
+      "frame": 210,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 35
+      },
+      "logic": 76696,
+      "render": 68680,
+      "wait": 156,
+      "tail": 212,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 67628
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 816
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 66264
+        },
+        "NativeRestoreBrick": {
+          "calls": 1,
+          "cycles": 43476
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 2564
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1584
+        }
+      },
+      "cycles": 145744,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 34
+      }
+    },
+    {
+      "run": 3,
+      "tick": 115,
+      "frame": 204,
+      "state": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 35
+      },
+      "logic": 76904,
+      "render": 67432,
+      "wait": 156,
+      "tail": 212,
+      "routines": {
+        "DrawMovingObjects": {
+          "calls": 1,
+          "cycles": 66380
+        },
+        "running_dot": {
+          "calls": 1,
+          "cycles": 816
+        },
+        "restore_objs_and_magnet": {
+          "calls": 1,
+          "cycles": 36
+        },
+        "handling_ball": {
+          "calls": 3,
+          "cycles": 66680
+        },
+        "NativeRestoreBrick": {
+          "calls": 1,
+          "cycles": 42616
+        },
+        "handling_bird": {
+          "calls": 1,
+          "cycles": 2800
+        },
+        "fill_briks_data": {
+          "calls": 1,
+          "cycles": 532
+        },
+        "play_sounds_queue": {
+          "calls": 1,
+          "cycles": 1584
+        }
+      },
+      "cycles": 144704,
+      "end": {
+        "balls": 3,
+        "smash": true,
+        "enemy": 9,
+        "bomb": false,
+        "bricks": 34
+      }
+    }
+  ],
+  "flicker": {
+    "ball1": {
+      "samples": 455,
+      "blankFrames": 0,
+      "partialFrames": 0,
+      "minBestPoseCoverage": 1,
+      "meanBestPoseCoverage": 1
+    },
+    "ball2": {
+      "samples": 455,
+      "blankFrames": 0,
+      "partialFrames": 1,
+      "minBestPoseCoverage": 0.96875,
+      "meanBestPoseCoverage": 0.9999313186813187
+    },
+    "ball3": {
+      "samples": 455,
+      "blankFrames": 0,
+      "partialFrames": 1,
+      "minBestPoseCoverage": 0.9375,
+      "meanBestPoseCoverage": 0.9998626373626374
+    },
+    "enemy": {
+      "samples": 437,
+      "blankFrames": 0,
+      "partialFrames": 17,
+      "minBestPoseCoverage": 0.2153846153846154,
+      "meanBestPoseCoverage": 0.9884329682598345
+    },
+    "bomb": {
+      "samples": 115,
+      "blankFrames": 0,
+      "partialFrames": 0,
+      "minBestPoseCoverage": 1,
+      "meanBestPoseCoverage": 1
+    }
+  }
+}
