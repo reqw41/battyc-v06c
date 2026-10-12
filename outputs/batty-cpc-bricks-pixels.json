@@ -1,0 +1,13 @@
+{
+  "romSHA256": "118e4fc3f9b91efdecbc3684654c1b3d1dce469e4c2009c8ba790a3e3626d3b9",
+  "staticCases": 15,
+  "animationCases": 64,
+  "hitAnimationFrames": 45,
+  "solidBody": true,
+  "whiteTopAndLeft": true,
+  "paperRightAndBottom": true,
+  "overlayUntouched": true,
+  "finalAnimationRestoresSolidBrick": true,
+  "meanStaticTicks": 11700,
+  "passed": true
+}

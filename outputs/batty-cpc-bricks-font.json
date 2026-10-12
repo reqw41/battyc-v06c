@@ -1,0 +1,13 @@
+{
+  "romSHA256": "118e4fc3f9b91efdecbc3684654c1b3d1dce469e4c2009c8ba790a3e3626d3b9",
+  "textCases": 5,
+  "characters": 57,
+  "digitCases": 10,
+  "dotFrames": 160,
+  "whiteContourBackgroundCore": true,
+  "textAndDigitsPreserveRGB": true,
+  "backgroundUnchangedByDots": true,
+  "oldDotHolesRestored": true,
+  "maxStack": 30,
+  "passed": true
+}

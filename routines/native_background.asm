@@ -401,13 +401,6 @@ NativePrintBrick:
  inc h
  call NativeWriteHL
  ld a,b
- or a
- ld hl,spr_brik_1
- jp nz,NativeBrickSource
- ld hl,spr_brik_black
-NativeBrickSource:
- ld (NativeSource),hl
- ld a,b
  rrca
  rrca
  rrca
@@ -419,10 +412,11 @@ NativeBrickSource:
  add hl,de
  ld a,(hl)
  ld (background_color),a
+ call NativeCpcSelectInk
  pop hl
  call NativePixelAddress
  ex de,hl
- ; The outline above the brick is erased in both background planes.
+ ; Keep the existing paper separation outside the solid brick.
  inc l
  call NativeBrickZero
  inc h
@@ -439,18 +433,13 @@ NativeBrickSource:
  pop hl
 NativeBrickBody:
  ex de,hl
- ld hl,(NativeSource)
  ld b,8
 NativeBrickRow:
- ld a,(hl)
- inc hl
- ld (background_pixel),a
- call background_write_selected
+ xor a
+ call NativeCpcBrickByte
  inc d
- ld a,(hl)
- inc hl
- ld (background_pixel),a
- call background_write_selected
+ xor a
+ call NativeCpcBrickByte
  dec d
  dec e
  dec b

@@ -4214,14 +4214,15 @@ pm_frame:
  inc hl
  ld d,(hl)
  pop hl
+ call NativeCpcPrepareAnimation
  ld b,8
 pm_row:
  ld a,(de)
- call plane_screen_write
+ call NativeCpcScreenWrite
  inc de
  inc h
  ld a,(de)
- call plane_screen_write
+ call NativeCpcScreenWrite
  inc de
  dec h
  dec l
@@ -4342,10 +4343,10 @@ print_one_brik_buf:
 
 ; Цвета кирпичей
 briks_colors:
-	DEFB $50,$C0,$40,$60,$F0	; Цвета обычных кирпичей
-	DEFB $00,$50,$40,$C0		; Цвета трудновыбиваемых кирпичей
+	DEFB $50,$C0,$30,$60,$F0	; Цвета обычных кирпичей
+	DEFB $20,$50,$40,$C0		; Серый металл и цветные трудновыбиваемые кирпичи
 	DEFB $D0			; Не используется
-	DEFB $00,$50,$C0,$40		; Цвета невыбиваемых кирпичей
+	DEFB $20,$50,$C0,$40		; Серый металл и цветные невыбиваемые кирпичи
 	DEFB $D0			; Не используется
 
 ; Хранит адреса пикселей и атрибутов в буфере текущего кирпича
@@ -5611,6 +5612,7 @@ LB6A9_02:
 ; HL - адрес на экране
 ; BC - адрес в буфере
 ;-----------------------
+ call NativeCpcPrepareAnimation
 	LD A,$07
 LB6A9_1:
 	ld (LB6A9_20+1),A	; save A
@@ -5618,7 +5620,7 @@ LB6A9_10:
 ;	ld a,$00
 ;	ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
 	LD A,(DE)		; байт из спрайта
-	CALL plane_screen_write	; Both background planes
+	CALL NativeCpcScreenWrite	; Solid body and white glint in A/C/E
 	; Native background already updated
 	INC H
 	inc b
@@ -5627,7 +5629,7 @@ LB6A9_11:
 ;	ld a,$00
 ;	ld (color_port),a	; Цвет правой половины кирпича
 	LD A,(DE)		; байт из спрайта
-	CALL plane_screen_write	; Both background planes
+	CALL NativeCpcScreenWrite	; Solid body and white glint in A/C/E
 	; Native background already updated
 	DEC H
 	dec L			; Изменено направление для Вектора
@@ -6944,6 +6946,7 @@ LBE8B_9:
  INCLUDE "routines/magnet_center_draw.asm"
  INCLUDE "routines/cheat_keys.asm"
  INCLUDE "routines/cpc_field_frame.asm"
+ INCLUDE "routines/cpc_bricks.asm"
 
 
 BATTYCODE_END:

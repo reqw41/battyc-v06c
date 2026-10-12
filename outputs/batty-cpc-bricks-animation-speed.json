@@ -1,0 +1,22 @@
+{
+  "romSHA256": "118e4fc3f9b91efdecbc3684654c1b3d1dce469e4c2009c8ba790a3e3626d3b9",
+  "method": "Native i8080 instruction emulation, interrupts disabled to isolate the five damage-animation slots. This measures active animation cost, not a complete gameplay frame.",
+  "before": {
+    "fiveConcurrentHitAnimations": true,
+    "steps": 15,
+    "meanTicks": 87069.33333333333,
+    "maxTicks": 87080,
+    "meanMs": 29.02311111111111,
+    "maxMs": 29.026666666666667
+  },
+  "after": {
+    "fiveConcurrentHitAnimations": true,
+    "steps": 15,
+    "meanTicks": 48674.666666666664,
+    "maxTicks": 48680,
+    "meanMs": 16.224888888888888,
+    "maxMs": 16.226666666666667
+  },
+  "meanSavedTicks": 38394.666666666664,
+  "passed": true
+}

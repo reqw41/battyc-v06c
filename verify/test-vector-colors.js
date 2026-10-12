@@ -52,8 +52,8 @@ for(let theme=0;theme<4;theme++){
 assert.equal(E.rd(E.L.briks_colors+3),0x60);assert.equal(E.rd(E.L.background_colors+6),5);assert.equal(E.rd(E.L.PaletteGame+5),0x38);
 assert.equal(E.rd(E.L.briks_colors+4),0xf0);assert.equal(E.rd(E.L.background_colors+15),0);assert.equal(E.rd(E.L.PaletteGame),0xff);assert.equal(E.rd(E.L.PaletteGame+3),0xad);assert.equal(E.rd(E.L.background_colors+2),3);
 // A real type-5 brick must render white ink index 0 and paper index 1.
-call(E,'planes_reset');write(E,0x6d00,0x15);ptr(E,E.L.cur_level_ptr,0x6d00);ptr(E,E.L.brik_attr_buf,0x7ac8);E.cpu.set_rp(4,0x7a38);call(E,'NativePrintBrick');
+call(E,'planes_reset');write(E,0x6d00,0x15);ptr(E,E.L.cur_level_ptr,0x6d00);ptr(E,E.L.brik_attr_buf,0x7bc8);E.cpu.set_rp(4,0x7b38);call(E,'NativePrintBrick');
 const brickPaper=Buffer.alloc(8192,255);
-for(let r=0;r<8;r++)for(let c=0;c<2;c++)brickPaper[(10+c)*256+224-56-r]=E.rd(E.L.spr_brik_1+r*2+c)^255;
+for(let r=0;r<8;r++)for(let c=0;c<2;c++)brickPaper[(11+c)*256+224-56-r]=(r<7?(c===0?255:254):0)^255;
 for(let i=0;i<8192;i++){assert.equal(E.rd(0xa000+i),0,'white brick A');assert.equal(E.rd(0xc000+i),0,'white brick C');assert.equal(E.rd(0xe000+i),brickPaper[i],'white brick E');}
 const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetMeanTicks:magnetTicks/magnets,previousMagnetMeanTicks:oldMagnetTicks/magnets,colourOverheadMeanTicks:(magnetTicks-oldMagnetTicks)/magnets,magnetCenterOn:6,magnetCenterOff:7,ringMatchesPreviousROM:true,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,whiteBrick:true,grayFrameIndex:3,recolourCases,headingCoreUsesPaper:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);
