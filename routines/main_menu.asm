@@ -116,6 +116,12 @@ L93F8_3:
 	PUSH HL
 	EX HL,DE
 	LD HL,(pointer_game_mode_text)
+ ; The blink leaves its last colour in the line: put the plain one back.
+ inc hl
+ inc hl
+ ld (hl),c44
+ dec hl
+ dec hl
 	EX HL,DE
 	CALL print_line
 	POP HL
