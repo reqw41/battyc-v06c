@@ -1510,22 +1510,26 @@ get_right_player_ctrl_state:
  and 1
  jp z,read_keyboard
  jp NativeJoystickState2
-; Double Play keyboard: A/D movement, F fire. Right player uses arrows/Space.
+; Double Play keyboard, left player, for the Vector-06C key layout: the two
+; leftmost home-row keys Ф (F) and Ы (Y) move, А (A) fires.
+; The right player uses the arrows and the space bar.
 NativeKeyboardLeft:
+ ld a,(KeyLine7)
+ cpl
+ and 2 ; Ы: right
+ rrca
+ or $0c
+ ld b,a
  ld a,(KeyLine4)
  cpl
  ld c,a
- ld b,$0c
- and $10
+ and $40 ; Ф: left
  jp z,NativeLeftKey
+ inc b
  inc b
 NativeLeftKey:
  ld a,c
- and 2
- or b
- ld b,a
- ld a,c
- and $40
+ and 2 ; А: fire
  jp z,NativeLeftKeyDone
  ld a,b
  or $10
