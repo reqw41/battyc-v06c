@@ -1,8 +1,2 @@
-; Z means the enabled picture. Native column pitch is fixed in either state.
-MagnetCenterSelectSource:
- ld hl,spr_magnet_circle_on+79
- jp z,MagnetCenterSourceReady
- ld hl,spr_magnet_circle_off+65
-MagnetCenterSourceReady:
- ld (MagnetCenterSource),hl
- ret
+; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
+; as plain texture and the magnet is redrawn (MagnetRedrawFlush).

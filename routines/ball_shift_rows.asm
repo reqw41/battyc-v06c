@@ -14,11 +14,15 @@ BallShiftR0:
  ld d,a
 BallShiftLead:
  and $ff
+BallShiftLeadMerge:
+ or (hl)
  ld (hl),a
  inc h
  ld a,d
 BallShiftSpill:
  and 0
+BallShiftSpillMerge:
+ or (hl)
  ld (hl),a
  dec h
  dec l

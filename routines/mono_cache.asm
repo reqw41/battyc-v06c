@@ -9,21 +9,7 @@ WaitVideoFrameLast:
 wvf_ready:
  ld (WaitVideoFrameLast+1),a
  ret
-SpriteCacheBuild:
- ld hl,(IXobj)
- ld a,(hl)
- cp 3
- ld a,0
- jp nz,mnn_kind
- inc a
-mnn_kind:
- ld (MonoBuildBat),a
- or a
- ld hl,mnn_lit
- jp z,mnn_select_cover
- ld hl,mnn_cover
-mnn_select_cover:
- ld (mnn_cover_select+1),hl
+SpriteCacheShiftSetup:
  ld a,(SpriteCacheShift)
  add a,a
  ld hl,MonoNativeRotations
@@ -113,48 +99,6 @@ mnn_row:
  pop de
 mnn_cover_select:
  jp mnn_lit
-mnn_cover:
- ld a,e
- cpl
-mnn_cover_rotate:
- jp mnn_cover_r0
-mnn_cover_r7: rrca
-mnn_cover_r6: rrca
-mnn_cover_r5: rrca
-mnn_cover_r4: rrca
-mnn_cover_r3: rrca
-mnn_cover_r2: rrca
-mnn_cover_r1: rrca
-mnn_cover_r0:
- ld e,a
-mnn_cover_lead:
- and $ff
- cpl
-mnn_cover_merge:
- and (hl)
-mnn_cover_store:
- ld (hl),a
-mnn_cover_skip:
- jp mnn_cover_step
-mnn_cover_step:
- ld a,l
-mnn_cover_to_next:
- add a,0
- ld l,a
- jp nc,mnn_cover_next_ready
- inc h
-mnn_cover_next_ready:
- ld a,e
-mnn_cover_spill:
- and 0
- cpl
- ld (hl),a
- ld a,l
-mnn_cover_from_next:
- sub 0
- ld l,a
- jp nc,mnn_lit
- dec h
 mnn_lit:
  inc hl
  ld a,d
@@ -227,22 +171,5 @@ MonoNativeCols: db 0
 MonoNativeFirst: db 0
 MonoNativeDest: dw 0
 MonoBuildBat: db 0
-NativeMagnetSetOverlay:
- push hl
- push af
- ld hl,(IXobj)
- ld a,l
- sub magnet_properties & $ff
- rrca
- rrca
- rrca
- rrca
- and 3
- ld hl,NativeMagnetOverlayFlags
- call hl_add_a
- pop af
- ld (hl),a
- pop hl
- ret
 
  INCLUDE "routines/restore_background_tail.asm"

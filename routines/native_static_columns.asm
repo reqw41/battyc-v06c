@@ -1,8 +1,11 @@
 ; Static graphics use native pairs too. Build shifted columns once, then
 ; program the three colour masks once per attribute block and POP rows.
 NativeStaticColumns:
- ld hl,(NativeDest)
- ld (MagnetCenterDest),hl
+ xor a
+ ld hl,MonoTags+44
+ ld (hl),a
+ inc hl
+ ld (hl),a
  ld a,(NativeHeight)
  ld (SpriteCacheHeight),a
  ld (nsc_height+1),a
@@ -16,16 +19,16 @@ NativeStaticColumns:
  ld (nsc_header+1),a
  ld hl,spr_magnet_circle_on+1
  ld (hl),30 ; column pitch remains 30 when the animated height is 23
- ld hl,$7a00
+ ld hl,$7ed0
  ld (SpriteCacheBuffer),hl
  call SpriteCacheBuild
 nsc_header:
  ld a,23
  ld (spr_magnet_circle_on+1),a
 nsc_cache_ready:
- ld a,($7a00)
+ ld a,($7ed0)
  ld (NativeLeft),a
- ld hl,$7a02
+ ld hl,$7ed2
  ld (NativeSource),hl
  ld hl,(NativeDest)
  ld a,l
@@ -127,5 +130,4 @@ nsc_top:
  ld hl,NativeLeft
  dec (hl)
  jp nz,nsc_column
- call MagnetCenterDraw
  jp SpriteCacheReset

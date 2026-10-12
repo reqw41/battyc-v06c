@@ -31,6 +31,7 @@
 	EXPORT LDDR8080B
 	EXPORT SBCHLDE8080
 	EXPORT BATTY0_END
+	EXPORT SplashPresent
 
 ;----------------------------------------------------------------------------
 
@@ -50,8 +51,15 @@
 	ld hl,KEYINT		; interrupt handler address
 	ld (38h+1),hl
 
-; Clear memory from C000h to FFFFh
+; A 64 KB file carries the title picture in its second half: it is already
+; in the screen memory. The plain 32 KB file has SplashPresent = 0.
+	ld a,(SplashPresent)
+	or a
+	call nz,Splash
+
+; Clear memory from C000h to FFFFh (from 8000h after the title picture)
 	xor a
+InitClearFrom:
 	ld bc,0C000h	; destination addr
 Init_2:
 	ld (bc),a
@@ -83,6 +91,43 @@ RestartInt:
 ; Start BATTY
 	; ei
 	jp	BATTY0_END
+
+; Show the loaded title picture until a key is pressed (or about 10 s).
+Splash:
+	xor a
+	ld (BorderColor),a
+	dec a
+	ld (ScreenScroll),a
+	ld hl,PaletteSplash+15
+	call SetPalette
+	ld bc,500
+SplashWait:
+	ei
+	halt
+	ld hl,KeyLine0
+	ld a,(KeyLine1)
+	and (hl)
+	ld hl,KeyLine2
+	and (hl)
+	ld hl,KeyLine4
+	and (hl)
+	ld hl,KeyLine5
+	and (hl)
+	ld hl,KeyLine7
+	and (hl)
+	inc a
+	jp nz,SplashDone
+	dec bc
+	ld a,b
+	or c
+	jp nz,SplashWait
+SplashDone:
+	di
+	ld a,80h
+	ld (InitClearFrom+2),a
+	ret
+SplashPresent: db 0 ; patched to 1 in the 64 KB file
+	INCLUDE "gfx/splash/splash_palette.asm"
 
 ; Set game palette
 SetPaletteMenu:

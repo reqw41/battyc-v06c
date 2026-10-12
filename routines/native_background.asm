@@ -341,6 +341,8 @@ NativeShift: db 0
 NativeLeft: db 0
 
 NativePrintDigit:
+ jp NativeDigitCheck
+NativePrintDigitDraw:
  ld hl,spr_score_digits+2
  add a,l
  ld l,a

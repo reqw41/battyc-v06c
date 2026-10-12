@@ -16,7 +16,10 @@ const pixel=(x,y)=>{const v=mem[0xc000+(y&7)*2048+(y>>3)*80+(x>>1)];return x&1?(
 const sourceRows=[2,3,4,5,7,8,9,11],sampleRow=(x,y)=>Array.from({length:8},(_,i)=>pixel(x+i,y));
 const fixture={sourceArchiveSHA256:crypto.createHash('sha256').update(fs.readFileSync(archive)).digest('hex'),source:'Original CPC VRAM after running BATTY1.BIN and BATTY2.BIN; mode 0, 160x200',nativeInks:{0:'black',13:'bright white',15:'gray'},sourceRows,leftTop:sourceRows.map(y=>sampleRow(0,y)),rightTop:sourceRows.map(y=>sampleRow(152,y)),middleTop:sourceRows.map(y=>sampleRow(64,y)),leftSide:sampleRow(0,20),rightSide:sampleRow(152,20)};
 fs.writeFileSync('verify/fixtures/cpc/frame.json',JSON.stringify(fixture,null,2)+'\n');
-const mapping={0:2,13:0,15:3},pair=r=>[2,1].map(bit=>r.reduce((v,c,i)=>{if(mapping[c]===undefined)throw Error('Unexpected CPC frame ink '+c);return v|(mapping[c]&bit?128>>i:0);},0));
-let asm='; CPC frame, native C/E row pairs. A is zero throughout.\n; 13 white -> Vector 0; 15 gray -> 3; 0 black -> level-texture shade 2.\n';
-for(const [name,rows]of[['LeftTop',fixture.leftTop],['MiddleTop',fixture.middleTop],['RightTop',fixture.rightTop],['LeftSide',[fixture.leftSide]],['RightSide',[fixture.rightSide]]])asm+='CpcFrame'+name+':\n DEFB '+rows.flatMap(pair).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')+'\n';
+// Black outside the frame (the run of ink 0 at the outer edge of a side piece) takes the HUD paper, index 1;
+// black inside it stays the level-texture shade, index 2.
+const mapping={0:2,13:0,15:3},outside=(r,side)=>{let n=0;if(side==='L')while(n<8&&r[n]===0)n++;if(side==='R')while(n<8&&r[7-n]===0)n++;return i=>side==='L'?i<n:side==='R'?i>=8-n:false;};
+const pair=(r,side)=>{const out=outside(r,side);return[2,1].map(bit=>r.reduce((v,c,i)=>{if(mapping[c]===undefined)throw Error('Unexpected CPC frame ink '+c);return v|((out(i)?1:mapping[c])&bit?128>>i:0);},0));};
+let asm='; CPC frame, native C/E row pairs. A is zero throughout.\n; 13 white -> Vector 0; 15 gray -> 3; 0 black -> level-texture shade 2, outside the frame -> HUD paper 1.\n';
+for(const [name,rows]of[['LeftTop',fixture.leftTop],['MiddleTop',fixture.middleTop],['RightTop',fixture.rightTop],['LeftSide',[fixture.leftSide]],['RightSide',[fixture.rightSide]]])asm+='CpcFrame'+name+':\n DEFB '+rows.flatMap(r=>pair(r,name[0]==='L'?'L':name[0]==='R'?'R':'M')).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')+'\n';
 fs.writeFileSync('gfx/cpc_frame.asm',asm);

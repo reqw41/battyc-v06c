@@ -1,11 +1,2 @@
-MagnetSampleCenterRead:
- inc hl
- ld a,(hl)
- call NativeSampleShift
- ld b,a
- ld a,(NativeSampleByte)
- cp 1
- ld a,b
- ret z
- ld a,c
- ret
+; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
+; as plain texture and the magnet is redrawn (MagnetRedrawFlush).

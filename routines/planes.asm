@@ -105,9 +105,7 @@ background_color: db 0
 background_pixel: db 0
 background_colors: db 6,4,3,6,7,4,5,6,7,4,5,6,7,2,6,0
 planes_begin:
- ld hl,plane_old
- ld (plane_slot),hl
- ret
+ ret ; descriptors live in MonoDesc/MonoOld, not plane_old
 FastErasePlain:
  ld hl,(ClearDst)
  ld a,h

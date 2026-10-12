@@ -103,9 +103,9 @@ pd_position_valid:
  inc hl
  ld a,(hl)
  ld b,a
- ; Only owner 0 is the falling bonus; static HUD owners are never bonuses.
+ ; Only owner 4 is the falling bonus; static HUD owners are never bonuses.
  ld a,(MonoOwner)
- or a
+ cp 4
  call z,MonoBonusHeight
  ld a,(plane_y)
  add a,b
@@ -169,19 +169,6 @@ pd_unclipped:
  sub $40
  ld h,a
  ld (plane_dst),hl
- ex de,hl
- ld hl,(plane_slot)
- ld (hl),d
- inc hl
- ld (hl),e
- inc hl
- ld a,(direct_columns)
- ld (hl),a
- inc hl
- ld a,(direct_rows)
- ld (hl),a
- inc hl
- ld (plane_slot),hl
  ret
 
 plane_x: db 0

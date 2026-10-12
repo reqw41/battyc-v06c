@@ -31,13 +31,8 @@ L6800_6:
 ; Формирование сдвинутых спрайтов для мяча и разных видов кареток
 spr_shift_gen:
  ret ; native phases are generated offline
- INCLUDE "routines/mono_composite_geometry.asm"
- INCLUDE "routines/mono_draw_pair.asm"
- INCLUDE "routines/mono_draw_dispatch.asm"
-
-; The former shift generator is permanent native code now. Reserve its
-; current 259-byte bank so subsequent asset addresses cannot silently move.
- ASSERT $ <= start_bin+259
- IF $ < start_bin+259
- DS start_bin+259-$,0
- ENDIF
+MonoPairActive EQU $71e5
+MonoCompositeBat:
+MonoDrawPair:
+MonoDrawPrepared:
+ ret ; compatibility entry points, raw-source renderer does not use them

@@ -1,17 +1,2 @@
-; Preserve central RGB accents while composing stationary magnet layers.
-MagnetSampleAccent:
- ld a,(NativeSampleMask)
- cpl
- ld b,a
- ld a,(NativeSampleAccentA)
- and b
- ld (NativeSampleAccentA),a
- ld a,(NativeSampleAccentE)
- and b
- ld (NativeSampleAccentE),a
- call MagnetSampleCenter
- ld b,a
- ld a,(NativeSampleAccentA)
- or b
- ld (NativeSampleAccentA),a
- jp MagnetAccentOff
+; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
+; as plain texture and the magnet is redrawn (MagnetRedrawFlush).

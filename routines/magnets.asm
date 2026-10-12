@@ -1,8 +1,6 @@
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Рисует в буфере все магниты на уровне
 print_magnets:
-  LD A,$1E	; Меняем высоту спрайта - 30 точек
-  LD (spr_magnet_circle_on+1),A
   LD A,(current_level_number_1up)
   ADD A,A
   LD HL,magnets
@@ -20,8 +18,6 @@ print_magnets:
   LD (IXobj),HL
 L8D4C_0:
   PUSH AF
-  xor a
-  call NativeMagnetSetOverlay
   LD HL,(IXobj)
   INC HL		; +$01
   LD (HL),$06		; IX+$01
@@ -51,7 +47,6 @@ L8D4C_0:
   LD (HL),D		; IX+$04 Запоминаем координату Y магнита
 
   CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
   LD HL,(IXobj)
   LD DE,$0004
   ADD HL,DE
@@ -66,9 +61,6 @@ MagnetInitialLayerChoice:
   LD HL,(IXobj)
   INC HL		; +$01
   LD (HL),$07		; IX+$01
-  ld a,1
-  call NativeMagnetSetOverlay
-  CALL print_obj_to_buff
 L8D4C_1:
   LD HL,(IXobj)
   INC HL
@@ -83,8 +75,17 @@ L8D4C_1:
   POP AF
   DEC A
   JP NZ,L8D4C_0
-  LD A,$17		; Меняем высоту спрайта - 23 точки
-  LD (spr_magnet_circle_on+1),A
+; Координаты готовы: строим кэш картинок и красим магниты из него
+  CALL MagCacheBuildAll
+  XOR A
+print_magnets_paint:
+  PUSH AF
+  CALL MagnetPaintFull
+  POP AF
+  INC A
+  LD HL,magnets_quantity
+  CP (HL)
+  JP NZ,print_magnets_paint
   RET
 
 magnets_quantity:
@@ -165,40 +166,35 @@ print_one_magnet:
   LD A,(magnets_quantity)
   AND A
   RET Z
-  DEC A
+  call NativeRestoreQueueFresh
+  call NativeRestoreQueueFresh ; reserve this frame for the magnet state change
   LD B,A
-L8E72_0:
   PUSH BC
   CALL random_generate
   LD A,(random_number)
-  AND $03
   POP BC
-  CP B
-  JP Z,L8E72_1
-  JP NC,L8E72_0
+  LD E,A
+  LD D,0
+  LD HL,0
+L8E72_0:
+  ADD HL,DE
+  DEC B
+  JP NZ,L8E72_0
+  LD A,H ; floor(random_byte * magnet_count / 256), at most four adds
 L8E72_1:
+  LD C,A		; номер магнита
   ADD A,A		; 2+2
   ADD A,A		; 4+4
   ADD A,A		; 8+8
   ADD A,A		; 16+16
-  LD HL,magnet_properties
+  LD HL,magnet_properties+1
   CALL hl_add_a
-  LD (current_magnet_prop),HL
-  LD (IXobj),HL ;NOTE: нужен для print_obj_to_buff
-  ld a,1
-  call NativeMagnetSetOverlay
-  inc HL
+  LD A,(SUWindowValid)
+  AND A
+  RET NZ		; память кэша занята окном раунда
   LD A,(HL)		; IX+$01
   XOR $01
   LD (HL),A		; IX+$01
-  inc HL
-  LD A,(HL)		; IX+$02
-  PUSH AF
-  SUB $05
-  LD (HL),A		; IX+$02
-  push HL
-  CALL print_obj_to_buff
-  pop HL
-  POP AF
-  LD (HL),A		; IX+$02
-  RET ; Magnet animation itself is silent.
+  LD A,C
+  JP MagnetPaintFull	; Magnet animation itself is silent.
+

@@ -33,7 +33,17 @@ mfi_build:
  ld a,(hl)
  or a
  jp z,mfi_next
- dec hl
+ ; Align vertical bounds to the eight-row dirty tiles. Classification
+ ; includes this expansion so a cleared tile cannot erase an isolated owner.
+ inc hl
+ ld a,(hl)
+ or 7
+ ld (hl),a
+ inc hl
+ ld a,(hl)
+ and $f8
+ ld (hl),a
+ ld hl,(MonoRegionPtr)
  ex de,hl
  ld hl,(MonoActivePtr)
  ld (hl),e

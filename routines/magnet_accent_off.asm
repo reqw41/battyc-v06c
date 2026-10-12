@@ -1,8 +1,2 @@
-MagnetAccentOff:
- ld a,(NativeSampleSprite)
- cp spr_magnet_circle_off%256
- ret nz
- ld a,(NativeSampleAccentE)
- or b
- ld (NativeSampleAccentE),a
- ret
+; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
+; as plain texture and the magnet is redrawn (MagnetRedrawFlush).

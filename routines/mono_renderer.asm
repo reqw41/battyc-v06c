@@ -1,16 +1,23 @@
 ; Native column-major (~coverage,lit) pairs. Only lit affects sprite plane.
-; Isolated owners overwrite the new rectangle and clear only retiring fringes.
-; Intersecting owners use OR and final composition of their old rectangles.
-MonoObjects: dw object_bonus,object_ball_1,object_ball_2,object_ball_3
- dw object_bullet_1,object_bullet_2,object_bat_2,object_bat_1,object_bat_temp
- dw object_enemy,object_rocket
-MonoSlots: dw $7a00,$7a80,$7ac0,$7b00,$7b40,$7b68,$7b90,$7c34,$7cd8,$7d7c,$7e1c,$7f00
-MonoCapacities: db 128,64,64,64,40,40,164,164,164,160,228,228
-MonoDesc: ds 77,0 ; top address, cols, rows, source, bottom-strip bat flag
+; Old eight-row tiles are cleared once through a bitmap; all current owners
+; are OR-blitted from original sources. Moving caches/isolation are obsolete.
+MonoRawSources EQU 1
+; Upper-field objects go first and the paddles last: with a raster-tied
+; frame they are replaced before the beam leaves the top border.
+; Owners 1..3 must stay the balls (dedicated blit), owner 4 is the bonus.
+MonoObjects: dw object_enemy,object_ball_1,object_ball_2,object_ball_3
+ dw object_bonus,object_bullet_1,object_bat_2,object_bat_1,object_bat_temp
+ dw object_bullet_2,object_rocket
+MonoSlots EQU MonoOnlySlot-22
+MonoOnlySlot: dw $7f00
+MonoCapacities EQU MonoOnlyCapacity-11
+MonoOnlyCapacity: db 228
+MonoDesc: ds 77,0 ; top address, cols, rows, source, shift
 MonoOld: ds 77,0  ; second descriptor bank; no per-frame geometry copy
  ASSERT high MonoDesc == high (MonoOld+77)
  ASSERT high MonoRegions == high (MonoRegions+55)
-MonoTags: ds 48,0 ; source pointer, shift, clipped height, per owner
+MonoTags EQU MonoOnlyTags-44
+MonoOnlyTags: ds 4,0 ; only the static glyph owner has a shifted cache
 MonoOwner: db 0
 MonoPtr: dw 0
 MonoOldPtr: dw 0
@@ -18,29 +25,26 @@ MonoDrawSource: dw 0
 MonoDrawVideo: dw 0
 MonoDrawCols: db 0
 MonoDrawRows: db 0
-MonoDrawBat: db 0
 MonoColumn: db 0
 MonoTop: db 0
 MonoRows: db 0
 MonoCols: db 0
-MonoOldBat: db 0
-MonoScan: db 0
-MonoCandidates: ds 22,0
-MonoCandidateCount: db 0
-MonoCandidatePtr: dw 0
-MonoSelectPtr: dw 0
-MonoSelectCount: db 0
-MonoOldRight: db 0
-MonoOldBottom: db 0
-MonoSingleFlag: db 0
-MonoNewTop: db 0
-MonoNewRows: db 0
-MonoNewBat: db 0
-MonoDeltaCol: db 0
-MonoSpanTop: db 0
-MonoSpanBottom: db 0
-MonoSpanRows: db 0
-MonoSource: dw 0
+MonoScan EQU $7f76
+MonoCandidates EQU $7f60
+MonoCandidateCount EQU $7f77
+MonoCandidatePtr EQU MonoRegions
+MonoSelectPtr EQU MonoRegions
+MonoSelectCount EQU $7f78
+MonoOldRight EQU MonoRegions
+MonoOldBottom EQU MonoRegions
+MonoSingleFlag EQU $7f79
+MonoNewTop EQU MonoRegions
+MonoNewRows EQU MonoRegions
+MonoDeltaCol EQU MonoRegions
+MonoSpanTop EQU MonoRegions
+MonoSpanBottom EQU MonoRegions
+MonoSpanRows EQU MonoRegions
+MonoSource EQU MonoRegions
 MonoScratch EQU $7100
 MonoBlack EQU $7120
 PreparedRow EQU $71e8
@@ -72,7 +76,7 @@ SpriteShiftMasks: db $ff,$7f,$3f,$1f,$0f,$07,$03,$01
 MonoReset EQU PaceReset
 MonoResetBody:
  ld hl,MonoDesc
- ld b,77+77+48
+ ld b,77+77+4
  xor a
 mr_zero:
  ld (hl),a
@@ -87,7 +91,7 @@ mr_old:
  inc hl
  dec b
  jp nz,mr_old
- ret
+ jp NativeDigitInvalidate
 RCBegin:
 RCFlush:
 SUInvalidate:
@@ -154,10 +158,9 @@ MonoRender:
 mono_new_base:
  ld hl,MonoDesc
  ld (MonoPtr),hl
- ld hl,plane_old
- ld (plane_slot),hl
  xor a
  ld (MonoOwner),a
+ ld (MonoActiveCount),a
 mono_prepare:
  ld hl,(MonoPtr)
  inc hl
@@ -181,13 +184,7 @@ mono_prepare:
  ld a,(color_valid)
  or a
  jp z,mono_next
- ld hl,MonoShifts
- ld a,(MonoOwner)
- call hl_add_a
- ld a,(direct_shift)
- ld (hl),a
- ld hl,(plane_dst)
- ex de,hl
+ ex de,hl ; plane_object_fast returns video in HL
  ld hl,(MonoPtr)
  ld (hl),e
  inc hl
@@ -207,7 +204,10 @@ mono_prepare:
  inc hl
  ld (hl),d
  inc hl
- ld (hl),0
+ ld a,(direct_shift)
+ ld (hl),a
+ ld hl,MonoActiveCount
+ inc (hl)
 mono_next:
  ld a,(MonoPtr)
  add a,7
@@ -217,31 +217,457 @@ mono_next:
  ld (MonoOwner),a
  cp 11
  jp nz,mono_prepare
- call MonoCompositeBat
- call MonoFindIsolated
- call MonoPairPrepare
+ ; Every sprite is redrawn from its original native source. No shifted
+ ; moving-object cache or pairwise isolation pass is required.
+ call GameplaySyncPoint
  call PaceStart
- xor a
- ld (MonoOwner),a
- ld hl,MonoRegions
- ld (MonoRegionPtr),hl
+ ; No image is ever erased before its replacement is on the screen.
+ ; An owner whose old+new bounding box touches no other owner is replaced
+ ; in place: the new picture is stored over the box and only the leftover
+ ; strips of the old one are zeroed afterwards. Owners that share a box are
+ ; handled together the old way: zero their old boxes, then OR-draw them.
+ ;
+ ; Pass A packs one eight-byte record per active owner:
+ ; flag (1 isolated, 2 shared), union box (column, end, top, bottom),
+ ; owner number, low bytes of its old and new descriptors.
+mono_old_base:
+ ld hl,MonoOld
+ ex de,hl
  ld hl,(mono_new_base+1)
- ld (MonoPtr),hl
- ld b,11
-mono_draw_all:
+ ld bc,MonoUnion
+ xor a
+ ld (MonoFastDraw),a
+mono_a_owner:
+ ld (mono_a_index+1),a
+ inc hl
+ inc hl
+ inc de
+ inc de
+ ld a,(de)
+ or (hl)
+ jp z,mono_a_idle
+ ld a,1
+ ld (bc),a
+ inc bc
+ ld a,(de)
+ or a
+ jp z,mono_a_new_only
+ ld a,(hl)
+ or a
+ jp z,mono_a_old_only
+ dec hl
+ dec de
+ ld a,(de)
+ cp (hl)
+ jp c,mono_a_col
+ ld a,(hl)
+mono_a_col:
+ ld (bc),a
+ inc bc
+ ld a,(de)
+ inc de
+ ex de,hl
+ add a,(hl)
+ ex de,hl
+ ld (mono_a_oend+1),a
+ ld a,(hl)
+ inc hl
+ add a,(hl)
+mono_a_oend:
+ cp 0
+ jp nc,mono_a_end
+ ld a,(mono_a_oend+1)
+mono_a_end:
+ ld (bc),a
+ inc bc
+ dec hl
+ dec hl
+ dec de
+ dec de
+ ld a,(de)
+ cp (hl)
+ jp nc,mono_a_top
+ ld a,(hl)
+mono_a_top:
+ ld (bc),a
+ inc bc
+ ld a,(de)
+ inc de
+ inc de
+ inc de
+ ex de,hl
+ sub (hl)
+ ex de,hl
+ inc a
+ ld (mono_a_obottom+1),a
+ ld a,(hl)
+ inc hl
+ inc hl
+ inc hl
+ sub (hl)
+ inc a
+mono_a_obottom:
+ cp 0
+ jp c,mono_a_bottom
+ ld a,(mono_a_obottom+1)
+mono_a_bottom:
+ ld (bc),a
+ inc bc
+ jp mono_a_tail
+mono_a_old_only:
+ push hl
+ ld h,d
+ ld l,e
+ call mono_a_box
+ pop hl
+ inc hl
+ inc de
+ jp mono_a_tail
+mono_a_new_only:
+ push hl
+ call mono_a_box
+ pop hl
+ inc hl
+ inc de
+mono_a_tail: ; both pointers are at descriptor+3
+ ld a,(mono_a_index+1)
+ ld (bc),a
+ inc bc
+ ld a,e
+ sub 3
+ ld (bc),a
+ inc bc
+ ld a,l
+ sub 3
+ ld (bc),a
+ inc bc
+ ld a,l
+ add a,4
+ ld l,a
+ ld a,e
+ add a,4
+ ld e,a
+ jp mono_a_index
+mono_a_idle:
+ ld a,l
+ add a,5
+ ld l,a
+ ld a,e
+ add a,5
+ ld e,a
+mono_a_index:
+ ld a,0
+ inc a
+ cp 11
+ jp nz,mono_a_owner
+ ld a,c
+ sub low MonoUnion
+ rrca
+ rrca
+ rrca
+ and 31
+ ld (MonoActiveN),a
+ call mono_pairs
+ ld a,(MonoSharedAny)
+ or a
+ jp z,mono_isolated
+ ld hl,mono_h_shared_zero
+ call mono_each
+ ld hl,mono_h_shared_draw
+ call mono_each
+mono_isolated:
+ xor a ; NOP: store instead of OR
+ call MonoMergeMode
+ ld hl,mono_h_isolated
+ call mono_each
+ ld a,$b6 ; OR (HL)
+ call MonoMergeMode
+ jp mono_copy_old
+; HL=descriptor+2, BC=box to fill (advanced). Keeps DE.
+mono_a_box:
+ push de
+ ld a,(hl)
+ dec hl
+ ld e,(hl)
+ add a,e
+ ld d,a
+ ld a,e
+ ld (bc),a
+ inc bc
+ ld a,d
+ ld (bc),a
+ inc bc
+ dec hl
+ ld a,(hl)
+ ld (bc),a
+ inc bc
+ inc hl
+ inc hl
+ inc hl
+ sub (hl)
+ inc a
+ ld (bc),a
+ inc bc
+ pop de
+ ret
+
+; Mark every pair of records whose union boxes intersect.
+mono_pairs:
+ xor a
+ ld (MonoSharedAny),a
+ ld a,(MonoActiveN)
+ cp 2
+ ret c
+ dec a
+ ld b,a
+ ld hl,MonoUnion+1
+mono_pair_i:
  push bc
- ld hl,(MonoPtr)
+ push hl
+ ld d,h
+ ld e,l
+ ld c,b
+mono_pair_j:
+ ld a,l
+ add a,8
+ ld l,a
+ push hl
+ push de
+ inc hl
+ ld a,(de) ; column i
+ cp (hl) ; end j
+ jp nc,mono_pair_next
+ dec hl
+ inc de
+ ld a,(de) ; end i
+ ld b,a
+ ld a,(hl) ; column j
+ cp b
+ jp nc,mono_pair_next
+ inc hl
+ inc hl ; top j
+ inc de
+ inc de ; bottom i
+ ld a,(de)
+ ld b,a
+ ld a,(hl)
+ cp b
+ jp c,mono_pair_next
+ inc hl ; bottom j
+ dec de ; top i
+ ld a,(de)
+ cp (hl)
+ jp c,mono_pair_next
+ pop de
+ pop hl
+ push hl
+ push de
+ dec hl
+ ld (hl),2
+ dec de
+ ld a,2
+ ld (de),a
+ ld (MonoSharedAny),a
+mono_pair_next:
+ pop de
+ pop hl
+ dec c
+ jp nz,mono_pair_j
+ pop hl
+ ld a,l
+ add a,8
+ ld l,a
+ pop bc
+ dec b
+ jp nz,mono_pair_i
+ ret
+
+; Call handler HL for every record with A=flag, HL=record.
+mono_each:
+ ld (mono_each_call+1),hl
+ ld a,(MonoActiveN)
+ or a
+ ret z
+ ld b,a
+ ld hl,MonoUnion
+mono_each_rec:
+ push bc
+ push hl
+ ld a,(hl)
+mono_each_call:
+ call 0
+ pop hl
+ ld a,l
+ add a,8
+ ld l,a
+ pop bc
+ dec b
+ jp nz,mono_each_rec
+ ret
+mono_h_shared_zero:
+ cp 2
+ ret nz
+ ld de,6
+ add hl,de
+ ld l,(hl)
+ ld a,(mono_old_base+2)
+ ld h,a
+ ld a,$ff
+ ld (mono_z_ncol+1),a
+ jp mono_z_old
+mono_h_shared_draw:
+ cp 2
+ ret nz
+ jp mono_rec_draw
+mono_h_isolated:
+ dec a
+ ret nz
+ push hl
+ call mono_rec_draw
+ pop hl
+ ld de,6
+ add hl,de
+ ld e,(hl)
+ inc hl
+ ld l,(hl)
+ ld a,(mono_old_base+2)
+ ld d,a
+ ld a,(mono_new_base+2)
+ ld h,a
+ ; fall through: zero what is left of the old picture outside the new box
+; DE=old descriptor, HL=new descriptor.
+mono_zero_strips:
+ push de
+ push hl
+ ld b,4
+mono_z_same:
+ ld a,(de)
+ cp (hl)
+ jp nz,mono_z_moved
+ inc de
+ inc hl
+ dec b
+ jp nz,mono_z_same
+ pop hl
+ pop de
+ ret ; same geometry: the stored picture covered the old one
+mono_z_moved:
+ pop hl
+ pop de
+ ld a,(hl)
+ ld (mono_z_ntop+1),a
+ ld c,a
+ inc hl
+ ld a,(hl)
+ ld (mono_z_ncol+1),a
+ ld b,a
+ inc hl
+ ld a,(hl)
+ or a
+ jp nz,mono_z_new
+ ld a,$ff
+ ld (mono_z_ncol+1),a
+ jp mono_z_old_de
+mono_z_new:
+ add a,b
+ ld (mono_z_nend+1),a
+ inc hl
+ ld a,c
+ sub (hl)
+ inc a
+ ld (mono_z_nbottom+1),a
+mono_z_old_de:
+ ex de,hl
+mono_z_old: ; HL=old descriptor
+ ld a,(hl)
+ ld (mono_z_top+1),a
+ ld (mono_z_top2+1),a
+ ld c,a
+ inc hl
+ ld b,(hl)
+ inc hl
+ ld a,(hl)
+ or a
+ ret z
+ add a,b
+ ld (mono_z_end+1),a
+ inc hl
+ ld a,(hl)
+ ld (mono_z_rows+1),a
+ ld a,c
+ sub (hl)
+ inc a
+ ld (mono_z_bottom+1),a
+mono_pace_old_call:
+ call PaceAccountOld
+mono_z_col:
+ ld h,b
+ ld a,b
+mono_z_ncol:
+ cp 0
+ jp c,mono_z_whole
+mono_z_nend:
+ cp 0
+ jp nc,mono_z_whole
+mono_z_top:
+ ld a,0
+ ld l,a
+mono_z_ntop:
+ sub 0
+ jp c,mono_z_below
+ call nz,mono_z_run
+mono_z_below:
+mono_z_nbottom:
+ ld a,0
+ ld l,a
+ dec l
+mono_z_bottom:
+ sub 0
+ jp c,mono_z_next
+ call nz,mono_z_run
+ jp mono_z_next
+mono_z_whole:
+mono_z_top2:
+ ld l,0
+mono_z_rows:
+ ld a,0
+ call mono_z_run
+mono_z_next:
+ inc b
+ ld a,b
+mono_z_end:
+ cp 0
+ jp nz,mono_z_col
+ ret
+mono_z_run:
+ ld c,a
+ xor a
+mono_z_byte:
+ ld (hl),a
+ dec l
+ dec c
+ jp nz,mono_z_byte
+ ret
+
+; HL=record: draw its owner's new picture in the current merge mode.
+mono_rec_draw:
+ ld de,5
+ add hl,de
+ ld a,(hl)
+ ld (MonoOwner),a
+ inc hl
+ inc hl
+ ld l,(hl)
+ ld a,(mono_new_base+2)
+ ld h,a
+ ld (MonoPtr),hl
  inc hl
  inc hl
  ld a,(hl)
  or a
- jp z,mono_draw_next
- ld hl,(MonoRegionPtr)
- ld de,4
- add hl,de
- ld a,(hl)
- ld (MonoFastDraw),a
- ld hl,(MonoPtr)
+ ret z
+ dec hl
+ dec hl
  ld e,(hl)
  inc hl
  ld d,(hl)
@@ -255,6 +681,9 @@ mono_draw_all:
  ld c,(hl)
  inc hl
  ld b,(hl)
+ inc hl
+ ld a,(hl)
+ ld (direct_shift),a
  ex de,hl
  ld (MonoDrawVideo),hl
  ld h,b
@@ -262,100 +691,24 @@ mono_draw_all:
  ld (MonoDrawSource),hl
 mono_pace_draw_call:
  call PaceAccountDraw
- call MonoDrawPrepared
-mono_draw_next:
- ld a,(MonoRegionPtr)
- add a,5
- ld (MonoRegionPtr),a
- ld a,(MonoOwner)
- inc a
- ld (MonoOwner),a
- ld a,(MonoPtr)
- add a,7
- ld (MonoPtr),a
- pop bc
- dec b
- jp nz,mono_draw_all
- ld hl,(mono_new_base+1)
- ld (MonoPtr),hl
- ld hl,MonoRegions
- ld (MonoRegionPtr),hl
-mono_old_base:
- ld hl,MonoOld
- ld (MonoOldPtr),hl
- ld b,11
-mono_erase_all:
- push bc
- ld hl,(MonoOldPtr)
- inc hl
- inc hl
- ld a,(hl)
- or a
- jp z,mono_erase_next
- dec hl
- dec hl
- ld a,(hl)
- ld (MonoTop),a
- inc hl
- ld a,(hl)
- ld (MonoColumn),a
- inc hl
- ld a,(hl)
- ld (MonoCols),a
- inc hl
- ld a,(hl)
- ld (MonoRows),a
-mono_pace_old_call:
- call PaceAccountOld
- ld hl,(MonoRegionPtr)
- ld de,4
- add hl,de
- ld a,(hl)
- or a
- jp z,mono_erase_general
- call MonoEraseFringes
- jp mono_erase_next
-mono_erase_general:
- call MonoSelectCandidates
-mono_old_column:
- call MonoComposeColumn
- ld a,(MonoSingleFlag)
- or a
- jp nz,mono_old_nextcol
- ld a,(MonoColumn)
- ld h,a
- ld a,(MonoTop)
- ld l,a
- ld de,MonoScratch
- ld a,(MonoRows)
+ ld a,(direct_shift)
  ld b,a
-mono_commit:
- ld a,(de)
- ld (hl),a
- inc e
- dec l
- dec b
- jp nz,mono_commit
-mono_old_nextcol:
- ld hl,MonoColumn
- inc (hl)
- ld hl,MonoCols
- dec (hl)
- jp nz,mono_old_column
-mono_erase_next:
- ld a,(MonoPtr)
- add a,7
- ld (MonoPtr),a
- ld a,(MonoRegionPtr)
- add a,5
- ld (MonoRegionPtr),a
- ld a,(MonoOldPtr)
- add a,7
- ld (MonoOldPtr),a
- pop bc
- dec b
- jp nz,mono_erase_all
- ; The completed new list becomes previous without copying any records.
+ jp MonoDrawWhite
+; A=$b6 (OR with the screen) or 0 (store): how the blits merge a sprite byte.
+MonoMergeMode:
+ ld (MonoStoreOp),a
+ ld (mono_bare_merge),a
+ ld (BallShiftLeadMerge),a
+ ld (BallShiftSpillMerge),a
+ ret
+MonoStoreOp: db $b6
+MonoSharedAny: db 0
+MonoActiveN: db 0
+ IF high $ != high ($+87)
+ DS 256-low $,0
+ ENDIF
+MonoUnion: ds 88,0
+ ASSERT high MonoUnion == high (MonoUnion+87)
 mono_copy_old:
  ld hl,(mono_new_base+1)
  ex de,hl
@@ -365,13 +718,6 @@ mono_copy_old:
  ld (mono_old_base+1),hl
  ret
 MonoDraw:
- ld a,(MonoFastDraw)
- or a
- ld a,$b6 ; OR M
- jp z,mono_draw_mode
- xor a
-mono_draw_mode:
- ld (mono_bare_merge),a
  ld hl,0
  add hl,sp
  ld (mono_draw_restore+1),hl
@@ -386,277 +732,16 @@ mono_draw_restore:
  ld sp,0
  ei
  ret
-MonoComposeColumn:
- xor a
- ld (MonoSingleFlag),a
- ld a,(MonoCandidateCount)
- cp 2
- jp nc,mono_many_candidates
- ld a,1
- ld (MonoSingleFlag),a
- ld a,(MonoCandidateCount)
- or a
- jp z,MonoZeroColumn
- jp mono_candidates_ready
-mono_many_candidates:
- ld hl,MonoScratch
- ld a,(MonoRows)
- ld b,a
- xor a
-mono_clear_scratch:
- ld (hl),a
- inc hl
- dec b
- jp nz,mono_clear_scratch
-mono_candidates_ready:
- ld a,(MonoCandidateCount)
- or a
- ret z
- ld (MonoScan),a
- ld hl,MonoCandidates
- ld (MonoCandidatePtr),hl
-mono_union_object:
- ld hl,(MonoCandidatePtr)
- ld e,(hl)
- inc hl
- ld d,(hl)
- inc hl
- ld (MonoCandidatePtr),hl
- ex de,hl
- ld a,(hl)
- ld (MonoNewTop),a
- inc hl
- ld b,(hl)
- inc hl
- ld c,(hl)
- ld a,(MonoColumn)
- sub b
- jp c,mono_union_next
- cp c
- jp nc,mono_union_next
- ld (MonoDeltaCol),a
- inc hl
- ld a,(hl)
- ld (MonoNewRows),a
- or a
- jp z,mono_union_next
- inc hl
- ld e,(hl)
- inc hl
- ld d,(hl)
- ex de,hl
- ld (MonoSource),hl
- ld a,(MonoNewTop)
- ld b,a
- ld a,(MonoTop)
- cp b
- jp c,mono_span_top
- ld a,b
-mono_span_top:
- ld (MonoSpanTop),a
- ld a,(MonoNewRows)
- ld c,a
- ld a,(MonoNewTop)
- sub c
- inc a
- ld b,a
- ld a,(MonoRows)
- ld c,a
- ld a,(MonoTop)
- sub c
- inc a
- cp b
- jp nc,mono_span_bottom
- ld a,b
-mono_span_bottom:
- ld (MonoSpanBottom),a
- ld b,a
- ld a,(MonoSpanTop)
- sub b
- jp c,mono_union_next
- inc a
- ld (MonoSpanRows),a
- ld a,(MonoNewRows)
- add a,a
- ld e,a
- ld d,0
- ld hl,(MonoSource)
- ld a,(MonoDeltaCol)
- or a
- jp z,mono_span_rowoffset
- ld b,a
-mono_span_coloffset:
- add hl,de
- dec b
- jp nz,mono_span_coloffset
-mono_span_rowoffset:
- ld a,(MonoSpanTop)
- ld b,a
- ld a,(MonoNewTop)
- sub b
- add a,a
- call hl_add_a
- ld (MonoSource),hl
- ld a,(MonoSpanTop)
- ld b,a
- ld a,(MonoTop)
- sub b
- add a,MonoScratch%256
- ld e,a
- ld d,MonoScratch/256
- ld a,(MonoSpanRows)
- ld b,a
- ld a,(MonoSingleFlag)
- or a
- jp nz,MonoSingleCommit
-mono_union_rows:
- ld c,(hl)
- inc hl
- ld a,(de)
- or (hl)
- ld (de),a
- inc hl
-mono_union_rownext:
- inc e
- dec b
- jp nz,mono_union_rows
-mono_union_next:
- ld a,(MonoSingleFlag)
- or a
- jp nz,MonoZeroColumn
- ld hl,MonoScan
- dec (hl)
- jp nz,mono_union_object
- ret
-MonoSingleCommit:
- ex de,hl
- ld a,(MonoColumn)
- ld h,a
- ld a,(MonoSpanTop)
- ld l,a
- ld a,(MonoSpanRows)
- ld b,a
-mono_single_rows:
- ld a,(de)
- ld c,a
- inc de
- ld a,(de)
- ld (hl),a
- inc de
-mono_single_nextrow:
- dec l
- dec b
- jp nz,mono_single_rows
- ld a,(MonoSpanTop)
- ld b,a
- ld a,(MonoTop)
- sub b
- ld b,a
- ld a,(MonoColumn)
- ld h,a
- ld a,(MonoTop)
- ld l,a
- call MonoZeroRange
- ld a,(MonoSpanBottom)
- ld b,a
- ld a,(MonoOldBottom)
- ld c,a
- ld a,b
- sub c
- ld b,a
- ld a,(MonoSpanBottom)
- dec a
- ld l,a
- ld a,(MonoColumn)
- ld h,a
- jp MonoZeroRange
-MonoZeroRange:
- ld a,b
- or a
- ret z
- xor a
-mono_zero_row:
- ld (hl),a
-mono_zero_next:
- dec l
- dec b
- jp nz,mono_zero_row
- ret
-MonoSelectCandidates:
- xor a
- ld (MonoCandidateCount),a
- ld hl,MonoCandidates
- ld (MonoCandidatePtr),hl
- ld a,(MonoColumn)
- ld b,a
- ld a,(MonoCols)
- add a,b
- ld (MonoOldRight),a
- ld a,(MonoRows)
- ld b,a
- ld a,(MonoTop)
- sub b
- inc a
- ld (MonoOldBottom),a
- ld hl,(mono_new_base+1)
- ld (MonoSelectPtr),hl
- ld a,11
- ld (MonoSelectCount),a
-mono_select:
- ld hl,(MonoSelectPtr)
- ld e,(hl)
- inc hl
- ld d,(hl)
- inc hl
- ld a,(hl)
- or a
- jp z,mono_select_next
- add a,d
- ld b,a
- ld a,(MonoColumn)
- cp b
- jp nc,mono_select_next
- ld a,(MonoOldRight)
- cp d
- jp c,mono_select_next
- jp z,mono_select_next
- ld a,(MonoOldBottom)
- cp e
- jp c,mono_select_vertical
- jp nz,mono_select_next
-mono_select_vertical:
- inc hl
- ld a,e
- sub (hl)
- inc a
- ld b,a
- ld a,(MonoTop)
- cp b
- jp c,mono_select_next
- ld hl,(MonoSelectPtr)
- ex de,hl
- ld hl,(MonoCandidatePtr)
- ld (hl),e
- inc hl
- ld (hl),d
- inc hl
- ld (MonoCandidatePtr),hl
- ld hl,MonoCandidateCount
- inc (hl)
-mono_select_next:
- ld hl,(MonoSelectPtr)
- ld de,7
- add hl,de
- ld (MonoSelectPtr),hl
- ld hl,MonoSelectCount
- dec (hl)
- jp nz,mono_select
- ret
+MonoComposeColumn EQU MonoClearColumn
+MonoZeroRange EQU RCBegin
 ; Outlined round text saves/restores its 10x40 rectangle in all four planes.
 ; Active moving objects have already been removed at the round transition.
- INCLUDE "routines/mono_isolation.asm"
+MonoFindIsolated:
+MonoEraseFringes:
+ ret ; obsolete in clear-old/redraw renderer
 
 MonoRemove:
+ call NativeRestoreQueueFlush
  ; Empty new list makes MonoRender restore all old sprite regions to zero.
  ld hl,(mono_new_base+1)
  ld b,11
@@ -696,7 +781,230 @@ mono_remove_skip:
  jp nz,mono_remove_old
  jp SpriteCacheReset
 
- INCLUDE "routines/mono_composite_bat.asm"
- INCLUDE "routines/mono_pair_clear.asm"
+MonoPairPrepare:
+ ret
 
  ASSERT low MonoObjects == 0
+
+
+
+SpriteCacheBuild:
+ ld hl,(IXobj)
+ ld a,(hl)
+ cp 3
+ ld a,0
+ jp nz,mnn_kind
+ inc a
+mnn_kind:
+ ld (MonoBuildBat),a
+ or a
+ ld hl,mnn_lit
+ jp z,mnn_select_cover
+ ld hl,mnn_cover
+mnn_select_cover:
+ ld (mnn_cover_select+1),hl
+ jp SpriteCacheShiftSetup
+
+mnn_cover:
+ ld a,e
+ cpl
+mnn_cover_rotate:
+ jp mnn_cover_r0
+mnn_cover_r7: rrca
+mnn_cover_r6: rrca
+mnn_cover_r5: rrca
+mnn_cover_r4: rrca
+mnn_cover_r3: rrca
+mnn_cover_r2: rrca
+mnn_cover_r1: rrca
+mnn_cover_r0:
+ ld e,a
+mnn_cover_lead:
+ and $ff
+ cpl
+mnn_cover_merge:
+ and (hl)
+mnn_cover_store:
+ ld (hl),a
+mnn_cover_skip:
+ jp mnn_cover_step
+mnn_cover_step:
+ ld a,l
+mnn_cover_to_next:
+ add a,0
+ ld l,a
+ jp nc,mnn_cover_next_ready
+ inc h
+mnn_cover_next_ready:
+ ld a,e
+mnn_cover_spill:
+ and 0
+ cpl
+ ld (hl),a
+ ld a,l
+mnn_cover_from_next:
+ sub 0
+ ld l,a
+ jp nc,mnn_lit
+ dec h
+ jp mnn_lit
+MonoCoverCodeEnd:
+
+BallShiftMaskInit:
+ ld hl,SpriteShiftMasks
+ ld a,(direct_shift)
+ call hl_add_a
+ ld a,(hl)
+ ld (BallShiftLead+1),a
+ cpl
+ ld (BallShiftSpill+1),a
+ ret
+
+ INCLUDE "routines/zx_field_frame.asm"
+; HL=plane C address of the cell top, DE=cell bitmap, C=rows.
+zf_cell:
+ ld a,(de)
+ inc de
+zf_mirror:
+ ld b,0
+ inc b
+ call z,zf_reverse
+ ld b,a
+zf_mode:
+ ld a,0
+ or a
+ call nz,zf_row_masks
+zf_mask_c:
+ ld a,0
+ and b
+ ld (hl),a
+ ld a,h
+ add a,$20
+ ld h,a
+ ld a,b
+ cpl
+zf_mask_e:
+ or 0
+ ld (hl),a
+ ld a,h
+ sub $40
+ ld h,a
+zf_mask_a:
+ ld a,0
+ and b
+ ld (hl),a
+ ld a,h
+ add a,$20
+ ld h,a
+ dec l
+ dec c
+ jp nz,zf_cell
+ ret
+zf_row_masks:
+ ld a,(zf_pattern_c)
+ rlca
+ ld (zf_pattern_c),a
+ sbc a,a
+ ld (zf_mask_c+1),a
+ ld (zf_mask_e+1),a
+ ld a,(zf_pattern_a)
+ rlca
+ ld (zf_pattern_a),a
+ sbc a,a
+ ld (zf_mask_a+1),a
+ ret
+zf_reverse: ; A = A with its bits in reverse order
+ push hl
+ push bc
+ ld c,a
+ ld b,8
+zf_reverse_bit:
+ ld a,c
+ rra
+ ld c,a
+ ld a,h
+ rla
+ ld h,a
+ dec b
+ jp nz,zf_reverse_bit
+ ld a,h
+ pop bc
+ pop hl
+ ret
+
+; Gameplay frame wait, requested by the game loop and taken once per step.
+GameplaySyncPoint:
+ ld a,(GameplaySync)
+ or a
+ ret z ; carry clear: no wait was taken here
+ xor a
+ ld (GameplaySync),a
+ call WaitGameplayFrame
+ scf
+ ret
+GameplaySync: db 0
+
+NativeMagCacheAfterWindow:
+ call MagCacheBuildAll
+ jp SpriteCacheReset
+
+ INCLUDE "routines/brick_restore_queue_upper.asm"
+QueueFresh: db 0
+QueueMode: db 0
+
+NativeRestoreQueueGate:
+ ld a,(QueueInStep)
+ or a
+ ret z ; ordinary one/two-ball restores and queue overflow stay complete
+ ld a,(NativeRestoreMagnetCount)
+ or a
+ jp nz,brq_magnet_gate
+ ld a,(QueueFresh)
+ or a
+ jp z,brq_idle_whole
+ ld a,(MonoActiveCount)
+ cp 7
+ jp c,brq_whole_zero
+ jp brq_grouped_mode
+brq_magnet_gate:
+ ld a,(QueueFresh)
+ or a
+ ret nz
+ ld a,(MonoActiveCount)
+ cp 7
+ ret nc
+brq_grouped_mode:
+ ld a,(QueueMode)
+ cp 3
+ ld a,8
+ jp nc,brq_nomag_mode
+ ld a,5
+brq_nomag_mode:
+ ld (QueueMode),a ; two columns fit an idle six-owner magnet frame
+ ret
+brq_whole_zero:
+ xor a
+brq_idle_whole:
+ ld (QueueMode),a ; no magnet and a light scene: finish the whole brick
+ ret
+NativeRestoreQueueColumn:
+ ld a,(QueueMode)
+ or a
+ ret z
+ ld a,d
+brq_cut_column:
+ sub 0
+ ret z
+ cp 1
+ jp nz,brq_column_skip
+ ld a,(QueueMode)
+ cp 5
+ ret nc ; grouped no-magnet mode also includes the following column
+brq_column_skip:
+ scf
+ ret
+QueueCut EQU brq_cut_column+1
+
+brq_get_slot:
+ ld hl,wins_recovery_data
+ jp hl_add_a

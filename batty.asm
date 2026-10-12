@@ -62,7 +62,7 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
  INCLUDE "routines/ball_rotation.asm"
 
 ; Графика: элементы обрамления экрана
-  INCLUDE "./gfx/cpc_frame.asm"
+  INCLUDE "./gfx/zx_frame.asm"
 
 ; Список уровней и их структура
   INCLUDE "./gfx/levels.asm"
@@ -595,26 +595,9 @@ pause_short_0:
 ; Сохранение объектов с экранного буфера с тенью и фоном в save_objs_buff
 ; Перенос объектов (макс. $0B) в буфер
 restore_objs_and_magnet:
-	LD A,(current_magnet_prop+1)
-	AND A
-	RET Z
-; Восстанавливаем магнит с фоном и с припуском 5 пикселей
-	LD HL,(current_magnet_prop)
-	inc HL
-	inc HL
-	LD A,(HL)			; IX+$02 координата Х объекта
-	SUB $05
-	LD L,A
-	inc HL
-	inc HL
-	LD A,(HL)			; IX+$04 координата Y объекта
-	SUB $05
-	LD H,A
-	LD BC,$0417
-	CALL win_bg_recovery
-	XOR A
-	LD (current_magnet_prop+1),A
-	RET
+ xor a
+ ld (current_magnet_prop+1),a
+ ret
 
 ; This entry point is used by the routines at LBB97 and LBC10.
 ; Восстанавливает объекты из save_objs_buff в экранный буфер
@@ -663,6 +646,10 @@ print_obj_to_buff:
 ;		BIT6 = 1 - каретка в процессе уменьшения
 ;		BIT7 = 1 - каретка не в процессе трансформации
 
+; Keep the first two ball descriptors on one page for the hot selector.
+ IF ($ & 255) > 233
+ DS 256-($ & 255),0
+ ENDIF
 ; Свойства объекта шарик
 object_ball_1:
   DEFB $02,$00,$84,$00,$A8,$00,$38,$02
@@ -752,14 +739,7 @@ object_separator:
 ; Данные окон (спрайтов с фоном) для восстановления из буфера на экран - 7 шт. по 4 байта:
 ; Первые два байта - координаты
 ; Вторые два байта - размеры окна
-wins_recovery_data:
-  DEFB $00,$00,$00,$00
-  DEFB $00,$00,$00,$00
-  DEFB $00,$00,$00,$00
-  DEFB $00,$00,$00,$00
-  DEFB $00,$00,$00,$00
-  DEFB $00,$00,$00,$00
-  DEFB $00,$00,$00,$00
+wins_recovery_data: ds 10*3,0 ; deferred brick coordinates and level-byte pointer
 
 ; Счётчик количества окон (спрайтов с фоном) для восстановления из буфера на экран
 wins_counter:
@@ -5020,29 +5000,16 @@ brik_value_0:
 	pop DE
 	pop HL
 LB2D8:
- ex de,hl
- ; Keep the recovery queue used by the game loop; A/C are updated immediately.
- ld hl,(wins_recovery_ptr)
- ld (hl),d
- inc hl
- ld (hl),e
- inc hl
- ld (hl),b
- inc hl
- ld (hl),c
- inc hl
- ld (wins_recovery_ptr),hl
- ld a,(wins_counter)
- inc a
- ld (wins_counter),a
  ld hl,(cur_level_ptr)
  ld a,(hl)
  or $80
  ld (hl),a
+ ld a,(balls_quantity)
+ cp 3
+ jp z,NativeRestoreQueued
  jp NativeRestoreBrick
 
  INCLUDE "./routines/restore_brick_background.asm"
- INCLUDE "./routines/restore_magnet_sample.asm"
 
 ; Обновление цвета знакоместа сразу на экране по данным из буфера цвета
 ; На входе в HL - адрес в буфере атрибутов
@@ -5074,9 +5041,7 @@ PrintLineBody:
  ld a,(UiActive)
  or a
  jp nz,PrintLineKeepPixels
- ld a,(UiStencilPass)
- or a
- call z,ClearOutlinedLine
+ call ClearOutlinedLine
 PrintLineKeepPixels:
 	LD A,B
 	AND $3F
@@ -5139,22 +5104,22 @@ screen_coord_attrib:
 ; Used by the routines at show_window_round_number, print_obj_from_buf_to_scr, LAFFC, print_line and print_sprite.
 ; На входе в HL координаты, на выходе там же адрес на экране
 screen_addr_calc:
-	ld a,l
-	rra
-	rra
-	rra
-	and %11111
-	ld b,a
-	ld a,h
-	ld (screen_addr_calc_1+1),a
-	ld c,0
-	ld hl,zx_scr
-	add hl,bc
-	ld a,l
+ ld a,h
+ ld c,a
+ ld a,l
+ rrca
+ rrca
+ rrca
+ and 31
+ ld b,a
+ or $c0
+ ld h,a
+ ld a,$e0
 screen_addr_calc_1:
-	sub $00
-	ld l,a
-	ret
+ sub c
+ ld l,a
+ ld c,0
+ ret
 
 hl_add_2a:
 	add A,A
@@ -5487,29 +5452,14 @@ briks_data:
 ; Used by the routines at LBAED, LBB97 and LBC10.
 ; Восстанавливает несколько окон, количество задано в A
 wins_recovery:
-	LD HL,wins_recovery_data
-LB717_0:
-	LD D,(HL)		; IX+$00
-	inc HL
-	LD E,(HL)		; IX+$01
-	inc HL
-	LD B,(HL)		; IX+$02
-	inc HL
-	LD C,(HL)		; IX+$03
-	inc HL
-	push AF
-	push HL
-	ex DE,HL		; HL - координаты, BC - размеры окна
-	CALL win_bg_recovery
-	pop HL
-	pop AF
-	dec A
-	jp nz,LB717_0
-	;XOR A			; A уже равно 0
-	LD (wins_counter),A
-	LD HL,wins_recovery_data
-	LD (wins_recovery_ptr),HL
-	RET
+ ld a,(QueueFresh)
+ cp 2
+ jp nc,brq_frame_done
+ call NativeRestoreQueueStep
+brq_frame_done:
+ xor a
+ ld (QueueFresh),a
+ ret
 
 ; Used by the routine at all_metal_briks_animation_snd.
 ; Проигрывает один звук металлического кирпича, если на уровне есть хотя бы один такой кирпич
@@ -6000,11 +5950,25 @@ LBAED_3:
 LBAED_4:
 LBAED_5:
 GameplayLogicDone:
+ call wins_recovery
+ ; The frame wait is taken inside the renderer, between sprite preparation
+ ; and the erase of the old images: the erased interval then starts at the
+ ; top border instead of crossing the middle of the field.
+ ; Only the one-ball game is tied to the raster this way; two and three
+ ; balls keep the wait (or its absence) in front of the whole output.
+ ld a,(balls_quantity)
+ dec a
+ jp z,GameplaySyncInside
  call WaitGameplayFrame
+ jp GameplayDrawBegin
+GameplaySyncInside:
+ inc a
+ ld (GameplaySync),a
 GameplayDrawBegin:
  call RCBegin
  CALL planes_begin
  CALL DrawMovingObjects
+ call GameplaySyncPoint ; renderer left early: keep the frame pace
  call RCFlush
 	LD HL,object_bat_1+2
 	CALL running_dot
@@ -6018,9 +5982,6 @@ GameplayDrawBegin:
 
 direct_dots_done:
 	CALL restore_objs_and_magnet
-	LD A,(wins_counter)
-	AND A
-	CALL NZ,wins_recovery
 	CALL pause_game
 	JP LB9E8_2
 
@@ -6090,6 +6051,7 @@ LBB97_0:
 
 ; Used by the routine at LBBFB.
 increment_round_number:
+ call NativeRestoreQueueFlush
 	LD A,(round_number_1up)
 	INC A
 	LD (round_number_1up),A
@@ -6120,24 +6082,7 @@ LBBFB_0:
 
 ; Used by the routine at LBAED.
 LBC10:
-	LD A,(current_magnet_prop+1)
-	AND A
-	JP Z,LBC10_0
-	LD HL,(current_magnet_prop)
-	inc HL
-	inc HL
-	LD A,(HL)		; IX+$02
-	SUB $05
-	LD L,A
-	inc HL
-	inc HL
-	LD A,(HL)		; IX+$04
-	SUB $05
-	LD H,A
-	LD BC,$0417
-	CALL win_bg_recovery
-	XOR A
-	LD (current_magnet_prop+1),A
+ call NativeRestoreQueueFlush
 LBC10_0:
 
 	LD HL,object_ball_1
@@ -6498,8 +6443,8 @@ LBE8B_11:
  pop af
 	inc HL
  push af
- ld a,$1c
- call NativeWriteHL ; (IX+$02) = $1C
+ ld a,$0c
+ call NativeWriteHL ; (IX+$02) = $0C: «ИГРОК 1» по центру над счётом
  pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
@@ -6508,8 +6453,8 @@ LBE8B_11:
 	INC (HL)		; INC (IX+$01): spr_2up
 	inc HL
  push af
- ld a,$cc
- call NativeWriteHL ; (IX+$02) = $CC
+ ld a,$bc
+ call NativeWriteHL ; (IX+$02) = $BC: «ИГРОК 2» по центру над счётом
  pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
@@ -6518,8 +6463,8 @@ LBE8B_11:
 	INC (HL)		; INC (IX+$01): spr_hi
 	inc HL
  push af
- ld a,$78
- call NativeWriteHL ; (IX+$02) = $78
+ ld a,$68
+ call NativeWriteHL ; (IX+$02) = $68: «РЕКОРД» над счётом
  pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
@@ -6570,7 +6515,7 @@ LBE8B_11:
 ; 	jp nz,LBFCF_1
 ;   ENDIF
 
- jp DrawCpcFieldFrame
+ jp DrawFieldFrame
 
 ; Графика текстуры уровня 1
   INCLUDE "./gfx/sprites_color_3.asm"
@@ -6711,7 +6656,7 @@ scr_score_need_upd:
  INCLUDE "./routines/native_background.asm"
 ; A dedicated background color follows the original four-level cycle.
 SetPaletteLevel:
- ld a,3
+ ld a,1 ; the border continues the HUD paper around the screen
  ld (BorderColor),a
  ld a,FieldScroll ; Field starts at row 37; texture and side walls end at 255.
  ld (ScreenScroll),a
@@ -6762,17 +6707,20 @@ LBE8B_9:
 
 
 
- INCLUDE "routines/mono_region_intersect.asm"
+MonoRegionsIntersect EQU RCBegin
  INCLUDE "routines/mono_draw_bare.asm"
  INCLUDE "routines/mono_shift_draw.asm"
  INCLUDE "routines/mono_cache_reset.asm"
  INCLUDE "routines/magnet_center_draw.asm"
  INCLUDE "routines/cheat_keys.asm"
- INCLUDE "routines/cpc_field_frame.asm"
  INCLUDE "routines/cpc_bricks.asm"
  INCLUDE "routines/menu_controls.asm"
  INCLUDE "routines/game_over_panel.asm"
  INCLUDE "routines/mono_ball_shift.asm"
+ INCLUDE "routines/restore_brick_fast.asm"
+ INCLUDE "routines/magnet_background_cache.asm"
+ INCLUDE "routines/brick_restore_queue.asm"
+ INCLUDE "routines/mono_uncovered.asm"
 
 
 BATTYCODE_END:
@@ -6818,14 +6766,16 @@ table_shifts EQU $7200
  INCLUDE "routines/mono_isolation_data.asm"
 
  ASSERT $ <= $6b60
+ IF $ < $6b60
  DS $6b60-$,0
+ ENDIF
 RCBoundary:
 ClearShapeFlags:
  ret
 LevelPaperColors: db $80,$10,$81,$03
 LevelTextureColors: db $c0,$20,$c1,$05
  INCLUDE "routines/mono_cache_address.asm"
- INCLUDE "routines/mono_zero_column.asm"
+MonoZeroColumn EQU RCBegin
  INCLUDE "routines/game_over_score.asm"
  ASSERT $ <= $6ba0
 StackFloor EQU $6ba0
@@ -6845,7 +6795,9 @@ SpriteBonusCache7 EQU $6c80
 
 RCReset:
  jp MonoReset
- INCLUDE "routines/mono_region_include.asm"
+MonoIncludeRegion:
+ ret ; obsolete isolation entry
+ INCLUDE "routines/mono_pace_kernel.asm"
 MonoShifts: ds 11,0
 MonoDrawWhiteGeneral:
  ld a,b
@@ -6863,16 +6815,20 @@ MonoDrawWhiteGeneral:
  ; Renderer and per-owner phase cache in ordinary RAM below video.
  DS $7144-$,0
  ORG $7144
- INCLUDE "routines/mono_composite_build.asm"
+
  INCLUDE "routines/native_static_masks.asm"
- INCLUDE "routines/magnet_sample_color.asm"
  ASSERT $ <= SpriteCacheOriginal
  DS $7200-$,0
  ORG $7200
  INCLUDE "routines/mono_renderer.asm"
+ INCLUDE "routines/restore_brick_setup.asm"
+ INCLUDE "routines/restore_brick_fringe_fast.asm"
+ INCLUDE "routines/native_digit_cache.asm"
 MonoCodeEnd:
  ASSERT $ <= $7a00
+ IF $ < $7a00
  DS $7a00-$,0
+ ENDIF
  ORG $7a00
  DS $600,0
 end_bin:

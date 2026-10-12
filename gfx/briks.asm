@@ -1,14 +1,7 @@
 	; IFDEF MX
 
 ; Спрайт: кирпич, кадр 1
-spr_brik_1:
-	IFDEF MX
-  DEFB $FF,$FE,$80,$00,$80,$00,$80,$00
-  DEFB $80,$00,$80,$00,$80,$00,$00,$00
-	ELSE
-  DEFB $FF,$FE,$D5,#54,$AA,$AA,$D5,$54
-  DEFB $AA,$AA,$D5,$54,$AA,$AA,$00,$00
-	ENDIF
+spr_brik_1 EQU CpcBrickNoGlint
 
 ; Спрайт: кирпич, кадр 2
 spr_brik_2:
@@ -40,14 +33,7 @@ spr_brik_7:
   DEFB $00,$02,$00,$02,$00,$06,$00,$06
   DEFB $00,$06,$00,$0E,$FF,$FE,$00,$00
 
-; Спрайт: отдельно чёрный кирпич
-	IFDEF MX
-	; Нет спрайта
-	ELSE
-spr_brik_black:
-  DEFB $FF,$FE,$80,$00,$80,$00,$80,$00
-  DEFB $80,$00,$80,$00,$80,$00,$00,$00
-	ENDIF
+spr_brik_black EQU CpcBrickNoGlint
 
 	; ELSE
 

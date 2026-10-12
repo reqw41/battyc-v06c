@@ -102,16 +102,7 @@ gfx_bat:
   DEFW spr_bat_gun_3		; $12
   DEFW spr_bat_gun_4		; $13
 
-gfx_ball:
-  DEFW spr_ball_normal
-  DEFW spr_ball_normal_shift_1
-  DEFW spr_ball_normal_shift_2
-  DEFW spr_ball_normal_shift_3
-  DEFW spr_ball_normal_shift_4
-  DEFW spr_ball_normal_shift_5
-  DEFW spr_ball_normal_shift_6
-  DEFW spr_ball_normal_shift_7
-  DEFW spr_big_ball
+gfx_ball EQU BallRotationFrames
 
 gfx_bonuses:
   DEFW spr_bonus_size			;00

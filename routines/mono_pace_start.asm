@@ -8,7 +8,7 @@ PaceStartBody:
  call hl_add_a
  ld e,(hl)
  ld d,0
- ld hl,221 ; 14144 cycles; conservative after direct object-table indexing
+ ld hl,80 ; 5120 cycles; clear-old/redraw pipeline, no isolation pass
  add hl,de
  ld (PaceWork),hl
  ret

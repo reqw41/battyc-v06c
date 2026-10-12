@@ -1,6 +1,6 @@
 SpriteCacheReset:
- ld hl,MonoTags
- ld b,48
+ ld hl,MonoOnlyTags
+ ld b,4
  xor a
 mcr_zero:
  ld (hl),a

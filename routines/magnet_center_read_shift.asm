@@ -1,7 +1,1 @@
-MagnetCenterReadShift:
- ld hl,(MagnetCenterSource)
- ld a,(hl)
- inc hl
- inc hl
- ld (MagnetCenterSource),hl
- jp NativeSampleShift
+; Retired: magnets are painted from the cache (magnet_background_cache.asm).

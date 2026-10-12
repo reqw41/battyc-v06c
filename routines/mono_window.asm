@@ -18,7 +18,7 @@ SUWindowRestore:
  xor a
  ld (SUWindowValid),a
  ld (OverlayActive),a
- jp SpriteCacheReset
+ jp NativeMagCacheAfterWindow
 MonoWindowCopySave:
  ld a,0
  ld (mono_window_mode+1),a

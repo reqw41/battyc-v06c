@@ -1,160 +1,194 @@
-; Restore empty cells around a destroyed brick from immutable level texture.
-; Neighbor outlines are derived from the level map, never from video pixels.
-; Retire save-under first, then restore A/C/E; preserve intact brick animation.
+; Read the 3x3 logical neighbourhood once. Only the cross is repainted.
+; Magnets lie above the texture: the brick is restored as plain texture,
+; then the touched rows of every marked magnet are repainted from its cache.
 NativeRestoreBrick:
- call MagnetAccentReset
+ call NativeRestoreBrickBody
+ jp MagnetRepaintMarked
+NativeRestoreBrickBody:
  ld hl,(LB28F+1)
- ld a,l
- sub 16
- ld l,a
- ld a,h
- sub 8
- ld h,a
- push hl
+ ld (NativeRestoreOrigin),hl
+ call NativeRestoreChooseMagnets
+ call NativeRestoreQueueGate
+NativeRestoreGridStart:
  ld hl,(cur_level_ptr)
  ld de,-16
  add hl,de
- ex de,hl
- pop hl
+ ld de,NativeRestoreGrid
  ld b,3
-NativeRestorePatchRow:
+NativeRestoreGridRow:
  ld c,3
-NativeRestorePatchCell:
- ld a,b
- cp 2
- jp z,NativeRestorePatchVisit
- ld a,c
- cp 2
- jp nz,NativeRestorePatchNext
-NativeRestorePatchVisit:
- ld a,b
- cp 2
- jp nz,NativeRestoreSetRowClip
- xor a
-NativeRestoreSetRowClip:
- ld (NativeRestoreRowClip),a
- push hl
- ld hl,NativeRestoreClipTable-2
- ld a,c
- add a,a
- call hl_add_a
+NativeRestoreGridCell:
  ld a,(hl)
- ld (NativeRestoreLeftClip),a
- inc hl
- ld a,(hl)
- ld (NativeRestoreRightClip),a
- pop hl
-NativeRestoreVisitReady:
- call NativeRestoreEmptyCell
-NativeRestorePatchNext:
+ rlca
+ sbc a,a
+ cpl
+ ld (de),a
  inc de
+ inc hl
+ dec c
+ jp nz,NativeRestoreGridCell
+ push de
+ ld de,12
+ add hl,de
+ pop de
+ dec b
+ jp nz,NativeRestoreGridRow
+ ld hl,(NativeRestoreOrigin)
+ ld a,l
+ cp 8
+ jp nz,NativeRestoreGridRight
+ xor a
+ ld (NativeRestoreGrid),a
+ ld (NativeRestoreGrid+3),a
+ ld (NativeRestoreGrid+6),a
+NativeRestoreGridRight:
+ ld a,l
+ cp 232
+ jp nz,NativeRestoreGridTop
+ xor a
+ ld (NativeRestoreGrid+2),a
+ ld (NativeRestoreGrid+5),a
+ ld (NativeRestoreGrid+8),a
+NativeRestoreGridTop:
+ ld a,h
+ cp 32
+ jp nz,NativeRestoreGridBottom
+ xor a
+ ld (NativeRestoreGrid),a
+ ld (NativeRestoreGrid+1),a
+ ld (NativeRestoreGrid+2),a
+NativeRestoreGridBottom:
+ ld a,h
+ cp 120
+ jp nz,NativeRestoreCenter
+ xor a
+ ld (NativeRestoreGrid+6),a
+ ld (NativeRestoreGrid+7),a
+ ld (NativeRestoreGrid+8),a
+NativeRestoreCenter:
+ call NativeRestoreQueueSparseGate
+ call NativeRestoreResetMasks
+ ld a,(NativeRestoreGrid+3)
+ and $80
+ cpl
+ ld (NativeRestoreLeftMask),a
+ ld a,(NativeRestoreGrid+5)
+ and 1
+ cpl
+ ld (NativeRestoreRightMask),a
+ ld a,(NativeRestoreGrid+1)
+ cpl
+ ld (NativeRestoreTopMask),a
+ ld a,(NativeRestoreGrid+7)
+ cpl
+ ld (NativeRestoreBottomMask),a
+ ld a,$ff
+ ld (NativeRestoreLeftClip),a
+ ld (NativeRestoreRightClip),a
+ xor a
+ ld (NativeRestoreRowClip),a
+ ld hl,(NativeRestoreOrigin)
+ call NativeRestoreRect
+ ; Left fringe. Horizontal masks do not affect its last bit.
+ ld a,(NativeRestoreGrid+3)
+ or a
+ jp nz,NativeRestoreRightFringe
+ call NativeRestoreResetMasks
+ ld a,(NativeRestoreGrid)
+ cpl
+ ld (NativeRestoreTopMask),a
+ ld a,(NativeRestoreGrid+6)
+ cpl
+ ld (NativeRestoreBottomMask),a
+ xor a
+ ld (NativeRestoreLeftClip),a
+ ld (NativeRestoreRowClip),a
+ inc a
+ ld (NativeRestoreRightClip),a
+ ld hl,(NativeRestoreOrigin)
+ ld a,l
+ sub 16
+ ld l,a
+ call NativeRestoreRect
+NativeRestoreRightFringe:
+ ld a,(NativeRestoreGrid+5)
+ or a
+ jp nz,NativeRestoreTopFringe
+ call NativeRestoreResetMasks
+ ld a,(NativeRestoreGrid+2)
+ cpl
+ ld (NativeRestoreTopMask),a
+ ld a,(NativeRestoreGrid+8)
+ cpl
+ ld (NativeRestoreBottomMask),a
+ xor a
+ ld (NativeRestoreRightClip),a
+ ld (NativeRestoreRowClip),a
+ ld a,$80
+ ld (NativeRestoreLeftClip),a
+ ld hl,(NativeRestoreOrigin)
  ld a,l
  add a,16
  ld l,a
- dec c
- jp nz,NativeRestorePatchCell
- ld a,l
- sub 48
- ld l,a
+ call NativeRestoreRect
+NativeRestoreTopFringe:
+ ld a,(NativeRestoreGrid+1)
+ or a
+ jp nz,NativeRestoreBottomFringe
+ call NativeRestoreResetMasks
+ ld hl,NativeRestoreGrid
+ call NativeRestoreHorizontalMasks
+ ld a,3
+ ld (NativeRestoreRowClip),a
+ ld hl,(NativeRestoreOrigin)
+ ld a,h
+ sub 8
+ ld h,a
+ call NativeRestoreRect
+NativeRestoreBottomFringe:
+ ld a,(NativeRestoreGrid+7)
+ or a
+ ret nz
+ call NativeRestoreResetMasks
+ ld hl,NativeRestoreGrid+6
+ call NativeRestoreHorizontalMasks
+ ld a,1
+ ld (NativeRestoreRowClip),a
+ ld hl,(NativeRestoreOrigin)
  ld a,h
  add a,8
  ld h,a
- push hl
- ld hl,12
- add hl,de
- ex de,hl
- pop hl
- dec b
- jp nz,NativeRestorePatchRow
+ jp NativeRestoreRect
+NativeRestoreHorizontalMasks:
+ ld a,(hl)
+ and $80
+ cpl
+ ld (NativeRestoreLeftMask),a
+ inc hl
+ inc hl
+ ld a,(hl)
+ and 1
+ cpl
+ ld (NativeRestoreRightMask),a
+ ld a,$ff
+ ld (NativeRestoreLeftClip),a
+ ld (NativeRestoreRightClip),a
  ret
-
-; HL=Y/X, DE=level cell. Preserve the patch traversal registers.
-NativeRestoreEmptyCell:
- push af
- push bc
- push de
- push hl
- ld a,l
- cp 8
- jp c,NativeRestoreCellDone
- cp 248
- jp nc,NativeRestoreCellDone
- call NativeBrickPresent
- or a
- jp nz,NativeRestoreCellDone
- ld (NativeRestoreXY),hl
- ex de,hl
- ld (NativeRestoreLevel),hl
- ex de,hl
+NativeRestoreResetMasks:
  ld a,$ff
  ld (NativeRestoreLeftMask),a
  ld (NativeRestoreRightMask),a
  ld (NativeRestoreTopMask),a
  ld (NativeRestoreBottomMask),a
- ; Left neighbor. The periodic field border is applied per pixel row.
+ ret
+NativeRestoreRect:
  ld a,l
  cp 8
- jp z,NativeRestoreRightNeighbor
- sub 16
- ld l,a
- dec de
- call NativeBrickPresent
- or a
- jp z,NativeRestoreRightNeighbor
-NativeRestoreLeftEdge:
- ld a,$7f
- ld (NativeRestoreLeftMask),a
-NativeRestoreRightNeighbor:
- ld hl,(NativeRestoreXY)
- ex de,hl
- ld hl,(NativeRestoreLevel)
- ex de,hl
- ld a,l
- cp 232
- jp z,NativeRestoreAbove
- add a,16
- ld l,a
- inc de
- call NativeBrickPresent
- or a
- jp z,NativeRestoreAbove
-NativeRestoreRightEdge:
- ld a,$fe
- ld (NativeRestoreRightMask),a
-NativeRestoreAbove:
- ld hl,(NativeRestoreLevel)
- ld de,-15
- add hl,de
- ex de,hl
- ld hl,(NativeRestoreXY)
- ld a,h
- sub 8
- ld h,a
- call NativeBrickPresent
- cpl
- ld (NativeRestoreTopMask),a
-NativeRestoreBelow:
- ld hl,(NativeRestoreLevel)
- ld de,15
- add hl,de
- ex de,hl
- ld hl,(NativeRestoreXY)
- ld a,h
- add a,8
- ld h,a
- call NativeBrickPresent
- cpl
- ld (NativeRestoreBottomMask),a
- ; Empty cells use the texture color, in the C plane only.
- ld hl,(NativeRestoreXY)
- call scr_buff_attr_calc
- ld a,$d0
- call NativeWriteHL
- inc h
- call NativeWriteHL
- ld hl,(NativeRestoreXY)
- call scr_buff_addr_calc
- call NativePixelAddress
+ ret c
+ cp 248
+ ret nc
+ ld (NativeRestoreXY),hl
+ call NativeRestoreAddressSetup
  ld a,(NativeRestoreLeftMask)
  ld (NativeRestoreMask+1),a
  ld a,(NativeRestoreLeftClip)
@@ -165,128 +199,54 @@ NativeRestoreBelow:
  ld (NativeRestoreMask+1),a
  ld a,(NativeRestoreRightClip)
  ld (NativeRestoreClip+1),a
- call NativeRestoreTextureColumn
-NativeRestoreCellDone:
- pop hl
- pop de
- pop bc
- pop af
- ret
-
-; DE=C-plane destination. Texture columns descend as logical Y increases.
+ jp NativeRestoreTextureColumn
+ ; DE=C video. Cell rows are aligned to eight pixels, so the texture
+ ; pointer can descend within its sixteen-byte period without wrapping.
 NativeRestoreTextureColumn:
+ call NativeRestoreQueueColumn
+ ret c
  ld a,(NativeRestoreClip+1)
  or a
  ret z
  push de
- ld b,8
-NativeRestoreTextureRow:
- ld a,(NativeRestoreRowClip)
- or a
- jp z,NativeRestoreReadTexture
- cp 3
- ld a,b
- jp nz,NativeRestoreClipFirst
- cp 1
- jp nz,NativeRestoreSkipPixel
- jp NativeRestoreReadTexture
-NativeRestoreClipFirst:
- cp 8
- jp nz,NativeRestoreSkipPixel
-NativeRestoreReadTexture:
  ld a,d
  and 1
  ld hl,(NativeTextureLeft+1)
- jp z,NativeRestoreTextureSource
+ jp z,NativeRestoreSource
  ld hl,(NativeTextureRight+1)
-NativeRestoreTextureSource:
+NativeRestoreSource:
  ld a,e
  sub $21
  and 15
  call hl_add_a
- ld a,(magnets_quantity)
+ ld b,8
+ ld a,(NativeRestoreRowClip)
  or a
- ld a,(hl)
- call nz,NativeRestoreMagnetSample
-NativeRestoreMask:
- and $ff
- ld c,a
+ jp z,NativeRestoreFastCheck
+ ld b,1
+ cp 3
+ jp nz,NativeRestoreFastCheck
+ ld a,e
+ sub 7
+ ld e,a
+ push de
+ ld de,-7
+ add hl,de
+ pop de
+NativeRestoreFastCheck:
+ ld a,(NativeRestoreClip+1)
+ cp $ff
+ jp nz,NativeRestoreFringeFast
  ld a,b
  cp 8
- ld a,c
- jp nz,NativeRestoreNotFirstRow
- ld hl,NativeRestoreTopMask
- and (hl)
-NativeRestoreNotFirstRow:
- ld c,a
- ld a,b
- cp 1
- ld a,c
- jp nz,NativeRestoreWriteRow
- ld hl,NativeRestoreBottomMask
- and (hl)
-; The CPC wall is outside the 30 field columns; no old ZX shadow stripes.
-NativeRestoreWriteRow:
-NativeRestoreStorePixel:
- ld c,a
-NativeRestoreClipPixel:
- ld a,d
- add $20
- ld d,a
- ld a,(NativeRestoreClip+1)
- cpl
- ld h,a
- ld a,(de)
- and h
- ld l,a
- ld a,(NativeRestoreClip+1)
- ld h,a
- push bc
- ld a,(NativeSampleAccentE)
- and c
- ld b,a
- ld a,c
- cpl
- or b
- pop bc
- and h
- or l
- ld (de),a
- ld a,d
- sub $20
- ld d,a
- ld a,c
-NativeRestoreClip:
- and $ff
- ld c,a
- ld a,(NativeRestoreClip+1)
- cpl
- ld h,a
- ld a,(de)
- and h
- or c
- ld (de),a
- ld a,d
- sub $20
- ld d,a
- ld a,(de)
- and h
- ld l,a
- ld a,(NativeSampleAccentA)
- and c
- or l
- ld (de),a
- ld a,d
- add a,$20
- ld d,a
-NativeRestoreSkipPixel:
- dec e
- dec b
- jp nz,NativeRestoreTextureRow
- pop de
- ret
+ jp z,NativeRestoreCopyFull
+ jp NativeRestoreFringeFast
+; Former immediates of the retired sampled row loop; still used as variables.
+NativeRestoreMask: db 0,0
+NativeRestoreClip: db 0,0
 NativeRestoreXY: dw 0
-NativeRestoreLevel: dw 0
+NativeRestoreOrigin: dw 0
+NativeRestoreGrid: ds 9,0
 NativeRestoreLeftMask: db 0
 NativeRestoreRightMask: db 0
 NativeRestoreTopMask: db 0

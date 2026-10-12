@@ -3,7 +3,7 @@ pad_rows:
  call hl_add_a
  ld e,(hl)
  ld d,0
- ld hl,60 ; 3840 cycles of successful owner preparation/control
+ ld hl,20 ; 1280 cycles of successful owner preparation/control
  ld a,b
  or a
  jp z,pad_add

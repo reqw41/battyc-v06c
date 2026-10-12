@@ -2,7 +2,9 @@
 const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
 const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const inst=E.cpu.instruction.bind(E.cpu);
 const B=make('../../outputs/batty-three-plus-one-cpc-bricks.rom','../../outputs/batty-three-plus-one-cpc-bricks.sym');
-for(const offset of[0,16])for(let i=0;i<(offset?16:12);i++)assert.equal(E.rd(E.L.txt_player_0_enter_your_name+offset+4+i),B.rd(B.L.txt_player_0_enter_your_name+offset+4+i),'name-entry text changed');
+// Russian font order: digits, 32 letters, punctuation, Latin Y.
+const ABC='0123456789АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ., -=Y',textAt=(M,a,n)=>Array.from({length:n},(_,i)=>ABC[M.rd(a+i)]).join('');
+assert.equal(textAt(E,E.L.txt_player_0_enter_your_name+4,12),'   ИГРОК 0  ','name-entry text changed');assert.equal(textAt(E,E.L.txt_player_0_enter_your_name+20,16),'ВВЕДИТЕ ВАШЕ ИМЯ','name-entry text changed');
 let loops=0,done=false;
 E.cpu.instruction=function(){if(this.pc===E.L.L93F8_0){
  loops++;
@@ -22,6 +24,6 @@ try{for(let f=0;f<1000;f++)R.run(1);}catch(e){if(e!=='records')throw e;}assert(r
 for(let i=0;i<10;i++){
  const rankY=R.rd(R.L.txt_high_score_table+i*6+1);
  const scoreY=R.rd(R.L.txt_high_score_table+61+i*18+1);assert.equal(rankY,39+i*17);assert.equal(scoreY,rankY);
- for(let c=0;c<14;c++)assert.equal(R.rd(R.L.txt_high_score_table+61+i*18+4+c),B.rd(B.L.txt_high_score_table+61+i*18+4+c),'record contents changed');
+ assert.equal(textAt(R,R.L.txt_high_score_table+61+i*18+4,14),String((10-i)*10000).padStart(6,'0')+'   '+(i%2?'П А К':'Х И Т'),'record contents changed');
 }
 const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),menuLoops:loops,togglesPerPlayer:2,keyboardJoystickToggleVerified:true,highScoreRows:10,rankAndScoreBaselinesMatch:true,rowSpacing:17,passed:true};fs.writeFileSync('outputs/batty-full-height-menu-selection.json',JSON.stringify(result,null,2));console.log(result);

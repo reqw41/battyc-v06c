@@ -5,43 +5,45 @@ spr_bomb:
  INCLUDE "routines/mono_pace_start.asm"
 MonoPadEnd_spr_bomb:
  ASSERT $ <= spr_bomb+66
- IF $ < spr_bomb+66
- DS spr_bomb+66-$,0
- ENDIF
 spr_magnet_circle_off:
- DEFB $03,$17,$ff,$00,$f8,$00,$e0,$03,$c0,$0e,$c0,$18
- DEFB $80,$11,$80,$32,$80,$24,$00,$22,$00,$61,$00,$40
- DEFB $00,$4c,$00,$4c,$00,$40,$00,$60,$00,$21,$80,$22
- DEFB $80,$34,$80,$12,$c0,$19,$c0,$0e,$e0,$03,$f8,$00
- DEFB $00,$00,$00,$7f,$00,$c1,$00,$1c,$00,$10,$00,$18
- DEFB $00,$90,$00,$41,$00,$9c,$00,$26,$00,$4f,$00,$5f
- DEFB $00,$5f,$00,$7f,$00,$3e,$00,$1c,$00,$80,$00,$5d
- DEFB $00,$90,$00,$18,$00,$10,$00,$c1,$00,$7f,$7f,$00
- DEFB $0f,$00,$03,$e0,$01,$38,$01,$0c,$00,$44,$00,$a6
- DEFB $00,$52,$00,$02,$00,$03,$00,$01,$00,$19,$00,$19
- DEFB $00,$01,$00,$03,$00,$42,$00,$82,$00,$46,$00,$84
- DEFB $00,$4c,$00,$38,$01,$e0,$0a,$00
-spr_magnet_circle_on:
- DEFB $04,$1e,$ff,$00,$f8,$00,$e0,$03,$c0,$0f,$c0,$1f
- DEFB $80,$1f,$80,$27,$80,$39,$00,$3e,$00,$7f,$00,$7e
- DEFB $00,$7f,$00,$7f,$00,$7e,$00,$7f,$00,$3e,$80,$39
- DEFB $80,$27,$80,$1f,$c0,$1f,$c0,$0f,$e0,$03,$f8,$00
+ DEFB $04,$18,$ff,$00,$f8,$00,$e0,$00,$c0,$00,$c0,$00
+ DEFB $80,$01,$80,$02,$80,$04,$00,$02,$00,$01,$00,$00
+ DEFB $00,$0c,$00,$0c,$00,$00,$00,$00,$00,$01,$80,$02
+ DEFB $80,$04,$80,$02,$c0,$01,$c0,$00,$e0,$00,$f8,$00
+ DEFB $ff,$00,$00,$00,$00,$00,$00,$00,$00,$1c,$00,$10
+ DEFB $00,$18,$00,$90,$00,$41,$00,$80,$00,$00,$00,$00
+ DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$80
+ DEFB $00,$5d,$00,$90,$00,$18,$00,$10,$00,$00,$00,$00
+ DEFB $00,$00,$7f,$00,$0f,$00,$03,$00,$01,$00,$01,$00
+ DEFB $00,$40,$00,$a0,$00,$50,$00,$00,$00,$00,$00,$00
+ DEFB $00,$18,$00,$18,$00,$00,$00,$00,$00,$40,$00,$80
+ DEFB $00,$40,$00,$80,$01,$40,$01,$00,$03,$00,$0f,$00
+ DEFB $7f,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
+ DEFB $ff,$00,$ff,$00,$ff,$00,$7f,$00,$7f,$00,$7f,$00
+ DEFB $7f,$00,$7f,$00,$7f,$00,$7f,$00,$7f,$00,$ff,$00
  DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
- DEFB $ff,$00,$00,$00,$00,$7f,$00,$f7,$00,$f7,$00,$f7
- DEFB $00,$f7,$00,$c1,$00,$e3,$00,$b6,$00,$3e,$00,$3e
- DEFB $00,$ff,$00,$ff,$00,$3e,$00,$3e,$00,$b6,$00,$e3
- DEFB $00,$c1,$00,$f7,$00,$f7,$00,$f7,$00,$f7,$00,$7f
- DEFB $00,$00,$aa,$00,$55,$00,$aa,$00,$d5,$00,$fa,$00
- DEFB $ff,$00,$7f,$00,$0f,$00,$03,$e0,$01,$f8,$01,$fc
- DEFB $00,$fc,$00,$f2,$00,$ce,$00,$be,$00,$7f,$00,$3f
- DEFB $00,$ff,$00,$ff,$00,$3f,$00,$7f,$00,$be,$00,$ce
- DEFB $00,$f2,$00,$fc,$00,$fc,$00,$f8,$01,$e0,$0a,$00
- DEFB $55,$00,$aa,$00,$55,$00,$aa,$00,$55,$00,$aa,$00
- DEFB $55,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
- DEFB $ff,$00,$ff,$00,$ff,$00,$7f,$00,$7f,$00,$3f,$00
- DEFB $5f,$00,$2f,$00,$57,$00,$2f,$00,$57,$00,$ab,$00
- DEFB $57,$00,$ab,$00,$57,$00,$ab,$00,$57,$00,$af,$00
- DEFB $57,$00,$af,$00,$5f,$00,$af,$00,$5f,$00,$bf,$00
+ DEFB $ff,$00
+spr_magnet_circle_on:
+ DEFB $04,$1e,$ff,$00,$f8,$00,$e0,$00,$c0,$03,$c0,$07
+ DEFB $80,$0f,$84,$1b,$82,$1d,$01,$3e,$00,$3f,$01,$3e
+ DEFB $00,$3f,$00,$3f,$01,$3e,$00,$3f,$01,$3e,$82,$1d
+ DEFB $84,$1b,$80,$0f,$c0,$07,$c0,$03,$e0,$00,$f8,$00
+ DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
+ DEFB $ff,$00,$00,$00,$00,$00,$00,$ff,$08,$f7,$08,$f7
+ DEFB $08,$f7,$3e,$c1,$1c,$e3,$49,$b6,$dd,$22,$ff,$00
+ DEFB $3e,$c1,$3e,$c1,$ff,$00,$dd,$22,$49,$b6,$1c,$e3
+ DEFB $3e,$c1,$08,$f7,$08,$f7,$08,$f7,$00,$ff,$00,$00
+ DEFB $00,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
+ DEFB $ff,$00,$7f,$00,$0f,$00,$03,$80,$01,$e0,$01,$f0
+ DEFB $00,$f8,$10,$ec,$20,$dc,$40,$be,$80,$7e,$c0,$3e
+ DEFB $00,$fe,$00,$fe,$c0,$3e,$80,$7e,$40,$be,$20,$dc
+ DEFB $10,$ec,$00,$f8,$01,$f0,$01,$e0,$03,$80,$0f,$00
+ DEFB $7f,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
+ DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
+ DEFB $ff,$00,$ff,$00,$ff,$00,$7f,$00,$7f,$00,$7f,$00
+ DEFB $7f,$00,$7f,$00,$7f,$00,$7f,$00,$7f,$00,$ff,$00
+ DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
+ DEFB $ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00
 spr_separator:
  DEFB $02,$18,$cf,$00,$87,$30,$03,$58,$03,$58,$03,$58
@@ -59,9 +61,6 @@ spr_big_ball:
  INCLUDE "routines/magnet_center_read.asm"
 MonoPadEnd_spr_big_ball:
  ASSERT $ <= spr_big_ball+50
- IF $ < spr_big_ball+50
- DS spr_big_ball+50-$,0
- ENDIF
 spr_400_points:
  DEFB $03,$0a,$cf,$00,$87,$30,$81,$30,$80,$36,$80,$36
  DEFB $80,$3f,$80,$3f,$c0,$06,$f0,$06,$f9,$00,$81,$00
@@ -79,79 +78,34 @@ spr_ball_normal:
  INCLUDE "routines/mono_pace_white.asm"
 MonoPadEnd_spr_ball_normal:
  ASSERT $ <= spr_ball_normal+50
- IF $ < spr_ball_normal+50
- DS spr_ball_normal+50-$,0
- ENDIF
 spr_ball_normal_shift_1:
- DEFB $02,$06,$e3,$00,$c1,$1c,$80,$26,$80,$2e,$80,$3e
- DEFB $c1,$1c,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
- DEFB $ff,$00
  INCLUDE "routines/mono_pace_dispatch.asm"
 MonoPadEnd_spr_ball_normal_shift_1:
- ASSERT $ <= spr_ball_normal_shift_1+74
- IF $ < spr_ball_normal_shift_1+74
- DS spr_ball_normal_shift_1+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_1+48
 spr_ball_normal_shift_2:
- DEFB $02,$06,$f1,$00,$e0,$0e,$c0,$13,$c0,$17,$c0,$1f
- DEFB $e0,$0e,$ff,$00,$ff,$00,$7f,$00,$7f,$00,$7f,$00
- DEFB $ff,$00
  INCLUDE "routines/ui_mono_outline_1.asm"
 MonoPadEnd_spr_ball_normal_shift_2:
- ASSERT $ <= spr_ball_normal_shift_2+74
- IF $ < spr_ball_normal_shift_2+74
- DS spr_ball_normal_shift_2+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_2+48
 spr_ball_normal_shift_3:
- DEFB $02,$06,$f8,$00,$f0,$07,$e0,$09,$e0,$0b,$e0,$0f
- DEFB $f0,$07,$ff,$00,$7f,$00,$3f,$80,$3f,$80,$3f,$80
- DEFB $7f,$00
  INCLUDE "routines/ui_mono_outline_2.asm"
 MonoPadEnd_spr_ball_normal_shift_3:
- ASSERT $ <= spr_ball_normal_shift_3+74
- IF $ < spr_ball_normal_shift_3+74
- DS spr_ball_normal_shift_3+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_3+48
 spr_ball_normal_shift_4:
- DEFB $02,$06,$fc,$00,$f8,$03,$f0,$04,$f0,$05,$f0,$07
- DEFB $f8,$03,$7f,$00,$3f,$80,$1f,$c0,$1f,$c0,$1f,$c0
- DEFB $3f,$80
  INCLUDE "routines/ui_outline_byte.asm"
 MonoPadEnd_spr_ball_normal_shift_4:
- ASSERT $ <= spr_ball_normal_shift_4+74
- IF $ < spr_ball_normal_shift_4+74
- DS spr_ball_normal_shift_4+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_4+48
 spr_ball_normal_shift_5:
- DEFB $02,$06,$fe,$00,$fc,$01,$f8,$02,$f8,$02,$f8,$03
- DEFB $fc,$01,$3f,$00,$1f,$c0,$0f,$60,$0f,$e0,$0f,$e0
- DEFB $1f,$c0
  INCLUDE "routines/mono_window_setup.asm"
 MonoPadEnd_spr_ball_normal_shift_5:
- ASSERT $ <= spr_ball_normal_shift_5+74
- IF $ < spr_ball_normal_shift_5+74
- DS spr_ball_normal_shift_5+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_5+48
 spr_ball_normal_shift_6:
- DEFB $02,$06,$ff,$00,$fe,$00,$fc,$01,$fc,$01,$fc,$01
- DEFB $fe,$00,$1f,$00,$0f,$e0,$07,$30,$07,$70,$07,$f0
- DEFB $0f,$e0
  INCLUDE "routines/mono_pace_draw_1.asm"
 MonoPadEnd_spr_ball_normal_shift_6:
- ASSERT $ <= spr_ball_normal_shift_6+74
- IF $ < spr_ball_normal_shift_6+74
- DS spr_ball_normal_shift_6+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_6+48
 spr_ball_normal_shift_7:
- DEFB $02,$06,$ff,$00,$ff,$00,$fe,$00,$fe,$00,$fe,$00
- DEFB $ff,$00,$8f,$00,$07,$70,$03,$98,$03,$b8,$03,$f8
- DEFB $07,$70
  INCLUDE "routines/mono_pace_draw_2.asm"
 MonoPadEnd_spr_ball_normal_shift_7:
- ASSERT $ <= spr_ball_normal_shift_7+74
- IF $ < spr_ball_normal_shift_7+74
- DS spr_ball_normal_shift_7+74-$,0
- ENDIF
+ ASSERT $ <= spr_ball_normal_shift_7+48
 spr_bat_normal_shift:
  DEFB $05,$0a,$fc,$00,$f8,$01,$f0,$03,$f0,$06,$f0,$04
  DEFB $f0,$07,$f0,$07,$f0,$03,$f8,$01,$fc,$00,$00,$00
@@ -165,15 +119,9 @@ spr_bat_normal_shift:
  INCLUDE "routines/native_rotate.asm"
 MonoPadEnd_spr_bat_normal_shift:
  ASSERT $ <= spr_bat_normal_shift+132
- IF $ < spr_bat_normal_shift+132
- DS spr_bat_normal_shift+132-$,0
- ENDIF
 spr_bullet_1:
  DEFB $01,$05,$9f,$00,$1f,$40,$1f,$40,$1f,$40,$9f,$00
- DS 6,0
-spr_bullet_2:
- DEFB $01,$05,$9f,$00,$1f,$40,$1f,$40,$1f,$40,$9f,$00
- DS 6,0
+spr_bullet_2 EQU spr_bullet_1
 spr_bullet_blast_1:
  DEFB $01,$06,$ff,$00,$ff,$00,$e7,$00,$c3,$18,$c3,$18
  DEFB $e7,$00
@@ -197,9 +145,6 @@ spr_bat_normal:
  INCLUDE "routines/mono_pace_old.asm"
 MonoPadEnd_spr_bat_normal:
  ASSERT $ <= spr_bat_normal+106
- IF $ < spr_bat_normal+106
- DS spr_bat_normal+106-$,0
- ENDIF
 spr_bat_right_part:
  DEFB $03,$0a,$00,$00,$80,$7f,$80,$00,$80,$00,$80,$7f
  DEFB $80,$7f,$80,$7f,$80,$7f,$80,$7f,$00,$00,$00,$00
@@ -210,9 +155,6 @@ spr_bat_right_part:
  INCLUDE "routines/magnet_center_put.asm"
 MonoPadEnd_spr_bat_right_part:
  ASSERT $ <= spr_bat_right_part+80
- IF $ < spr_bat_right_part+80
- DS spr_bat_right_part+80-$,0
- ENDIF
 spr_bat_left_part:
  DEFB $03,$0a,$c0,$00,$80,$1b,$00,$34,$00,$64,$00,$4b
  DEFB $00,$7b,$00,$7b,$00,$3b,$80,$1b,$c0,$00,$00,$00
@@ -223,9 +165,6 @@ spr_bat_left_part:
  INCLUDE "routines/magnet_center_stride.asm"
 MonoPadEnd_spr_bat_left_part:
  ASSERT $ <= spr_bat_left_part+80
- IF $ < spr_bat_left_part+80
- DS spr_bat_left_part+80-$,0
- ENDIF
 spr_bat_big:
  DEFB $06,$0a,$c0,$00,$80,$1b,$00,$34,$00,$64,$00,$4b
  DEFB $00,$7b,$00,$7b,$00,$3b,$80,$1b,$c0,$00,$00,$00
@@ -241,9 +180,6 @@ spr_bat_big:
  INCLUDE "routines/mono_pace_bat.asm"
 MonoPadEnd_spr_bat_big:
  ASSERT $ <= spr_bat_big+158
- IF $ < spr_bat_big+158
- DS spr_bat_big+158-$,0
- ENDIF
 spr_bat_gun_1:
  DEFB $04,$0a,$e0,$00,$c0,$0d,$80,$1a,$80,$32,$80,$25
  DEFB $80,$3d,$80,$3d,$80,$1d,$c0,$0d,$e0,$00,$00,$00
@@ -255,9 +191,6 @@ spr_bat_gun_1:
  INCLUDE "routines/mono_bonus_height.asm"
 MonoPadEnd_spr_bat_gun_1:
  ASSERT $ <= spr_bat_gun_1+106
- IF $ < spr_bat_gun_1+106
- DS spr_bat_gun_1+106-$,0
- ENDIF
 spr_bat_gun_2:
  DEFB $04,$0a,$e0,$00,$c0,$0d,$80,$1a,$80,$32,$80,$25
  DEFB $80,$3d,$80,$3e,$80,$1e,$c0,$0e,$e0,$00,$00,$00
@@ -269,9 +202,6 @@ spr_bat_gun_2:
  INCLUDE "routines/ui_clear_line_1.asm"
 MonoPadEnd_spr_bat_gun_2:
  ASSERT $ <= spr_bat_gun_2+106
- IF $ < spr_bat_gun_2+106
- DS spr_bat_gun_2+106-$,0
- ENDIF
 spr_bat_gun_3:
  DEFB $04,$0a,$c0,$00,$80,$1b,$00,$34,$00,$64,$00,$4b
  DEFB $00,$7b,$00,$7d,$00,$3d,$80,$1e,$c0,$00,$06,$00
@@ -283,9 +213,6 @@ spr_bat_gun_3:
  INCLUDE "routines/ui_clear_line_2.asm"
 MonoPadEnd_spr_bat_gun_3:
  ASSERT $ <= spr_bat_gun_3+106
- IF $ < spr_bat_gun_3+106
- DS spr_bat_gun_3+106-$,0
- ENDIF
 spr_bat_gun_4:
  DEFB $04,$0a,$c0,$00,$80,$1b,$00,$34,$00,$64,$00,$4b
  DEFB $00,$7b,$00,$7d,$00,$3e,$80,$1f,$c0,$00,$00,$00
@@ -297,9 +224,6 @@ spr_bat_gun_4:
  INCLUDE "routines/paper_plane_fill.asm"
 MonoPadEnd_spr_bat_gun_4:
  ASSERT $ <= spr_bat_gun_4+106
- IF $ < spr_bat_gun_4+106
- DS spr_bat_gun_4+106-$,0
- ENDIF
 spr_bat_gun:
  DEFB $04,$0b,$ff,$00,$80,$00,$00,$3b,$00,$64,$00,$44
  DEFB $00,$7b,$00,$7d,$00,$3e,$80,$0f,$e0,$00,$ff,$00
@@ -312,9 +236,6 @@ spr_bat_gun:
  INCLUDE "routines/magnet_center_read_shift.asm"
 MonoPadEnd_spr_bat_gun:
  ASSERT $ <= spr_bat_gun+106
- IF $ < spr_bat_gun+106
- DS spr_bat_gun+106-$,0
- ENDIF
 spr_bat_gun_shift:
  DEFB $05,$0b,$ff,$00,$f8,$00,$f0,$03,$f0,$06,$f0,$04
  DEFB $f0,$07,$f0,$07,$f0,$03,$f8,$00,$fe,$00,$ff,$00
@@ -329,9 +250,6 @@ spr_bat_gun_shift:
  INCLUDE "routines/mono_pace_shift.asm"
 MonoPadEnd_spr_bat_gun_shift:
  ASSERT $ <= spr_bat_gun_shift+152
- IF $ < spr_bat_gun_shift+152
- DS spr_bat_gun_shift+152-$,0
- ENDIF
 spr_bat_big_shift:
  DEFB $07,$0a,$fc,$00,$f8,$01,$f0,$03,$f0,$06,$f0,$04
  DEFB $f0,$07,$f0,$07,$f0,$03,$f8,$01,$fc,$00,$00,$00
@@ -348,31 +266,21 @@ spr_bat_big_shift:
  INCLUDE "routines/ui_glyph_background.asm"
 MonoPadEnd_spr_bat_big_shift:
  ASSERT $ <= spr_bat_big_shift+184
- IF $ < spr_bat_big_shift+184
- DS spr_bat_big_shift+184-$,0
- ENDIF
 spr_spark_1:
  DEFB $01,$07,$ef,$00,$c7,$10,$83,$10,$01,$7c,$83,$10
  DEFB $c7,$10,$ef,$00
  INCLUDE "routines/mono_pace_wait.asm"
 MonoPadEnd_spr_spark_1:
  ASSERT $ <= spr_spark_1+46
- IF $ < spr_spark_1+46
- DS spr_spark_1+46-$,0
- ENDIF
 spr_spark_2:
  DEFB $01,$07,$df,$00,$8f,$20,$8f,$20,$07,$70,$8f,$20
  DEFB $8f,$20,$df,$00
- DS 6,0
 spr_spark_3:
  DEFB $01,$05,$df,$00,$8f,$20,$07,$70,$8f,$20,$df,$00
- DS 6,0
 spr_spark_4:
  DEFB $01,$04,$bf,$00,$1f,$40,$1f,$40,$bf,$00
- DS 4,0
 spr_spark_5:
  DEFB $01,$03,$bf,$00,$1f,$40,$bf,$00
- DS 2,0
 spr_ufo_1:
  DEFB $03,$0e,$ff,$00,$fc,$00,$f0,$03,$c0,$0e,$80,$38
  DEFB $00,$70,$00,$61,$80,$00,$00,$79,$00,$79,$00,$79
@@ -440,7 +348,6 @@ spr_bird_1:
  DEFB $00,$5a,$00,$99,$00,$91,$6e,$00,$ff,$00,$f1,$00
  DEFB $80,$0e,$01,$7c,$03,$f8,$07,$e0,$1f,$80,$7f,$00
  DEFB $7f,$00,$7f,$00,$3f,$80,$7f,$00
- DS 24,0
 spr_bird_2:
  DEFB $03,$0b,$ff,$00,$ff,$00,$ff,$00,$fe,$00,$e0,$01
  DEFB $c0,$1f,$80,$3f,$00,$60,$9f,$00,$fe,$00,$ff,$00
@@ -451,9 +358,6 @@ spr_bird_2:
  INCLUDE "routines/ui_menu_overlay.asm"
 MonoPadEnd_spr_bird_2:
  ASSERT $ <= spr_bird_2+92
- IF $ < spr_bird_2+92
- DS spr_bird_2+92-$,0
- ENDIF
 spr_bird_3:
  DEFB $03,$0b,$ff,$00,$ff,$00,$ff,$00,$fe,$00,$f8,$01
  DEFB $f0,$07,$e0,$0f,$c0,$1c,$c3,$18,$86,$30,$cf,$00
@@ -464,9 +368,6 @@ spr_bird_3:
  INCLUDE "routines/magnet_center_e.asm"
 MonoPadEnd_spr_bird_3:
  ASSERT $ <= spr_bird_3+92
- IF $ < spr_bird_3+92
- DS spr_bird_3+92-$,0
- ENDIF
 spr_bird_4:
  DEFB $03,$0b,$ff,$00,$fc,$00,$f8,$03,$f0,$07,$e0,$0e
  DEFB $e1,$0c,$e1,$0c,$c1,$1c,$c2,$18,$c7,$10,$ef,$00
@@ -477,9 +378,6 @@ spr_bird_4:
  INCLUDE "routines/magnet_center_locate.asm"
 MonoPadEnd_spr_bird_4:
  ASSERT $ <= spr_bird_4+86
- IF $ < spr_bird_4+86
- DS spr_bird_4+86-$,0
- ENDIF
 spr_bird_5:
  DEFB $03,$0f,$cf,$00,$87,$30,$c3,$18,$e1,$0c,$e0,$0e
  DEFB $f0,$07,$f8,$03,$f8,$03,$fc,$01,$fe,$00,$ff,$00
@@ -492,9 +390,6 @@ spr_bird_5:
  INCLUDE "routines/magnet_accent_off.asm"
 MonoPadEnd_spr_bird_5:
  ASSERT $ <= spr_bird_5+110
- IF $ < spr_bird_5+110
- DS spr_bird_5+110-$,0
- ENDIF
 spr_alien_blast_1:
  DEFB $02,$0d,$ff,$00,$ff,$00,$ff,$00,$fd,$00,$f3,$00
  DEFB $e0,$0c,$e0,$0f,$f0,$07,$e8,$02,$f0,$07,$e0,$0e
@@ -568,7 +463,6 @@ spr_bonus_smash:
  DEFB $07,$70,$03,$98,$01,$3c,$01,$7c,$01,$fc,$03,$f8
  DEFB $07,$70,$03,$00,$01,$d4,$01,$14,$01,$dc,$01,$54
  DEFB $01,$d4
- DS 6,0
 spr_bonus_kill_aliens:
  DEFB $03,$0e,$f0,$00,$e0,$0f,$e0,$0d,$c0,$1d,$c0,$1c
  DEFB $80,$3d,$80,$3d,$00,$7f,$00,$45,$00,$55,$00,$45
@@ -578,7 +472,6 @@ spr_bonus_kill_aliens:
  DEFB $07,$f0,$07,$70,$03,$78,$03,$78,$01,$7c,$01,$3c
  DEFB $00,$fe,$00,$22,$00,$ae,$00,$a2,$00,$ba,$00,$a2
  DEFB $00,$fe
- DS 6,0
 spr_bonus_hand:
  DEFB $03,$0b,$ff,$00,$ff,$00,$ff,$00,$fc,$00,$f8,$03
  DEFB $80,$07,$00,$6f,$00,$0f,$00,$6f,$00,$6f,$00,$6f
@@ -586,7 +479,6 @@ spr_bonus_hand:
  DEFB $00,$fc,$00,$ff,$00,$ff,$00,$ff,$00,$fe,$9f,$00
  DEFB $0f,$60,$07,$70,$03,$b8,$03,$d8,$03,$58,$03,$38
  DEFB $07,$f0,$0f,$e0,$1f,$c0,$3f,$00
- DS 6,0
 spr_bonus_size:
  DEFB $03,$0a,$c0,$00,$80,$37,$00,$48,$00,$48,$80,$17
  DEFB $80,$30,$00,$7f,$80,$30,$c0,$17,$e0,$0f,$00,$00
@@ -594,7 +486,6 @@ spr_bonus_size:
  DEFB $00,$fc,$00,$ff,$00,$ff,$0f,$00,$07,$b0,$03,$48
  DEFB $03,$48,$07,$a0,$07,$30,$03,$f8,$07,$30,$0f,$a0
  DEFB $1f,$c0
- DS 6,0
 spr_bonus_slow:
  DEFB $03,$0e,$e3,$00,$c1,$1c,$80,$22,$00,$4f,$00,$5f
  DEFB $00,$5f,$80,$3e,$c1,$1c,$c3,$00,$80,$3c,$80,$21
@@ -604,14 +495,12 @@ spr_bonus_slow:
  DEFB $ff,$00,$ff,$00,$ff,$00,$7f,$00,$3f,$80,$37,$80
  DEFB $23,$88,$63,$08,$c7,$10,$ef,$00,$0f,$00,$07,$50
  DEFB $07,$f0
- DS 6,0
 spr_bonus_gun:
  DEFB $03,$08,$c0,$00,$80,$3e,$00,$41,$00,$42,$80,$3c
  DEFB $80,$3f,$c0,$1f,$e0,$0f,$00,$00,$00,$b7,$00,$38
  DEFB $00,$7c,$00,$03,$00,$ff,$00,$ff,$00,$ff,$3f,$00
  DEFB $1f,$c0,$0f,$20,$0f,$20,$1f,$c0,$1f,$c0,$3f,$80
  DEFB $7f,$00
- DS 6,0
 spr_bonus_extra_life:
  DEFB $03,$0c,$c0,$00,$80,$37,$00,$40,$00,$37,$00,$77
  DEFB $80,$37,$c0,$00,$fd,$00,$f8,$02,$f0,$07,$f8,$02
@@ -620,7 +509,6 @@ spr_bonus_extra_life:
  DEFB $c1,$1c,$7f,$00,$3f,$80,$1f,$c0,$1f,$c0,$1f,$c0
  DEFB $3f,$80,$7f,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00
- DS 6,0
 spr_bonus_5000_points:
  DEFB $03,$0d,$80,$00,$00,$7f,$00,$42,$00,$5e,$00,$42
  DEFB $00,$7a,$00,$42,$00,$7f,$80,$1f,$e0,$07,$f8,$01
@@ -629,7 +517,6 @@ spr_bonus_5000_points:
  DEFB $00,$ff,$00,$7c,$83,$10,$03,$00,$01,$fc,$01,$84
  DEFB $01,$b4,$01,$b4,$01,$b4,$01,$84,$01,$fc,$03,$f0
  DEFB $0f,$c0,$3f,$00,$ff,$00,$ff,$00
- DS 6,0
 spr_bonus_triple_ball:
  DEFB $03,$0e,$ff,$00,$ff,$00,$e0,$00,$c0,$1e,$c0,$1c
  DEFB $c0,$1c,$c0,$12,$e4,$01,$fe,$00,$ff,$00,$fe,$00
@@ -639,4 +526,3 @@ spr_bonus_triple_ball:
  DEFB $ff,$00,$3f,$00,$1f,$c0,$1f,$c0,$1f,$c0,$1f,$40
  DEFB $bf,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00
  DEFB $ff,$00
- DS 6,0

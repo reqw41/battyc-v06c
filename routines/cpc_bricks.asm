@@ -91,16 +91,9 @@ NativeCpcPrepareAnimation:
  pop de
  ld a,d
  cp spr_brik_1/256
- jp nz,CpcBrickCheckBlack
- ld a,e
- cp spr_brik_1%256
- jp z,CpcBrickCleanFrame
-CpcBrickCheckBlack:
- ld a,d
- cp spr_brik_black/256
  jp nz,CpcBrickPrepared
  ld a,e
- cp spr_brik_black%256
+ cp spr_brik_1%256
  jp nz,CpcBrickPrepared
 CpcBrickCleanFrame:
  ld de,CpcBrickNoGlint

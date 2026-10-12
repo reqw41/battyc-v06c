@@ -1,14 +1,15 @@
-; Reclaimed ordinary RAM below the guarded stack. Rebuilt every render.
-MonoRegions: ds 55,0 ; left, exclusive right, top, inclusive bottom, isolated
-MonoActiveRegions: ds 22,0
+; Only the digit cache and two render flags remain from isolation storage.
+MonoRegions: ds 32,0
+MonoActiveRegions EQU MonoRegions
 MonoActiveCount: db 0
-MonoRegionPtr: dw 0
-MonoActivePtr: dw 0
-MonoPairPtr: dw 0
-MonoPairOuter: dw 0
-MonoPairInner: dw 0
-MonoPairCount: db 0
-MonoOuterCount: db 0
-MonoBuildCount: db 0
 MonoFastDraw: db 0
-MonoNewRight: db 0
+MonoRegionPtr EQU MonoRegions
+MonoActivePtr EQU MonoRegions
+MonoPairPtr EQU MonoRegions
+MonoPairOuter EQU MonoRegions
+MonoPairInner EQU MonoRegions
+MonoPairCount EQU MonoRegions
+MonoOuterCount EQU MonoRegions
+MonoBuildCount EQU MonoRegions
+MonoNewRight EQU MonoRegions
+ INCLUDE "routines/brick_restore_queue_lower.asm"

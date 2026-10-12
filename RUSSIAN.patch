@@ -1,0 +1,4705 @@
+diff -ruN a/batty.asm b/batty.asm
+--- a/batty.asm	2026-10-12 21:45:35.000000000 +0500
++++ b/batty.asm	2026-10-13 01:03:07.000000000 +0500
+@@ -62,7 +62,7 @@
+  INCLUDE "routines/ball_rotation.asm"
+ 
+ ; Графика: элементы обрамления экрана
+-  INCLUDE "./gfx/cpc_frame.asm"
++  INCLUDE "./gfx/zx_frame.asm"
+ 
+ ; Список уровней и их структура
+   INCLUDE "./gfx/levels.asm"
+@@ -5010,7 +5010,6 @@
+  jp NativeRestoreBrick
+ 
+  INCLUDE "./routines/restore_brick_background.asm"
+- INCLUDE "./routines/restore_magnet_sample.asm"
+ 
+ ; Обновление цвета знакоместа сразу на экране по данным из буфера цвета
+ ; На входе в HL - адрес в буфере атрибутов
+@@ -5952,11 +5951,24 @@
+ LBAED_5:
+ GameplayLogicDone:
+  call wins_recovery
++ ; The frame wait is taken inside the renderer, between sprite preparation
++ ; and the erase of the old images: the erased interval then starts at the
++ ; top border instead of crossing the middle of the field.
++ ; Only the one-ball game is tied to the raster this way; two and three
++ ; balls keep the wait (or its absence) in front of the whole output.
++ ld a,(balls_quantity)
++ dec a
++ jp z,GameplaySyncInside
+  call WaitGameplayFrame
++ jp GameplayDrawBegin
++GameplaySyncInside:
++ inc a
++ ld (GameplaySync),a
+ GameplayDrawBegin:
+  call RCBegin
+  CALL planes_begin
+  CALL DrawMovingObjects
++ call GameplaySyncPoint ; renderer left early: keep the frame pace
+  call RCFlush
+ 	LD HL,object_bat_1+2
+ 	CALL running_dot
+@@ -6431,8 +6443,8 @@
+  pop af
+ 	inc HL
+  push af
+- ld a,$1c
+- call NativeWriteHL ; (IX+$02) = $1C
++ ld a,$0c
++ call NativeWriteHL ; (IX+$02) = $0C: «ИГРОК 1» по центру над счётом
+  pop af
+ 	CALL ix_buf_addr_calc
+ 	CALL print_obj_to_buff
+@@ -6441,8 +6453,8 @@
+ 	INC (HL)		; INC (IX+$01): spr_2up
+ 	inc HL
+  push af
+- ld a,$cc
+- call NativeWriteHL ; (IX+$02) = $CC
++ ld a,$bc
++ call NativeWriteHL ; (IX+$02) = $BC: «ИГРОК 2» по центру над счётом
+  pop af
+ 	CALL ix_buf_addr_calc
+ 	CALL print_obj_to_buff
+@@ -6451,8 +6463,8 @@
+ 	INC (HL)		; INC (IX+$01): spr_hi
+ 	inc HL
+  push af
+- ld a,$78
+- call NativeWriteHL ; (IX+$02) = $78
++ ld a,$68
++ call NativeWriteHL ; (IX+$02) = $68: «РЕКОРД» над счётом
+  pop af
+ 	CALL ix_buf_addr_calc
+ 	CALL print_obj_to_buff
+@@ -6503,7 +6515,7 @@
+ ; 	jp nz,LBFCF_1
+ ;   ENDIF
+ 
+- jp DrawCpcFieldFrame
++ jp DrawFieldFrame
+ 
+ ; Графика текстуры уровня 1
+   INCLUDE "./gfx/sprites_color_3.asm"
+@@ -6644,7 +6656,7 @@
+  INCLUDE "./routines/native_background.asm"
+ ; A dedicated background color follows the original four-level cycle.
+ SetPaletteLevel:
+- ld a,3
++ ld a,1 ; the border continues the HUD paper around the screen
+  ld (BorderColor),a
+  ld a,FieldScroll ; Field starts at row 37; texture and side walls end at 255.
+  ld (ScreenScroll),a
+@@ -6701,7 +6713,6 @@
+  INCLUDE "routines/mono_cache_reset.asm"
+  INCLUDE "routines/magnet_center_draw.asm"
+  INCLUDE "routines/cheat_keys.asm"
+- INCLUDE "routines/cpc_field_frame.asm"
+  INCLUDE "routines/cpc_bricks.asm"
+  INCLUDE "routines/menu_controls.asm"
+  INCLUDE "routines/game_over_panel.asm"
+@@ -6806,7 +6817,6 @@
+  ORG $7144
+ 
+  INCLUDE "routines/native_static_masks.asm"
+- INCLUDE "routines/magnet_sample_color.asm"
+  ASSERT $ <= SpriteCacheOriginal
+  DS $7200-$,0
+  ORG $7200
+diff -ruN a/batty0.asm b/batty0.asm
+--- a/batty0.asm	2026-10-12 16:58:25.000000000 +0500
++++ b/batty0.asm	2026-10-13 00:43:29.000000000 +0500
+@@ -31,6 +31,7 @@
+ 	EXPORT LDDR8080B
+ 	EXPORT SBCHLDE8080
+ 	EXPORT BATTY0_END
++	EXPORT SplashPresent
+ 
+ ;----------------------------------------------------------------------------
+ 
+@@ -50,8 +51,15 @@
+ 	ld hl,KEYINT		; interrupt handler address
+ 	ld (38h+1),hl
+ 
+-; Clear memory from C000h to FFFFh
++; A 64 KB file carries the title picture in its second half: it is already
++; in the screen memory. The plain 32 KB file has SplashPresent = 0.
++	ld a,(SplashPresent)
++	or a
++	call nz,Splash
++
++; Clear memory from C000h to FFFFh (from 8000h after the title picture)
+ 	xor a
++InitClearFrom:
+ 	ld bc,0C000h	; destination addr
+ Init_2:
+ 	ld (bc),a
+@@ -84,6 +92,43 @@
+ 	; ei
+ 	jp	BATTY0_END
+ 
++; Show the loaded title picture until a key is pressed (or about 10 s).
++Splash:
++	xor a
++	ld (BorderColor),a
++	dec a
++	ld (ScreenScroll),a
++	ld hl,PaletteSplash+15
++	call SetPalette
++	ld bc,500
++SplashWait:
++	ei
++	halt
++	ld hl,KeyLine0
++	ld a,(KeyLine1)
++	and (hl)
++	ld hl,KeyLine2
++	and (hl)
++	ld hl,KeyLine4
++	and (hl)
++	ld hl,KeyLine5
++	and (hl)
++	ld hl,KeyLine7
++	and (hl)
++	inc a
++	jp nz,SplashDone
++	dec bc
++	ld a,b
++	or c
++	jp nz,SplashWait
++SplashDone:
++	di
++	ld a,80h
++	ld (InitClearFrom+2),a
++	ret
++SplashPresent: db 0 ; patched to 1 in the 64 KB file
++	INCLUDE "gfx/splash/splash_palette.asm"
++
+ ; Set game palette
+ SetPaletteMenu:
+  xor a
+diff -ruN a/build-three-plus-one.sh b/build-three-plus-one.sh
+--- a/build-three-plus-one.sh	2026-10-11 23:08:11.000000000 +0500
++++ b/build-three-plus-one.sh	2026-10-13 01:02:56.000000000 +0500
+@@ -5,5 +5,7 @@
+ "$assembler" --nologo --i8080 batty0.asm --exp=batty0.inc --sym=batty0.sym
+ node verify/generate-no-shadows.js
+ node verify/generate-mono-assets.js
++node verify/generate-zx-frame.js
+ "$assembler" --nologo --i8080 --nofakes -DNO_SPRITE_SHADOWS=1 batty.asm --raw=batty8080.bin --sym=batty.sym
+ cat batty0.bin batty8080.bin > batty.rom
++node verify/make-splash-rom.js
+diff -ruN a/gfx/cpc_frame.asm b/gfx/cpc_frame.asm
+--- a/gfx/cpc_frame.asm	2026-10-12 11:22:38.000000000 +0500
++++ b/gfx/cpc_frame.asm	1970-01-01 05:00:00.000000000 +0500
+@@ -1,12 +0,0 @@
+-; CPC frame, native C/E row pairs. A is zero throughout.
+-; 13 white -> Vector 0; 15 gray -> 3; 0 black -> level-texture shade 2.
+-CpcFrameLeftTop:
+- DEFB $ff,$0f,$f0,$10,$e0,$20,$ef,$2f,$df,$5f,$df,$5f,$dc,$5c,$db,$5b
+-CpcFrameMiddleTop:
+- DEFB $ff,$ff,$00,$00,$00,$00,$ff,$ff,$ff,$ff,$ff,$ff,$00,$00,$ff,$00
+-CpcFrameRightTop:
+- DEFB $ff,$f0,$0f,$08,$07,$04,$fb,$f8,$ff,$fe,$ff,$fe,$3f,$3e,$df,$de
+-CpcFrameLeftSide:
+- DEFB $df,$5e
+-CpcFrameRightSide:
+- DEFB $df,$5e
+diff -ruN a/gfx/font.asm b/gfx/font.asm
+--- a/gfx/font.asm	2026-10-11 22:54:57.000000000 +0500
++++ b/gfx/font.asm	2026-10-12 20:19:42.000000000 +0500
+@@ -1,6 +1,7 @@
+-; Знакогенератор: цифры, буквы, знаки препинания
+-; 0-9, A-Z, ".", ",", " ", "-", "_", "II", "="
+-; Всего 43 символа шириной 8 и высотой 6 пикселей
++; Знакогенератор: цифры, русские буквы, знаки препинания
++; 0-9, А-Я (без Ё), ".", ",", " ", "-", "="
++; и латинская Y для названия игры. Всего 48 символов шириной 8 и высотой 6 пикселей
++; Латинские надписи набираются похожими буквами (BATTY = В,А,Т,Т,Y)
+ font:
+   DEFB $7C,$E6,$D2,$CA,$E6,$7C	; 00 - 0
+   DEFB $18,$38,$18,$18,$18,$3C	; 01 - 1
+@@ -12,36 +13,41 @@
+   DEFB $FE,$FE,$0C,$0C,$18,$18	; 07 - 7
+   DEFB $7C,$C6,$7C,$C6,$C6,$7C	; 08 - 8
+   DEFB $7C,$C6,$C6,$7E,$06,$06	; 09 - 9
+-  DEFB $7C,$FE,$C6,$FE,$C6,$C6	; 0A - A
+-  DEFB $F8,$CC,$F8,$CC,$CC,$F8	; 0B - B
+-  DEFB $7C,$E6,$C0,$C0,$E6,$7C	; 0C - C
+-  DEFB $FC,$C6,$C6,$C6,$C6,$FC	; 0D - D
+-  DEFB $FE,$C0,$F8,$F8,$C0,$FE	; 0E - E
+-  DEFB $FE,$C0,$F8,$F8,$C0,$C0	; 0F - F
+-  DEFB $7C,$E6,$C0,$CE,$E6,$7C	; 10 - G
+-  DEFB $C6,$C6,$FE,$FE,$C6,$C6	; 11 - H
+-  DEFB $30,$30,$30,$30,$30,$30	; 12 - I
+-  DEFB $7C,$7C,$18,$18,$D8,$70	; 13 - J
+-  DEFB $C6,$DC,$F8,$F8,$CC,$C6	; 14 - K
+-  DEFB $C0,$C0,$C0,$C0,$FE,$FE	; 15 - L
+-  DEFB $7C,$FE,$D6,$D6,$D6,$D6	; 16 - M
+-  DEFB $FC,$FE,$C6,$C6,$C6,$C6	; 17 - N
+-  DEFB $7C,$FE,$C6,$C6,$FE,$7C	; 18 - O
+-  DEFB $FC,$C6,$C6,$FC,$C0,$C0	; 19 - P
+-  DEFB $7C,$FE,$C6,$C2,$F4,$7A	; 1A - Q
+-  DEFB $FC,$C6,$C6,$F8,$CC,$C6	; 1B - R
+-  DEFB $7E,$C0,$7C,$06,$FE,$FC	; 1C - S
+-  DEFB $FC,$FC,$30,$30,$30,$30	; 1D - T
+-  DEFB $C6,$C6,$C6,$C6,$FE,$7E	; 1E - U
+-  DEFB $C6,$C6,$6C,$6C,$38,$38	; 1F - V
+-  DEFB $D6,$D6,$D6,$D6,$FE,$7C	; 20 - W
+-  DEFB $C6,$6C,$38,$38,$6C,$C6	; 21 - X
+-  DEFB $C6,$C6,$FE,$38,$38,$38	; 22 - Y
+-  DEFB $FE,$FC,$18,$30,$7E,$FE	; 23 - Z
+-  DEFB $00,$00,$00,$00,$18,$18	; 24 - .
+-  DEFB $00,$00,$00,$18,$18,$30	; 25 - ,
+-  DEFB $00,$00,$00,$00,$00,$00	; 26 - SPACE
+-  DEFB $00,$00,$7E,$7E,$00,$00	; 27 - -
+-  DEFB $00,$00,$00,$00,$00,$FF	; 28 - _
+-  DEFB $FE,$6C,$6C,$6C,$6C,$FE	; 29 - II
+-  DEFB $00,$00,$FF,$00,$00,$FF	; 2A - =
++  DEFB $7C,$FE,$C6,$FE,$C6,$C6	; 0A - А
++  DEFB $FE,$C0,$FC,$C6,$C6,$FC	; 0B - Б
++  DEFB $F8,$CC,$F8,$CC,$CC,$F8	; 0C - В
++  DEFB $FE,$FE,$C0,$C0,$C0,$C0	; 0D - Г
++  DEFB $3C,$6C,$6C,$6C,$FE,$C6	; 0E - Д
++  DEFB $FE,$C0,$F8,$F8,$C0,$FE	; 0F - Е
++  DEFB $D6,$D6,$7C,$7C,$D6,$D6	; 10 - Ж
++  DEFB $7C,$C6,$1C,$1C,$C6,$7C	; 11 - З
++  DEFB $C6,$CE,$DE,$F6,$E6,$C6	; 12 - И
++  DEFB $38,$C6,$CE,$D6,$E6,$C6	; 13 - Й
++  DEFB $C6,$DC,$F8,$F8,$CC,$C6	; 14 - К
++  DEFB $3E,$7E,$66,$66,$C6,$C6	; 15 - Л
++  DEFB $7C,$FE,$D6,$D6,$D6,$D6	; 16 - М
++  DEFB $C6,$C6,$FE,$FE,$C6,$C6	; 17 - Н
++  DEFB $7C,$FE,$C6,$C6,$FE,$7C	; 18 - О
++  DEFB $FE,$FE,$C6,$C6,$C6,$C6	; 19 - П
++  DEFB $FC,$C6,$C6,$FC,$C0,$C0	; 1A - Р
++  DEFB $7C,$E6,$C0,$C0,$E6,$7C	; 1B - С
++  DEFB $FC,$FC,$30,$30,$30,$30	; 1C - Т
++  DEFB $C6,$C6,$7E,$06,$C6,$7C	; 1D - У
++  DEFB $7C,$D6,$D6,$7C,$10,$10	; 1E - Ф
++  DEFB $C6,$6C,$38,$38,$6C,$C6	; 1F - Х
++  DEFB $CC,$CC,$CC,$CC,$FE,$06	; 20 - Ц
++  DEFB $C6,$C6,$7E,$06,$06,$06	; 21 - Ч
++  DEFB $D6,$D6,$D6,$D6,$FE,$FE	; 22 - Ш
++  DEFB $D6,$D6,$D6,$D6,$FF,$03	; 23 - Щ
++  DEFB $E0,$60,$7C,$66,$66,$7C	; 24 - Ъ
++  DEFB $C6,$C6,$F6,$DE,$DE,$F6	; 25 - Ы
++  DEFB $C0,$C0,$FC,$C6,$C6,$FC	; 26 - Ь
++  DEFB $7C,$C6,$3E,$3E,$C6,$7C	; 27 - Э
++  DEFB $9C,$B6,$F6,$F6,$B6,$9C	; 28 - Ю
++  DEFB $7E,$C6,$C6,$7E,$66,$C6	; 29 - Я
++  DEFB $00,$00,$00,$00,$18,$18	; 2A - .
++  DEFB $00,$00,$00,$18,$18,$30	; 2B - ,
++  DEFB $00,$00,$00,$00,$00,$00	; 2C - SPACE
++  DEFB $00,$00,$7E,$7E,$00,$00	; 2D - -
++  DEFB $00,$00,$FF,$00,$00,$FF	; 2E - =
++  DEFB $C6,$C6,$FE,$38,$38,$38	; 2F - Y (вне набора для ввода имени)
+diff -ruN a/gfx/splash/make_splash.py b/gfx/splash/make_splash.py
+--- a/gfx/splash/make_splash.py	1970-01-01 05:00:00.000000000 +0500
++++ b/gfx/splash/make_splash.py	2026-10-13 00:43:29.000000000 +0500
+@@ -0,0 +1,151 @@
++import sys,re
++from PIL import Image
++src,fontasm,out=sys.argv[1:4]
++d=open(src,'rb').read()[1:6913]
++def zbit(x,y):
++    a=((y&0xc0)<<5)|((y&7)<<8)|((y&0x38)<<2)|(x>>3);return d[a]>>(7-(x&7))&1
++def zattr(x,y):return d[6144+(y>>3)*32+(x>>3)]
++PAL=[(0,0,0),(0,0,85),(0,0,170),(0,73,255),(255,0,0),(146,0,0),(255,255,0),(255,146,0),
++     (0,219,0),(0,109,0),(0,255,255),(255,0,255),(255,255,255),(182,182,170),(109,109,85),(73,73,85)]
++K,NAVY,BLUE,BBLUE,RED,DRED,YEL,ORA,GRN,DGRN,CYAN,MAG,WHITE,LGREY,GREY,DGREY=range(16)
++BG=-1
++W=H=256
++img=[[BG]*W for _ in range(H)]
++TOP=12;INS=16;SPLIT=128
++def zxcol(c,bright):
++    return [K,BBLUE if bright else BLUE,RED if bright else DRED,MAG,GRN if bright else DGRN,CYAN,YEL,WHITE if bright else LGREY][c]
++def pixel(x,y):
++    """colour of ZX pixel (x,y) or BG"""
++    at=zattr(x,y);b=zbit(x,y);ink=at&7;pap=(at>>3)&7;br=at>>6&1
++    c=ink if b else pap
++    if c==0:return BG
++    col=zxcol(c,br)
++    if y<72:                       # logo: per-row stripes instead of attribute cells
++        r=y>>3
++        if col in(RED,DRED,YEL,MAG) or (r>=4 and col not in(WHITE,LGREY,CYAN)):
++            col=[None,None,None,None,MAG,RED,ORA,YEL,YEL][min(r,8)] or col
++            if r==8 and (y&7)>=4:col=ORA
++    elif y<104 or (y<136 and (x<36 or x>219)):   # pipe and side walls
++        if col in(WHITE,LGREY):
++            if 36<=x<=219 and y<97:col=LGREY
++            else:col=GREY
++    return col
++# upper part
++for y in range(SPLIT):
++    for x in range(W):img[y+TOP][x]=pixel(x,y)
++# pipe highlights: first ink row of the pipe white, last rows darker
++for x in range(36,220):
++    ys=[y for y in range(72,100) if img[y+TOP][x]==LGREY]
++    if ys:
++        img[ys[0]+TOP][x]=WHITE
++        for y in ys[-3:]:img[y+TOP][x]=GREY
++# brick rows: geometry from the ZX rows (left/right edge and joints are linear in y)
++def runs(y):
++    row=[zbit(x,y) for x in range(W)];L=26+ (127-y) ;  # search inside the field
++    xs=[x for x in range(20,236) if row[x]]
++    # field = longest stretch between walls
++    segs=[];s=None
++    for x in range(W+1):
++        v=x<W and row[x]
++        if v and s is None:s=x
++        if not v and s is not None:segs.append((s,x-1));s=None
++    segs=[g for g in segs if g[0]>24 and g[1]<232]
++    return segs
++top=runs(105);bot=runs(127)
++assert len(top)==len(bot),(len(top),len(bot))
++N=len(top)
++def brick_edges(y):       # y in ZX coordinates, may exceed 127
++    t=(y-105)/22.0
++    return [(round(a[0]+(b[0]-a[0])*t),round(a[1]+(b[1]-a[1])*t)) for a,b in zip(top,bot)]
++ROWS=[(105,YEL,ORA),(113,RED,DRED),(121,GRN,DGRN),(129,BBLUE,BLUE),(137,LGREY,GREY)]
++for y0,c,dark in ROWS:
++    for i in range(7):
++        y=y0+i
++        for a,b in brick_edges(y):
++            for x in range(max(a,0),min(b,W-1)+1):
++                col=c
++                if i==0:col=WHITE if c!=LGREY else WHITE
++                if i==6 or x==b:col=dark
++                img[y+TOP][x]=col
++    for x in range(W):                       # black joint line under the row
++        e=brick_edges(y0+7)
++        if e[0][0]<=x<=e[-1][1]:img[y0+7+TOP][x]=K
++# front face under the nearest row, then the shadow
++FY=145
++eF=brick_edges(FY);L,R=eF[0][0],eF[-1][1]
++for i in range(7):
++    y=FY+i+TOP
++    for a,b in eF:
++        for x in range(max(a,0),min(b,W-1)+1):
++            img[y][x]=DGREY if (i==6 or x in(a,b) or (x+i)&1) else K
++for x in range(max(L,0),min(R,W-1)+1):
++    if img[FY-1+TOP][x]==BG:img[FY-1+TOP][x]=K
++SH=[]
++for i in range(6):
++    y=FY+9+i+TOP
++    for x in range(L+12-i,min(R+4+i,W-1)+1):
++        if (x+i)&1:SH.append((x,y))
++# lower part of the ZX picture (bats, ball, copyright), moved down
++LOW=TOP+INS+12
++for y in range(146,184):
++    for x in range(W):
++        c=pixel(x,y)
++        at=zattr(x,y)
++        r,cc=y>>3,x>>3
++        if c!=BG and at==6 and (r>=21 or (r in(19,20) and 11<=cc<=13) or (r==20 and (cc==3 or cc>=26))):   # dim yellow dither = shadow
++            SH.append((x,y+LOW));continue
++        if c!=BG:img[y+LOW][x]=c
++for y in range(184,192):
++    for x in range(W):
++        c=pixel(x,y)
++        if c!=BG:img[y+LOW+8][x]=c
++# Russian line in the game font
++glyph={}
++n=0
++for line in open(fontasm,encoding='utf-8'):
++    m=re.match(r'\s*DEFB\s+([^;]+);\s*([0-9A-F]{2})\s*-\s*(.*)',line)
++    if m:glyph[m.group(3).strip() or ' ']=[int(v.strip()[1:],16) for v in m.group(1).split(',')]
++def text(s,y,col):
++    x=(W-8*len(s))//2
++    for ch in s:
++        g=glyph.get(ch)
++        if g:
++            for r,row in enumerate(g):
++                for b in range(8):
++                    if row>>(7-b)&1:img[y+r][x+b]=col
++        x+=8
++text('ВЕРСИЯ ДЛЯ ВЕКТОРА-06Ц',242,CYAN)
++# background: two-blue diamonds, black halo around everything, black dither shadows
++fg=[[img[y][x]!=BG for x in range(W)] for y in range(H)]
++def near(x,y,r):
++    for dy in range(-r,r+1):
++        for dx in range(-r,r+1):
++            if abs(dx)+abs(dy)<=r+1 and 0<=x+dx<W and 0<=y+dy<H and fg[y+dy][x+dx]:return True
++    return False
++shadow=set(SH)
++for y in range(H):
++    for x in range(W):
++        if img[y][x]!=BG:continue
++        if near(x,y,1) or (x,y) in shadow:img[y][x]=K;continue
++        if (x-1,y) in shadow or (x+1,y) in shadow:img[y][x]=NAVY;continue
++        u,v=(x+y)%16,(x-y)%16
++        img[y][x]=NAVY if (u<1 or v<1 or (u in(7,8) and v in(7,8))) else BLUE if ((x//8+y//8)&1)==0 and False else (NAVY if (u<8)!=(v<8) else BLUE)
++im=Image.new('P',(W,H));pal=[]
++for c in PAL:pal+=list(c)
++im.putpalette(pal+[0]*(768-len(pal)))
++im.putdata([img[y][x] for y in range(H) for x in range(W)])
++im.save(out);im.convert('RGB').resize((768,768),Image.NEAREST).save(out.replace('.png','_x3.png'))
++# Vector-06C screen image: four planes of 8 KB, column-major, picture row r at offset 255-r
++# (vertical scroll $FF). Colour index = 8*plane8000 + 4*planeA000 + 2*planeC000 + planeE000.
++import os
++d0=os.path.dirname(os.path.abspath(__file__))
++scr=bytearray(32768)
++for y in range(H):
++    for x in range(W):
++        c=img[y][x]
++        for k,bit in enumerate((8,4,2,1)):
++            if c&bit:scr[k*8192+(x>>3)*256+255-y]|=128>>(x&7)
++open(os.path.join(d0,'splash.bin'),'wb').write(scr)
++vec=lambda r,g,b:(round(b*3/255)<<6)|(round(g*7/255)<<3)|round(r*7/255)
++open(os.path.join(d0,'splash_palette.asm'),'w').write('; Generated by make_splash.py: sixteen colours of the title picture (BBGGGRRR)\nPaletteSplash:\n db '+','.join('$%02x'%vec(*c) for c in PAL)+'\n')
++print('colours',sorted(set(v for r in img for v in r)),'bricks per row',N)
+diff -ruN a/gfx/splash/splash_palette.asm b/gfx/splash/splash_palette.asm
+--- a/gfx/splash/splash_palette.asm	1970-01-01 05:00:00.000000000 +0500
++++ b/gfx/splash/splash_palette.asm	2026-10-13 00:43:29.000000000 +0500
+@@ -0,0 +1,3 @@
++; Generated by make_splash.py: sixteen colours of the title picture (BBGGGRRR)
++PaletteSplash:
++ db $00,$40,$80,$d0,$07,$04,$3f,$27,$30,$18,$f8,$c7,$ff,$ad,$5b,$52
+diff -ruN a/gfx/sprites_no_masks_2.asm b/gfx/sprites_no_masks_2.asm
+--- a/gfx/sprites_no_masks_2.asm	2026-10-11 22:54:57.000000000 +0500
++++ b/gfx/sprites_no_masks_2.asm	2026-10-12 20:19:42.000000000 +0500
+@@ -1,19 +1,18 @@
+ ; Data block at 938C
+-spr_press_a:
++spr_press_a:	; стрелка и надпись ЖМИ А
+   DEFB $04,$0D,$00,$00,$80,$00,$00,$01
+   DEFB $C0,$00,$00,$03,$E0,$00,$00,$01
+   DEFB $C0,$00,$00,$01,$C0,$00,$00,$01
+   DEFB $C0,$00,$00,$00,$00,$00,$00,$00
+-  DEFB $00,$00,$08,$AE,$EE,$28,$08,$A8
+-  DEFB $22,$28,$0E,$CE,$EE,$38,$0A,$A8
+-  DEFB $88,$28,$0E,$EE,$EE,$38
++  DEFB $00,$00,$05,$51,$48,$A0,$05,$51
++  DEFB $48,$A0,$03,$95,$68,$E0,$05,$5B
++  DEFB $58,$A0,$05,$51,$48,$E0
+ 
+-; Data block at 93C2
+-spr_press_b:
++spr_press_b:	; стрелка и надпись ЖМИ Б
+   DEFB $04,$0D,$00,$00,$80,$00,$00,$01
+   DEFB $C0,$00,$00,$03,$E0,$00,$00,$01
+   DEFB $C0,$00,$00,$01,$C0,$00,$00,$01
+   DEFB $C0,$00,$00,$00,$00,$00,$00,$00
+-  DEFB $00,$00,$08,$AE,$EE,$38,$08,$A8
+-  DEFB $22,$28,$0E,$CE,$EE,$38,$0A,$A8
+-  DEFB $88,$28,$0E,$EE,$EE,$38
++  DEFB $00,$00,$05,$51,$48,$E0,$05,$51
++  DEFB $48,$A0,$03,$95,$68,$E0,$05,$5B
++  DEFB $58,$80,$05,$51,$48,$E0
+diff -ruN a/gfx/zx_frame.asm b/gfx/zx_frame.asm
+--- a/gfx/zx_frame.asm	1970-01-01 05:00:00.000000000 +0500
++++ b/gfx/zx_frame.asm	2026-10-13 01:22:44.000000000 +0500
+@@ -0,0 +1,31 @@
++; Generated by verify/generate-zx-frame.js: ZX field frame, one bit per pixel.
++ZxFrameTop:
++ DEFB $9e,$9d,$9b,$97,$af,$d0,$a0,$7f
++ DEFB $ff,$ff,$ff,$ff,$ff,$00,$00,$ff
++ DEFB $ff,$ff,$ff,$ff,$ff,$00,$00,$ff
++ DEFB $6c,$6e,$6f,$6f,$69,$93,$96,$6c
++ DEFB $00,$00,$7f,$7f,$7f,$7f,$00,$00
++ DEFB $00,$7e,$7e,$7e,$7e,$00,$7e,$00
++ DEFB $00,$00,$fe,$fe,$fe,$fe,$00,$00
++ DEFB $3e,$7e,$fe,$fe,$9e,$c1,$61,$3e
++ DEFB $ff,$ff,$ff,$ff,$ff,$00,$00,$ff
++ DEFB $ff,$ff,$ff,$ff,$ff,$00,$00,$ff
++ DEFB $ff,$ff,$ff,$ff,$ff,$00,$00,$ff
++ DEFB $7c,$7e,$7f,$7f,$79,$83,$86,$7c
++ZxFrameTopSeq: ; bitmap cell*4 + material, left half of the top band
++ DEFB $00,$04,$08,$0e,$11,$15,$19,$1e
++ DEFB $20,$24,$28,$2e,$11,$15,$19,$1e
++ZxFrameSide:
++ DEFB $3c,$6e,$cf,$9f,$9f,$9f,$9f,$60
++ DEFB $9f,$9f,$9f,$9f,$9f,$9f,$9f,$9f
++ DEFB $9f,$9f,$9f,$9f,$9f,$9f,$9f,$9f
++ DEFB $60,$9f,$9f,$9f,$9f,$cf,$6e,$3c
++ DEFB $00,$3c,$3c,$3c,$3c,$3c,$3c,$3c
++ DEFB $00,$5e,$5e,$5e,$5e,$5e,$5e,$00
++ DEFB $3c,$3c,$3c,$3c,$3c,$3c,$3c,$00
++ZxFrameSideSeq:
++ DEFB $02,$00,$00,$02,$01,$01,$01
++ZxFrameTopMasks: ; row patterns A,C for tube, connector, cap
++ DEFB $3e,$3f,$00,$3f,$0f,$0f
++ZxFrameSideMasks: ; bit masks A,C
++ DEFB $1c,$1f,$00,$0f,$0f,$0f
+diff -ruN a/MAGNETS.md b/MAGNETS.md
+--- a/MAGNETS.md	1970-01-01 05:00:00.000000000 +0500
++++ b/MAGNETS.md	2026-10-13 01:25:53.000000000 +0500
+@@ -0,0 +1,45 @@
++# Магниты: раскраска по рисунку (вариант A) поверх ускорений Codex
++
++Дерево `wt/russian`. Основа — рабочее состояние `wt/three-plus-one` на вечер 12.10.2026 (ROM `8cf6c053…`: очередь кирпичей, блит по ИЛИ, отсечение магнитов). Изменения входят в `RUSSIAN.patch`.
++
++## Как выглядит
++
++| Состояние | Ободок | Внутри |
++|---|---|---|
++| Включён (кадр 6) | серый (3), 1–2 точки | голубое тело (7), красные стрелки и ядро (4); стрелки не доходят до ободка на точку, концы диагональных выровнены под 45° |
++| Выключен (кадр 7) | тот же серый | серые знаки (3) на бумаге (1), голубой шар (7) с тёмным бликом |
++
++Тени у магнита нет. Оба состояния занимают один и тот же диск 25×24 точки с общим ободком (всё, что дальше 10,8 точки от центра). Широкое кольцо ZX у выключенного убрано, знаки сохранены целиком. Снимок: `outputs/batty-magnet-current.png`.
++
++Используются индексы 1, 3, 4, 7. Если палитра раунда меняет красный, серый или голубой, магнит перекрасится вместе с ними.
++
++## Как устроено
++
++Магнит — верхний слой над фоном. Он сам владеет всеми тремя плоскостями своих точек, а кирпичи его точек не касаются.
++
++- **Кэш картинки** (`routines/magnet_background_cache.asm`): по 304 байта на магнит в `7A00..7EBF`. На каждую из 4×24 ячеек три байта: P1 — ободок и тело включённого (плоскости C и E), P2 — тело и красное (плоскость A), знаки выключенного (плоскость C); затем 2×8 байт голубого шара. Диск — это P1|P2, ободок — P1&~P2. Кэш строится прямо из спрайтов (`MagCacheBuildAll`); спрайты под эту раскладку готовит `verify/generate-mono-assets.js`.
++- **Покраска** (`MagnetPaint`): из кэша пишутся только точки диска, остальное в байте не трогается. Столбец кэша читается через стек, прерывания закрыты на один столбец. Умеет красить часть строк.
++- **Начальная отрисовка** (`print_magnets`): строит кэш и красит все магниты. Через общий вывод статических объектов магниты больше не идут.
++- **Переключение** (`print_one_magnet`): меняет состояние и красит магнит целиком.
++- **Кирпич рядом с магнитом**: всегда восстанавливается быстрым путём как обычный фон. `NativeRestoreChooseMagnets` отмечает задетые магниты, `MagnetRepaintMarked` сразу после восстановления перекрашивает у них только задетые строки (до 10).
++- **Окно раунда** занимает ту же память: после его снятия кэш строится заново (`NativeMagCacheAfterWindow`). Пока окно на экране, покраска пропускается.
++
++Удалено из кода Codex: выборочный кэш фона 306 байт на магнит, XOR-переключение, медленный строчный путь восстановления кирпича, побайтный семплер магнита и его прежние остатки. Пустые файлы `magnet_center_*`, `magnet_sample_*`, `magnet_accent_*`, `restore_magnet_sample` оставлены, потому что на них ссылается генератор хвостов спрайтов.
++
++Код заканчивается на `691F` вместо `6AFA` (свободно 481 байт до `6B00`); во второй области тоже освободилось около 500 байт.
++
++## Цена
++
++| Операция | Было у Codex | Стало |
++|---|---|---|
++| Переключение магнита | около 20,2 тыс. тактов | около 20 тыс. тактов |
++| Подготовка кэша на уровень | 0,53–2,11 с | 0,08 с на магнит, два раза (до и после окна раунда): до 0,7 с |
++| Кирпич рядом с магнитом, одиночный мяч | — | до 12,6 мс |
++
++Замеры тяжёлой натурной сцены — в `MERGE.md`.
++
++## Проверки
++
++- `verify/test-vector-colors.js` — независимая попиксельная модель: 320 случаев (оба состояния, все 8 сдвигов, 5 высот, полная и частичная покраска поверх произвольного содержимого экрана).
++- `verify/test-three-plane-bricks.js` и `verify/test-brick-queue.js` с `BATTY_BRICK_LEVELS=0,…,14` — по 1206 одиночных и 1206 последовательных разрушений на всех 15 уровнях совпадают с полной перерисовкой уровня по трём плоскостям, в том числе через очередь и при её переполнении.
++- `verify/test-magnet-gameplay.js` — настоящая игра на уровнях 2, 6 и 14 по 2500 кадров: стек в пределах, перезапусков процессора нет, отметок магнитов к выводу кадра не остаётся.
+diff -ruN a/MERGE.md b/MERGE.md
+--- a/MERGE.md	1970-01-01 05:00:00.000000000 +0500
++++ b/MERGE.md	2026-10-13 01:25:53.000000000 +0500
+@@ -0,0 +1,79 @@
++# Сведение: ускорения Codex + русская версия + магниты
++
++Дата: 12.10.2026. Дерево `wt/russian`. Основа — рабочее состояние `wt/three-plus-one` (ROM `8cf6c0534c52…`), поверх него лежат правки этого дерева. Итоговый ROM: `8195a3f7af5d…`, 32512 байт, код до `6A61` (граница `6B00`); с заставкой — `batty-splash.rom`, 65280 байт. Копия: `outputs/batty-three-plus-one-russian.rom`. Ничего не закоммичено. `RUSSIAN.patch` — разница с состоянием Codex до сведения (без двоичных файлов `gfx/splash/*.bin`); в `wt/three-plus-one` все эти правки уже внесены (13.10.2026), ROM там тот же.
++
++## Проверка работы Codex
++
++- ROM пересобирается бит в бит (`8cf6c053…`).
++- Его набор сценариев проходит, включая новые модели (очередь кирпичей, перенос блита, кэш и переключение магнитов, пересчёт координат); исключения перечислены ниже.
++- `measure-ball-blit` падал: эталон ожидал запись байта, а блит теперь накладывает по ИЛИ. Эталон исправлен, 98 случаев проходят.
++- `test-mono-hud`, `test-mono-pacing`, `test-bonus-effects`, `test-natural-bonus-gameplay` падают и до его правок (в снимке на вечер 12.10), и после.
++- Контроль 25 Гц в управляемых сценах (`BATTY_REQUIRE_25=1 measure-object-speed`) теперь проходит; до его правок падал.
++- Бюджет 120000 тактов в натурной тяжёлой сцене (три Smash-мяча, враг, бомба) подтверждается на тех же прогонах, что в его отчёте. На других прогонах он не держится: на уровне 2 сборка Codex дала 10 кадров из 4050 сверх бюджета, до 140136 тактов. Причины — синхронное восстановление кирпича при переполнении очереди и кадры с 7–8 объектами.
++
++## Что сведено
++
++| Часть | Как |
++|---|---|
++| Перевод (шрифт, строки, ввод имени, HUD) | перенесён без изменений, см. `RUSSIAN.md` |
++| Очередь кирпичей, блит по ИЛИ, отсечение магнитов, пересчёт координат | взято у Codex как есть |
++| Магниты | своя раскраска и покраска из кэша картинки, см. `MAGNETS.md`; выборочный кэш и XOR-переключение Codex заменены |
++| Мерцание объектов | вывод переделан: изображение замещается на месте без стирания, см. ниже |
++
++## Мерцание объектов
++
++Вывод Codex стирал все старые изображения разом и только потом рисовал новые. Объект оставался стёртым 13–25 тыс. тактов, и луч заставал его таким: при одном мяче — всё, что было в полосе кирпичей, при трёх мячах — любой объект примерно в каждом пятом кадре. В сборке `rotation-fast`, стоявшей на MiSTer раньше, такого не было.
++
++Теперь изображение никогда не стирается раньше, чем на экране появится его замена (`routines/mono_renderer.asm`, `routines/mono_shift_draw.asm`):
++
++- **Замещение на месте.** Для каждого активного объекта берётся общий прямоугольник старой и новой позиции. Если он не пересекается с прямоугольниками других объектов, новый рисунок записывается прямо поверх старого, а затем обнуляются только полоски старого рисунка, оставшиеся снаружи нового.
++- **Байт за одну запись.** Сдвинутый блит при каждой записи сохраняет ровно ту половину байта, которой владеет соседний столбец спрайта. Байт экрана переходит от старого рисунка к новому без пустого момента.
++- **Пересекающиеся объекты** (например, мяч вплотную к бите) обрабатываются вместе по-старому: обнуляются их старые прямоугольники, затем они рисуются по ИЛИ. Это единственный случай, когда объект на короткое время может быть стёрт.
++- **Привязка к растру при одном мяче.** Ожидание кадра перенесено внутрь вывода, между подготовкой спрайтов и первой записью на экран (`GameplaySyncPoint`).
++- **Порядок.** Первым выводится враг, затем мячи и бонус, биты — последними (`MonoObjects`).
++- Карта грязных плиток и очистка восьмистрочными плитками больше не используются.
++
++Растровая модель, 11 высот × 2 сдвига, 64 кадра на сцену (132 сцены, 8448 кадров):
++
++| Сцена | Было у Codex | Стало |
++|---|---|---|
++| Один мяч: бонус, НЛО, птица | частично видны при Y ≤ 88 | полностью видны во всех кадрах |
++| Три мяча и враг: бонус, НЛО, птица | пропадали в ~20 % кадров, частично видны в ~30 % | полностью видны во всех кадрах |
++
++Вывод стал дешевле: сцена «три мяча» — 31,1 тыс. тактов против 41,4 тыс., «три мяча, бонус и враг» — 57,3 против 67,9 тыс.
++
++## Замеры итоговой сборки
++
++Натурная тяжёлая сцена, 12 прогонов на уровень, те же параметры, что у Codex:
++
++| Уровень | Кадров | Среднее | Максимум | Сверх 120000 |
++|---|---|---|---|---|
++| 1 | 745 | 84696 | 125532 | 8 |
++| 2 | 929 | 89729 | 122188 | 5 |
++| 14 | 584 | 88574 | 121132 | 1 |
++
++Среднее ниже, чем у Codex (91–94 тыс.). Кадры сверх бюджета — это анимация превращения биты (вывод 82–84 тыс. тактов, у Codex столько же), синхронное восстановление кирпича из очереди и переключение магнита в кадре с попаданием мяча. У сборки Codex на его 12 прогонах превышений нет, на 36 других прогонах уровня 2 — 10 из 4050.
++
++Контроль 25 Гц в управляемых сценах (`BATTY_REQUIRE_25=1 measure-object-speed`) проходит.
++
++## Проверки итоговой сборки
++
++Проходят 33 сценария, контроль 25 Гц и 1206 одиночных и 1206 последовательных разрушений кирпичей на всех 15 уровнях (напрямую и через очередь). Падают те же четыре сценария, что и в основе.
++
++На MiSTer залито как `Batty-3plus1-russian` (ядро `BattyVector`), игра запускается и идёт.
++
++## Заставка
++
++`gfx/splash/make_splash.py` собирает картинку 256×256 в 16 цветах из экрана загрузки ZX (`gfx/splash/batty-zx-screen.bin`, взят из ленты): `outputs/batty-splash-256.png`, а также экранный образ `gfx/splash/splash.bin` (четыре плоскости по 8 КБ) и палитру `splash_palette.asm`.
++
++Сборка дополнительно выдаёт `batty-splash.rom` (`verify/make-splash-rom.js`): это `batty.rom` плюс образ экрана. Загрузчик кладёт вторую половину файла прямо в экранную память `8000..FFFF`, поэтому картинка видна сразу после загрузки. Стартовый код (`batty0.asm`, `Splash`) ставит её палитру и ждёт клавишу или около 10 секунд, затем очищает экран с `8000` и запускает игру. В обычном `batty.rom` байт `SplashPresent` равен нулю, и заставка пропускается: все тесты работают с ним.
++
++На MiSTer файл на 64 КБ грузится и показывается правильно (`Batty-3plus1-russian-splash`).
++
++## Прочее, 13.10.2026
++
++- HUD и меню: «ИГРОК 1», «ИГРОК 2» и «РЕКОРД» вместо «ИГ1», «ИГ2» и «РК». В игре надписи стоят по центру над счётом. В меню это текст по знакоместам, поэтому надписи выровнены по правому краю счёта (сдвиг от центра 4 точки).
++- Бордюр экрана в игре — цвета HUD (индекс 1) вместо серого: полоса HUD продолжается вокруг экрана, серая рамка выделяется на тёмном (`SetPaletteLevel`).
++- Рамка поля — снова из ZX Spectrum (трубы и соединители), раскрашена по мотивам ремейка: трубы голубые с белым бликом и серой тенью, соединители серые с белым бликом, фон между деталями — цвета HUD. Свет на верхней полосе идёт сверху, на боковых стенках — слева. Данные — по одному биту на точку из исходных спрайтов ZX (`verify/fixtures/zx/frame_sprites.asm` → `verify/generate-zx-frame.js` → `gfx/zx_frame.asm`), правая половина получается зеркалированием; цвет задают две маски на материал. Отрисовка `routines/zx_field_frame.asm`, раз на уровень, 148 мс. Рамка CPC и её тест удалены, вместо него `verify/test-zx-frame.js` (независимая модель, 5424 точки и все 32768 байт видеопамяти).
++- Удалена неиспользуемая очистка плиток `MonoComposeUncovered`.
++- Магниты перекрашены: у обоих состояний тонкий серый ободок; включённый — голубое тело и красные стрелки, выключенный — серые знаки и голубой шар. См. `MAGNETS.md`.
+diff -ruN a/routines/cpc_field_frame.asm b/routines/cpc_field_frame.asm
+--- a/routines/cpc_field_frame.asm	2026-10-12 12:22:08.000000000 +0500
++++ b/routines/cpc_field_frame.asm	1970-01-01 05:00:00.000000000 +0500
+@@ -1,64 +0,0 @@
+-; Literal CPC corner/highlight pixels adapted to the existing 8-row top wall.
+-; Permanent graphics live only in A/C/E. No per-frame repair or save-under.
+-DrawCpcFieldFrame:
+- ld hl,$c0e0
+- ld b,32
+-CpcFrameTopColumn:
+- ld de,CpcFrameMiddleTop
+- ld a,h
+- cp $c0
+- jp nz,CpcFrameTopRightCheck
+- ld de,CpcFrameLeftTop
+-CpcFrameTopRightCheck:
+- cp $df
+- jp nz,CpcFrameTopReady
+- ld de,CpcFrameRightTop
+-CpcFrameTopReady:
+- push bc
+- ld c,8
+-CpcFrameTopRow:
+- call CpcFramePair
+- dec l
+- dec c
+- jp nz,CpcFrameTopRow
+- pop bc
+- ld l,$e0
+- inc h
+- dec b
+- jp nz,CpcFrameTopColumn
+- ld hl,$c0d8
+- ld de,CpcFrameLeftSide
+- call CpcFrameSide
+- ld hl,$dfd8
+- ld de,CpcFrameRightSide
+-CpcFrameSide:
+- ex de,hl
+- ld (CpcFrameSideSource+1),hl
+- ex de,hl
+- ld b,FieldHeight-8
+-CpcFrameSideRow:
+-CpcFrameSideSource:
+- ld de,0
+- call CpcFramePair
+- dec l
+- dec b
+- jp nz,CpcFrameSideRow
+- ret
+-CpcFramePair:
+- ld a,(de)
+- inc de
+- ld (hl),a
+- push hl
+- ld a,h
+- sub $20
+- ld h,a
+- xor a
+- ld (hl),a
+- ld a,h
+- add $40
+- ld h,a
+- ld a,(de)
+- inc de
+- ld (hl),a
+- pop hl
+- ret
+diff -ruN a/routines/direct_sprites.asm b/routines/direct_sprites.asm
+--- a/routines/direct_sprites.asm	2026-10-12 21:45:35.000000000 +0500
++++ b/routines/direct_sprites.asm	2026-10-13 00:07:26.000000000 +0500
+@@ -103,9 +103,9 @@
+  inc hl
+  ld a,(hl)
+  ld b,a
+- ; Only owner 0 is the falling bonus; static HUD owners are never bonuses.
++ ; Only owner 4 is the falling bonus; static HUD owners are never bonuses.
+  ld a,(MonoOwner)
+- or a
++ cp 4
+  call z,MonoBonusHeight
+  ld a,(plane_y)
+  add a,b
+diff -ruN a/routines/magnet_accent_off.asm b/routines/magnet_accent_off.asm
+--- a/routines/magnet_accent_off.asm	2026-10-12 05:54:09.000000000 +0500
++++ b/routines/magnet_accent_off.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,8 +1,2 @@
+-MagnetAccentOff:
+- ld a,(NativeSampleSprite)
+- cp spr_magnet_circle_off%256
+- ret nz
+- ld a,(NativeSampleAccentE)
+- or b
+- ld (NativeSampleAccentE),a
+- ret
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_accent_reset.asm b/routines/magnet_accent_reset.asm
+--- a/routines/magnet_accent_reset.asm	2026-10-12 05:53:03.000000000 +0500
++++ b/routines/magnet_accent_reset.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,5 +1,2 @@
+-MagnetAccentReset:
+- xor a
+- ld (NativeSampleAccentA),a
+- ld (NativeSampleAccentE),a
+- ret
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_background_cache.asm b/routines/magnet_background_cache.asm
+--- a/routines/magnet_background_cache.asm	2026-10-12 21:38:12.000000000 +0500
++++ b/routines/magnet_background_cache.asm	2026-10-13 01:17:04.000000000 +0500
+@@ -1,46 +1,37 @@
+-; 4 immutable caches: On-C (150), Off XOR delta (92), centre arrays (64).
+-; Centre arrays: On-A, E XOR correction, Off-A, Off-E (16 bytes each).
+-; 4*306=1224 bytes. Static shift scratch is relocated to $7ed0 (302 bytes).
+-MagCacheSlots: dw $7a00,$7b32,$7c64,$7d96
+- ASSERT $7d96+306 == $7ec8
+-MagCacheMeta: ds 24,0 ; C column, top row, cache pointer, property pointer
+-MagCacheLevel: db $ff
+-MagCacheCount: db 0
++; Magnet picture cache: one 304-byte slot per magnet at 7a00..7ebf.
++; 4x24 cells (the disc is 25x24), column-major, three bytes each:
++;   P1 = grey ring + cyan body of the on picture (its planes C and E),
++;   P2 = cyan body + red arrows and core of the on picture (its plane A),
++;   marks-off = grey marks of the off picture (plane C);
++; then 2x8 bytes of the off-state ball (planes A and C).
++; The disc is P1|P2, the ring is P1&~P2.
++;   on  = grey ring (C+E), cyan body (A+C+E), red arrows and core (A);
++;   off = grey ring and marks (C+E) on paper (E), cyan ball (A+C+E).
++; The slot is rebuilt whenever the round window returns this RAM.
++MagRows EQU 24
++MagCacheSlots: dw $7a00,$7b30,$7c60,$7d90
++ ASSERT $7d90+304 <= $7ec8
++MagCacheMeta: ds 8,0 ; plane A column, top row
++MagnetCoreOff: db $1c,$26,$4f,$5f,$5f,$7f,$3e,$1c
+ MCIndex: db 0
+-MCCol: db 0
+-MCRow: db 0
+-MCState: db 0
+-MCValue: db 0
+-MCSavedFrame: db 0
+-MCSavedFlag: db 0
+ MCBase: dw 0
+-MCProps: dw 0
+-MCVideo: dw 0
+-MCFlag: dw 0
+-MCOnPtr: dw 0
+-MCDeltaPtr: dw 0
+ 
+-NativeMagCacheBuildAll:
+- ld a,(current_level_number_1up)
+- ld b,a
+- ld a,(MagCacheLevel)
+- cp b
+- jp nz,mcbg_rebuild
+- ld a,(magnets_quantity)
+- ld b,a
+- ld a,(MagCacheCount)
+- cp b
+- ret z
+-mcbg_rebuild:
++MagCacheBuildAll:
+  xor a
++mcb_all:
++ ld hl,magnets_quantity
++ cp (hl)
++ ret nc
+  ld (MCIndex),a
+- ld (MagCacheCount),a
+- ld a,(magnets_quantity)
+- or a
+- jp z,mcbg_done
+-mcbg_mag:
++ call MagCacheBuildOne
++ ld a,(MCIndex)
++ inc a
++ jp mcb_all
++
++MagCacheBuildOne:
+  ld a,(MCIndex)
+  add a,a
++ ld c,a
+  ld hl,MagCacheSlots
+  call hl_add_a
+  ld e,(hl)
+@@ -48,230 +39,404 @@
+  ld d,(hl)
+  ex de,hl
+  ld (MCBase),hl
+- ld a,(MCIndex)
+- rlca
+- rlca
+- rlca
+- rlca
+- ld hl,magnet_properties
++ ld a,c
++ ld hl,MagCacheMeta
++ call hl_add_a
++ ex de,hl
++ ld a,c
++ add a,a
++ add a,a
++ add a,a
++ ld hl,magnet_properties+2
+  call hl_add_a
+- ld (MCProps),hl
+- inc hl
+- ld a,(hl)
+- ld (MCSavedFrame),a
+- ld (hl),6
+- inc hl
+  ld a,(hl)
+  sub 5
++ ld b,a
++ and 7
++ ld (NativeShift),a
++ ld a,b
+  rrca
+  rrca
+  rrca
+  and 31
+- or $c0
+- ld d,a
++ or $a0
++ ld (de),a
++ inc de
+  inc hl
+  inc hl
+- ld a,(hl)
+- sub 5
+- ld e,a
+- ld a,224
+- sub e
+- ld e,a
++ ld a,229
++ sub (hl)
++ ld (de),a
++ ld hl,(MCBase)
+  ex de,hl
+- ld (MCVideo),hl
+- ld a,(MCIndex)
+- ld hl,NativeMagnetOverlayFlags
+- call hl_add_a
+- ld (MCFlag),hl
++ push de
++ ld hl,spr_magnet_circle_on+2
++ ld bc,$2f3c ; cpl, 30-row column: ring + body
++ call mcb_pass
++ pop de
++ inc de
++ push de
++ ld hl,spr_magnet_circle_on+3
++ ld bc,$003c ; body
++ call mcb_pass
++ pop de
++ inc de
++ push de
++ ld hl,spr_magnet_circle_off+2
++ ld bc,$2f00+MagRows*2 ; cpl, off-sprite column: the disc
++ call mcb_pass
++ ; P2 = body | (disc & ~P1): the red part is the disc outside ring and body
++ ld hl,(MCBase)
++ ld b,MagRows*4
++mcb_red:
+  ld a,(hl)
+- ld (MCSavedFlag),a
+- ld (hl),0 ; the base On layer already contains the identical On overlay
+- ld a,(MCIndex)
+- add a,a
+- ld b,a
+- add a,a
+- add a,b
+- ld hl,MagCacheMeta
+- call hl_add_a
+- push hl
+- ld hl,(MCVideo)
+- ex de,hl
+- pop hl
+- ld (hl),d
++ cpl
+  inc hl
+- ld (hl),e
+  inc hl
+- push hl
+- ld hl,(MCBase)
+- ex de,hl
+- pop hl
+- ld (hl),e
++ and (hl)
++ dec hl
++ or (hl)
++ ld (hl),a
+  inc hl
+- ld (hl),d
+  inc hl
++ dec b
++ jp nz,mcb_red
++ pop de
++ ld hl,spr_magnet_circle_off+3
++ ld bc,MagRows*2 ; nop
++ call mcb_pass
++ ld de,MagnetCoreOff
++ ld hl,(MCBase)
++ ld bc,MagRows*12
++ add hl,bc
++ ld b,8
++mcb_core_off:
++ push bc
++ call mcb_core_byte
++ ld (hl),a
+  push hl
+- ld hl,(MCProps)
+- ex de,hl
++ ld a,8
++ call hl_add_a
++ ld (hl),c
+  pop hl
+- ld (hl),e
+  inc hl
+- ld (hl),d
++ pop bc
++ dec b
++ jp nz,mcb_core_off
++ ret
++mcb_core_byte:
++ ld a,(de)
++ inc de
++ jp NativeSampleShift ; keeps DE and HL
++
++; HL=source byte of column 0, DE=first cache byte, C=source column stride,
++; B=opcode applied to the source byte before the shift (cpl or nop).
++mcb_pass:
++ ld a,b
++ ld (mcb_inv1),a
++ ld (mcb_inv2),a
++ ld a,c
++ ld (mcb_stride+1),a
+  xor a
+- ld (MCState),a
+- call NativeMagCacheBuildState
+- ld hl,(MCFlag)
+- ld (hl),1
+- ld a,32
+- ld (MCState),a
+- ld hl,(MCProps)
+- inc hl
+- ld (hl),7
+- call NativeMagCacheBuildState
+- ld hl,(MCProps)
++mcb_col:
++ ld (mcb_colno+1),a
++ ld a,MagRows
++mcb_row:
++ push af
++ push de
++ ld a,(hl)
++mcb_inv1:
++ nop
++ call NativeSampleShift
++ ld d,a
++mcb_colno:
++ ld a,0
++ or a
++ jp z,mcb_store
++ push hl
++mcb_stride:
++ ld a,0
++ cpl
++ inc a
++ add a,l
++ ld l,a
++ jp c,mcb_previous
++ dec h
++mcb_previous:
++ ld a,(hl)
++mcb_inv2:
++ nop
++ call NativeSampleShift
++ ld a,c
++ or d
++ ld d,a
++ pop hl
++mcb_store:
++ ld a,d
++ pop de
++ ld (de),a
++ inc de
++ inc de
++ inc de
+  inc hl
+- ld a,(MCSavedFrame)
+- ld (hl),a
+- ld hl,(MCFlag)
+- ld a,(MCSavedFlag)
+- ld (hl),a
+- ld hl,MCIndex
+- inc (hl)
+- ld a,(magnets_quantity)
+- cp (hl)
+- jp nz,mcbg_mag
+-mcbg_done:
+- ld a,(current_level_number_1up)
+- ld (MagCacheLevel),a
+- ld a,(magnets_quantity)
+- ld (MagCacheCount),a
++ inc hl
++ pop af
++ dec a
++ jp nz,mcb_row
++ ld a,(mcb_stride+1)
++ sub MagRows*2
++ call hl_add_a
++ ld a,(mcb_colno+1)
++ inc a
++ cp 4
++ jp nz,mcb_col
+  ret
+ 
+-
+-; Current level geometry has disjoint magnet footprints. State delta is
+-; reversible: C/E XOR its 4x23 difference; E centre XOR its correction.
+-; The centre A accent has its own reversible On/Off delta.
+-NativeMagCacheTryToggle:
+- ld a,(MagCacheCount)
+- ld b,a
+- ld a,(magnets_quantity)
+- cp b
+- jp nz,mct_miss
+- ld a,(MagCacheLevel)
+- ld b,a
+- ld a,(current_level_number_1up)
+- cp b
+- jp nz,mct_miss
+- ld hl,(IXobj)
+- ld a,l
+- sub magnet_properties & $ff
+- rrca
+- rrca
+- rrca
+- rrca
+- and 3
++; Repaint the rows of every marked magnet that the restored brick can touch.
++MagnetRepaintMarked:
++ ld a,(NativeRestoreMagnetCount)
++ or a
++ ret z
++ xor a
++mrm_magnet:
++ ld (MCIndex),a
++ ld hl,MagnetRedrawFlags
++ call hl_add_a
++ ld a,(hl)
++ or a
++ jp z,mrm_next
++ ld (hl),0
++ ld a,(MCIndex)
++ add a,a
++ ld hl,MagCacheMeta+1
++ call hl_add_a
++ ld a,(NativeRestoreOrigin+1)
++ add a,(hl)
++ sub 225 ; first touched magnet row, may be negative
+  ld b,a
+- ld hl,NativeMagnetOverlayFlags
++ ld c,10
++ jp p,mrm_bottom
++ add a,c
++ ld c,a
++ ld b,0
++mrm_bottom:
++ ld a,b
++ add a,c
++ cp MagRows+1
++ jp c,mrm_paint
++ ld a,MagRows
++ sub b
++ ld c,a
++mrm_paint:
++ ld a,(MCIndex)
++ call MagnetPaint
++mrm_next:
++ ld a,(MCIndex)
++ inc a
++ cp 4
++ jp nz,mrm_magnet
++ ret
++
++; A=magnet. Paint its current state from the cache: all rows, or C rows
++; starting at row B. Pixels outside the cover are left alone. The cache
++; column is read through SP, so interrupts are held off for one column.
++MagnetPaintFull:
++ ld bc,MagRows
++MagnetPaint:
++ ld (MCIndex),a
++ ld a,(SUWindowValid)
++ or a
++ ret nz ; the round window holds the cache RAM
++ ld a,b
++ ld (mp_first+1),a
++ add a,c
++ ld (mp_last+1),a
++ ld a,(MCIndex)
++ rlca
++ rlca
++ rlca
++ rlca
++ ld hl,magnet_properties+1
+  call hl_add_a
+- ld c,(hl)
+- ld (hl),1
+- ld hl,(IXobj)
+- inc hl
+  ld a,(hl)
+- xor 1
+- ld (hl),a
+  and 1
+- or c
+- jp z,mct_done ; disabled overlay and new On need no pixel change
+- ld a,b
++ ld (mp_off+1),a
++ ld hl,mp_on_row
++ jp z,mp_state
++ ld hl,mp_off_row
++mp_state:
++ ld (mp_enter+1),hl
++ ld a,(MCIndex)
+  add a,a
+  ld c,a
+- add a,a
+- add a,c
+  ld hl,MagCacheMeta
+  call hl_add_a
+  ld d,(hl)
+  inc hl
+- ld e,(hl)
+- push hl
+- ex de,hl
+- ld (MCVideo),hl
+- ex de,hl
+- pop hl
+- inc hl
+- ld c,(hl)
++ ld b,(hl)
++ ld a,b
++mp_first:
++ sub 0
++ ld e,a
++ ld a,b
++mp_last:
++ sub 0
++ ld (mp_on_end+1),a
++ ld (mp_off_end+1),a
++ ld a,c
++ ld hl,MagCacheSlots
++ call hl_add_a
++ ld a,(hl)
+  inc hl
+  ld h,(hl)
+- ld l,c
++ ld l,a
+  ld (MCBase),hl
+- ld bc,150
+- add hl,bc
+- ld b,4
+-mct_col:
+- push de
+- ld c,23
+-mct_row:
++ ld a,(mp_first+1)
++ ld c,a
++ add a,a
++ add a,c
++ call hl_add_a
++ ex de,hl
++ ld (mp_video+1),hl
++ ld hl,0
++ add hl,sp
++ ld (mp_sp+1),hl
++ ex de,hl
++ ld a,4
++mp_col:
++ ld (mp_cols+1),a
++ ld (mp_cache+1),hl
++ di
++ ld sp,hl
++mp_video:
++ ld hl,0 ; plane A
++ ld e,l
++ ld a,h
++ add a,$20
++ ld d,a ; plane C
++mp_enter:
++ jp mp_on_row
++mp_on_row:
++ pop bc ; C=P1 (ring+body), B=P2 (body+red)
++ inc sp
+  ld a,(hl)
+- or a
+- jp z,mct_next
++ or c
++ xor c
++ or b
++ ld (hl),a
+  ld a,(de)
+- xor (hl)
++ or b
++ xor b
++ or c
+  ld (de),a
+  ld a,d
+- add $20
++ add a,$20
+  ld d,a
+  ld a,(de)
+- xor (hl)
++ or b
++ xor b
++ or c
+  ld (de),a
+  ld a,d
+  sub $20
+  ld d,a
+-mct_next:
+- inc hl
+  dec e
+- dec c
+- jp nz,mct_row
+- pop de
+- inc d
+- dec b
+- jp nz,mct_col
+- ld hl,(MCBase)
+- ld bc,258
+- add hl,bc
+- push hl
+- ld hl,(MCVideo)
+- ld a,h
+- add $21
++ dec l
++ ld a,l
++mp_on_end:
++ cp 0
++ jp nz,mp_on_row
++ jp mp_col_done
++mp_off_row:
++ pop bc ; C=P1, B=P2
++ ld a,(hl)
++ or c
++ xor c
++ or b
++ xor b
++ ld (hl),a ; A: the disc is cleared
++ ld a,d
++ add a,$20
++ ld d,a
++ ld a,(de)
++ or c
++ or b
++ ld (de),a ; E: the whole disc
++ ld a,d
++ sub $20
+  ld d,a
++ ld a,(de)
++ or c
++ or b
++ xor b
++ pop bc ; C=marks-off
++ dec sp
++ or c
++ ld (de),a ; C: the ring and the marks
++ dec e
++ dec l
+  ld a,l
++mp_off_end:
++ cp 0
++ jp nz,mp_off_row
++mp_col_done:
++mp_sp:
++ ld sp,0
++ ei
++ ld hl,mp_video+2
++ inc (hl)
++mp_cache:
++ ld hl,0
++ ld bc,MagRows*3
++ add hl,bc
++mp_cols:
++ ld a,0
++ dec a
++ jp nz,mp_col
++mp_off:
++ ld a,0
++ or a
++ ret z
++ ld a,(MCIndex)
++ add a,a
++ ld hl,MagCacheMeta
++ call hl_add_a
++ ld d,(hl)
++ inc d
++ inc hl
++ ld a,(hl)
+  sub 8
+  ld e,a
+- pop hl
++ ld hl,(MCBase)
++ ld bc,MagRows*12
++ add hl,bc
+  ld b,2
+-mct_accent_col:
++mp_core_col:
+  push de
+  ld c,8
+-mct_accent_row:
+- call NativeMagAccentDelta
++mp_core_row:
++ ld a,(de)
++ or (hl)
++ ld (de),a
++ ld a,d
++ add a,$20
++ ld d,a
+  ld a,(de)
+- xor (hl)
++ or (hl)
+  ld (de),a
++ ld a,d
++ sub $20
++ ld d,a
+  inc hl
+  dec e
+  dec c
+- jp nz,mct_accent_row
++ jp nz,mp_core_row
+  pop de
+  inc d
+  dec b
+- jp nz,mct_accent_col
+-mct_done:
+- scf
+- ret
+-mct_miss:
+- ld hl,(IXobj)
+- or a ; signal legacy fallback without changing the property/flag
++ jp nz,mp_core_col
+  ret
+ 
+-
+ PaceStartExtended:
+  ld hl,RCBegin
+  ld de,RCBegin
+@@ -287,7 +452,6 @@
+  ld (mono_pace_draw_call+1),hl
+  ex de,hl
+  ld (mono_pace_old_call+1),hl
+- call PaceKernelDispatch
+  ld a,(balls_quantity)
+  cp 3
+  ret z
+diff -ruN a/routines/magnet_center_draw.asm b/routines/magnet_center_draw.asm
+--- a/routines/magnet_center_draw.asm	2026-10-12 06:08:02.000000000 +0500
++++ b/routines/magnet_center_draw.asm	2026-10-12 23:00:25.000000000 +0500
+@@ -1,26 +1 @@
+-; Colour only the middle eight columns/rows of the original picture.
+-; All pixels of the ring and lettering outside that square stay unchanged.
+-; Reserved free RAM after PreparedRow; no VRAM or quasi-disk scratch.
+-MagnetCenterDest EQU $71e9
+-MagnetCenterSource EQU $71eb
+-MagnetCenterOff EQU $71ed
+-NativeSampleAccentA EQU $71ee
+-NativeSampleAccentE EQU $71ef
+-MagnetCenterSourceEntry:
+- call MagnetCenterSelectSource
+- jp MagnetCenterSetup
+-MagnetCenterRow:
+- push bc
+- push hl
+- call MagnetCenterReadShift
+- pop hl
+- call MagnetCenterPut
+- inc h
+- ld a,c
+- call MagnetCenterPut
+- dec h
+- dec l
+- pop bc
+- dec b
+- jp nz,MagnetCenterRow
+- ret
++; Retired: magnets are painted from the cache (magnet_background_cache.asm).
+diff -ruN a/routines/magnet_center_e.asm b/routines/magnet_center_e.asm
+--- a/routines/magnet_center_e.asm	2026-10-12 05:54:09.000000000 +0500
++++ b/routines/magnet_center_e.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,16 +1,2 @@
+-MagnetCenterE:
+- ld a,(MagnetCenterOff)
+- or a
+- ld a,e
+- jp nz,MagnetCenterEOn
+- cpl
+- and (hl)
+- jp MagnetCenterEStore
+-MagnetCenterEOn:
+- or (hl)
+-MagnetCenterEStore:
+- ld (hl),a
+- ld a,h
+- sub $40
+- ld h,a
+- ret
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_center_guard.asm b/routines/magnet_center_guard.asm
+--- a/routines/magnet_center_guard.asm	2026-10-12 06:08:02.000000000 +0500
++++ b/routines/magnet_center_guard.asm	2026-10-12 23:00:25.000000000 +0500
+@@ -1,10 +1 @@
+-; Native kind 3 is a separator (5) or a magnet (6/7); HUD is dispatched earlier.
+-MagnetCenterDraw:
+- ld hl,(IXobj)
+- inc hl
+- ld a,(hl)
+- cp 6
+- ret c
+- sub 6
+- ld (MagnetCenterOff),a
+- jp MagnetCenterSourceEntry
++; Retired: magnets are painted from the cache (magnet_background_cache.asm).
+diff -ruN a/routines/magnet_center_locate.asm b/routines/magnet_center_locate.asm
+--- a/routines/magnet_center_locate.asm	2026-10-12 05:54:09.000000000 +0500
++++ b/routines/magnet_center_locate.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,6 +1,2 @@
+-MagnetSampleCenterBody:
+- ld hl,(NativeSampleSource)
+- ld a,(NativeSampleByte)
+- cp 1
+- jp z,MagnetSampleCenterRead
+- jp NativeSampleCenterStride
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_center_put.asm b/routines/magnet_center_put.asm
+--- a/routines/magnet_center_put.asm	2026-10-12 05:54:09.000000000 +0500
++++ b/routines/magnet_center_put.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,14 +1,2 @@
+-MagnetCenterPut:
+- ld e,a
+- or (hl)
+- ld (hl),a
+- ld a,h
+- add $20
+- ld h,a
+- ld a,e
+- or (hl)
+- ld (hl),a
+- ld a,h
+- add $20
+- ld h,a
+- jp MagnetCenterE
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_center_read_shift.asm b/routines/magnet_center_read_shift.asm
+--- a/routines/magnet_center_read_shift.asm	2026-10-12 06:08:02.000000000 +0500
++++ b/routines/magnet_center_read_shift.asm	2026-10-12 23:00:25.000000000 +0500
+@@ -1,7 +1 @@
+-MagnetCenterReadShift:
+- ld hl,(MagnetCenterSource)
+- ld a,(hl)
+- inc hl
+- inc hl
+- ld (MagnetCenterSource),hl
+- jp NativeSampleShift
++; Retired: magnets are painted from the cache (magnet_background_cache.asm).
+diff -ruN a/routines/magnet_center_read.asm b/routines/magnet_center_read.asm
+--- a/routines/magnet_center_read.asm	2026-10-12 17:27:55.000000000 +0500
++++ b/routines/magnet_center_read.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,11 +1,2 @@
+-MagnetSampleCenterRead:
+- inc hl
+- ld a,(hl)
+- call NativeSampleShift
+- ld b,a
+- ld a,(NativeSampleByte)
+- cp 1
+- ld a,b
+- ret z
+- ld a,c
+- ret
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_center_setup.asm b/routines/magnet_center_setup.asm
+--- a/routines/magnet_center_setup.asm	2026-10-12 06:08:02.000000000 +0500
++++ b/routines/magnet_center_setup.asm	2026-10-12 23:00:25.000000000 +0500
+@@ -1,10 +1 @@
+-MagnetCenterSetup:
+- ld hl,(MagnetCenterDest)
+- ld a,h
+- add $31
+- ld h,a
+- ld a,$d8
+- sub l
+- ld l,a
+- ld b,8
+- jp MagnetCenterRow
++; Retired: magnets are painted from the cache (magnet_background_cache.asm).
+diff -ruN a/routines/magnet_center_source.asm b/routines/magnet_center_source.asm
+--- a/routines/magnet_center_source.asm	2026-10-12 06:00:05.000000000 +0500
++++ b/routines/magnet_center_source.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,8 +1,2 @@
+-; Z means the enabled picture. Native column pitch is fixed in either state.
+-MagnetCenterSelectSource:
+- ld hl,spr_magnet_circle_on+79
+- jp z,MagnetCenterSourceReady
+- ld hl,spr_magnet_circle_off+65
+-MagnetCenterSourceReady:
+- ld (MagnetCenterSource),hl
+- ret
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_center_stride.asm b/routines/magnet_center_stride.asm
+--- a/routines/magnet_center_stride.asm	2026-10-12 05:54:09.000000000 +0500
++++ b/routines/magnet_center_stride.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,9 +1,2 @@
+-NativeSampleCenterStride:
+- ld de,0
+- ld a,l
+- sub e
+- ld l,a
+- ld a,h
+- sbc a,d
+- ld h,a
+- jp MagnetSampleCenterRead
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_sample_center.asm b/routines/magnet_sample_center.asm
+--- a/routines/magnet_sample_center.asm	2026-10-12 05:53:03.000000000 +0500
++++ b/routines/magnet_sample_center.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,13 +1,2 @@
+-; Return central glyph bits in A for the sampled destination byte.
+-MagnetSampleCenter:
+- ld a,(NativeSampleRow)
+- and $f8
+- cp 8
+- ld a,0
+- ret nz
+- ld a,(NativeSampleByte)
+- dec a
+- cp 2
+- ld a,0
+- ret nc
+- jp MagnetSampleCenterBody
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnet_sample_color.asm b/routines/magnet_sample_color.asm
+--- a/routines/magnet_sample_color.asm	2026-10-12 05:57:41.000000000 +0500
++++ b/routines/magnet_sample_color.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,17 +1,2 @@
+-; Preserve central RGB accents while composing stationary magnet layers.
+-MagnetSampleAccent:
+- ld a,(NativeSampleMask)
+- cpl
+- ld b,a
+- ld a,(NativeSampleAccentA)
+- and b
+- ld (NativeSampleAccentA),a
+- ld a,(NativeSampleAccentE)
+- and b
+- ld (NativeSampleAccentE),a
+- call MagnetSampleCenter
+- ld b,a
+- ld a,(NativeSampleAccentA)
+- or b
+- ld (NativeSampleAccentA),a
+- jp MagnetAccentOff
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/magnets.asm b/routines/magnets.asm
+--- a/routines/magnets.asm	2026-10-12 21:23:52.000000000 +0500
++++ b/routines/magnets.asm	2026-10-12 23:00:53.000000000 +0500
+@@ -1,8 +1,6 @@
+ ; Used by the routine at game_screen_draw_to_buffer.
+ ; Рисует в буфере все магниты на уровне
+ print_magnets:
+-  LD A,$1E	; Меняем высоту спрайта - 30 точек
+-  LD (spr_magnet_circle_on+1),A
+   LD A,(current_level_number_1up)
+   ADD A,A
+   LD HL,magnets
+@@ -20,8 +18,6 @@
+   LD (IXobj),HL
+ L8D4C_0:
+   PUSH AF
+-  xor a
+-  call NativeMagnetSetOverlay
+   LD HL,(IXobj)
+   INC HL		; +$01
+   LD (HL),$06		; IX+$01
+@@ -51,7 +47,6 @@
+   LD (HL),D		; IX+$04 Запоминаем координату Y магнита
+ 
+   CALL ix_buf_addr_calc
+-  CALL print_obj_to_buff
+   LD HL,(IXobj)
+   LD DE,$0004
+   ADD HL,DE
+@@ -66,9 +61,6 @@
+   LD HL,(IXobj)
+   INC HL		; +$01
+   LD (HL),$07		; IX+$01
+-  ld a,1
+-  call NativeMagnetSetOverlay
+-  CALL print_obj_to_buff
+ L8D4C_1:
+   LD HL,(IXobj)
+   INC HL
+@@ -83,8 +75,17 @@
+   POP AF
+   DEC A
+   JP NZ,L8D4C_0
+-  LD A,$17		; Меняем высоту спрайта - 23 точки
+-  LD (spr_magnet_circle_on+1),A
++; Координаты готовы: строим кэш картинок и красим магниты из него
++  CALL MagCacheBuildAll
++  XOR A
++print_magnets_paint:
++  PUSH AF
++  CALL MagnetPaintFull
++  POP AF
++  INC A
++  LD HL,magnets_quantity
++  CP (HL)
++  JP NZ,print_magnets_paint
+   RET
+ 
+ magnets_quantity:
+@@ -181,31 +182,19 @@
+   JP NZ,L8E72_0
+   LD A,H ; floor(random_byte * magnet_count / 256), at most four adds
+ L8E72_1:
++  LD C,A		; номер магнита
+   ADD A,A		; 2+2
+   ADD A,A		; 4+4
+   ADD A,A		; 8+8
+   ADD A,A		; 16+16
+-  LD HL,magnet_properties
++  LD HL,magnet_properties+1
+   CALL hl_add_a
+-  LD (current_magnet_prop),HL
+-  LD (IXobj),HL ;NOTE: нужен для print_obj_to_buff
+-  call NativeMagCacheTryToggle
+-  RET C
+-print_one_magnet_legacy:
+-  ld a,1
+-  call NativeMagnetSetOverlay
+-  inc HL
++  LD A,(SUWindowValid)
++  AND A
++  RET NZ		; память кэша занята окном раунда
+   LD A,(HL)		; IX+$01
+   XOR $01
+   LD (HL),A		; IX+$01
+-  inc HL
+-  LD A,(HL)		; IX+$02
+-  PUSH AF
+-  SUB $05
+-  LD (HL),A		; IX+$02
+-  push HL
+-  CALL print_obj_to_buff
+-  pop HL
+-  POP AF
+-  LD (HL),A		; IX+$02
+-  RET ; Magnet animation itself is silent.
++  LD A,C
++  JP MagnetPaintFull	; Magnet animation itself is silent.
++
+diff -ruN a/routines/mono_cache.asm b/routines/mono_cache.asm
+--- a/routines/mono_cache.asm	2026-10-12 19:30:50.000000000 +0500
++++ b/routines/mono_cache.asm	2026-10-12 23:00:58.000000000 +0500
+@@ -171,22 +171,5 @@
+ MonoNativeFirst: db 0
+ MonoNativeDest: dw 0
+ MonoBuildBat: db 0
+-NativeMagnetSetOverlay:
+- push hl
+- push af
+- ld hl,(IXobj)
+- ld a,l
+- sub magnet_properties & $ff
+- rrca
+- rrca
+- rrca
+- rrca
+- and 3
+- ld hl,NativeMagnetOverlayFlags
+- call hl_add_a
+- pop af
+- ld (hl),a
+- pop hl
+- ret
+ 
+  INCLUDE "routines/restore_background_tail.asm"
+diff -ruN a/routines/mono_pace_kernel.asm b/routines/mono_pace_kernel.asm
+--- a/routines/mono_pace_kernel.asm	2026-10-12 21:10:57.000000000 +0500
++++ b/routines/mono_pace_kernel.asm	2026-10-13 01:03:07.000000000 +0500
+@@ -1,13 +1 @@
+-PaceKernelDispatch:
+- ld hl,mdt_count
+- ld de,mdt_account
+- ld a,(balls_quantity)
+- cp 3
+- jp nz,pace_kernel_ready
+- ld hl,mdt_next
+- ld de,RCBegin
+-pace_kernel_ready:
+- ld (mdt_count_dispatch+1),hl
+- ex de,hl
+- ld (mdt_account_dispatch+1),hl
+- ret
++; Retired: the dirty-tile kernel it used to patch is gone (replace-in-place renderer).
+diff -ruN a/routines/mono_renderer.asm b/routines/mono_renderer.asm
+--- a/routines/mono_renderer.asm	2026-10-12 22:24:57.000000000 +0500
++++ b/routines/mono_renderer.asm	2026-10-13 01:03:07.000000000 +0500
+@@ -2,9 +2,12 @@
+ ; Old eight-row tiles are cleared once through a bitmap; all current owners
+ ; are OR-blitted from original sources. Moving caches/isolation are obsolete.
+ MonoRawSources EQU 1
+-MonoObjects: dw object_bonus,object_ball_1,object_ball_2,object_ball_3
+- dw object_bullet_1,object_bullet_2,object_bat_2,object_bat_1,object_bat_temp
+- dw object_enemy,object_rocket
++; Upper-field objects go first and the paddles last: with a raster-tied
++; frame they are replaced before the beam leaves the top border.
++; Owners 1..3 must stay the balls (dedicated blit), owner 4 is the bonus.
++MonoObjects: dw object_enemy,object_ball_1,object_ball_2,object_ball_3
++ dw object_bonus,object_bullet_1,object_bat_2,object_bat_1,object_bat_temp
++ dw object_bullet_2,object_rocket
+ MonoSlots EQU MonoOnlySlot-22
+ MonoOnlySlot: dw $7f00
+ MonoCapacities EQU MonoOnlyCapacity-11
+@@ -216,89 +219,497 @@
+  jp nz,mono_prepare
+  ; Every sprite is redrawn from its original native source. No shifted
+  ; moving-object cache or pairwise isolation pass is required.
++ call GameplaySyncPoint
+  call PaceStart
+- ld hl,MonoDirtyBitmap
+- ld b,128
+- xor a
+-mono_done_reset:
+- ld (hl),a
+- inc l
+- dec b
+- jp nz,mono_done_reset
+- ; Dirty bitmap shares the temporary static sprite cache, never live owners.
+- ld hl,MonoTags+44
+- ld (hl),a
+- inc hl
+- ld (hl),a
++ ; No image is ever erased before its replacement is on the screen.
++ ; An owner whose old+new bounding box touches no other owner is replaced
++ ; in place: the new picture is stored over the box and only the leftover
++ ; strips of the old one are zeroed afterwards. Owners that share a box are
++ ; handled together the old way: zero their old boxes, then OR-draw them.
++ ;
++ ; Pass A packs one eight-byte record per active owner:
++ ; flag (1 isolated, 2 shared), union box (column, end, top, bottom),
++ ; owner number, low bytes of its old and new descriptors.
+ mono_old_base:
+  ld hl,MonoOld
+- ld (MonoOldPtr),hl
+- ld b,11
+-mono_erase_all:
+- push bc
+- ld hl,(MonoOldPtr)
++ ex de,hl
++ ld hl,(mono_new_base+1)
++ ld bc,MonoUnion
++ xor a
++ ld (MonoFastDraw),a
++mono_a_owner:
++ ld (mono_a_index+1),a
++ inc hl
++ inc hl
++ inc de
++ inc de
++ ld a,(de)
++ or (hl)
++ jp z,mono_a_idle
++ ld a,1
++ ld (bc),a
++ inc bc
++ ld a,(de)
++ or a
++ jp z,mono_a_new_only
++ ld a,(hl)
++ or a
++ jp z,mono_a_old_only
++ dec hl
++ dec de
++ ld a,(de)
++ cp (hl)
++ jp c,mono_a_col
++ ld a,(hl)
++mono_a_col:
++ ld (bc),a
++ inc bc
++ ld a,(de)
++ inc de
++ ex de,hl
++ add a,(hl)
++ ex de,hl
++ ld (mono_a_oend+1),a
+  ld a,(hl)
+- ld (MonoTop),a
+  inc hl
++ add a,(hl)
++mono_a_oend:
++ cp 0
++ jp nc,mono_a_end
++ ld a,(mono_a_oend+1)
++mono_a_end:
++ ld (bc),a
++ inc bc
++ dec hl
++ dec hl
++ dec de
++ dec de
++ ld a,(de)
++ cp (hl)
++ jp nc,mono_a_top
++ ld a,(hl)
++mono_a_top:
++ ld (bc),a
++ inc bc
++ ld a,(de)
++ inc de
++ inc de
++ inc de
++ ex de,hl
++ sub (hl)
++ ex de,hl
++ inc a
++ ld (mono_a_obottom+1),a
+  ld a,(hl)
+- ld (MonoColumn),a
+  inc hl
++ inc hl
++ inc hl
++ sub (hl)
++ inc a
++mono_a_obottom:
++ cp 0
++ jp c,mono_a_bottom
++ ld a,(mono_a_obottom+1)
++mono_a_bottom:
++ ld (bc),a
++ inc bc
++ jp mono_a_tail
++mono_a_old_only:
++ push hl
++ ld h,d
++ ld l,e
++ call mono_a_box
++ pop hl
++ inc hl
++ inc de
++ jp mono_a_tail
++mono_a_new_only:
++ push hl
++ call mono_a_box
++ pop hl
++ inc hl
++ inc de
++mono_a_tail: ; both pointers are at descriptor+3
++ ld a,(mono_a_index+1)
++ ld (bc),a
++ inc bc
++ ld a,e
++ sub 3
++ ld (bc),a
++ inc bc
++ ld a,l
++ sub 3
++ ld (bc),a
++ inc bc
++ ld a,l
++ add a,4
++ ld l,a
++ ld a,e
++ add a,4
++ ld e,a
++ jp mono_a_index
++mono_a_idle:
++ ld a,l
++ add a,5
++ ld l,a
++ ld a,e
++ add a,5
++ ld e,a
++mono_a_index:
++ ld a,0
++ inc a
++ cp 11
++ jp nz,mono_a_owner
++ ld a,c
++ sub low MonoUnion
++ rrca
++ rrca
++ rrca
++ and 31
++ ld (MonoActiveN),a
++ call mono_pairs
++ ld a,(MonoSharedAny)
++ or a
++ jp z,mono_isolated
++ ld hl,mono_h_shared_zero
++ call mono_each
++ ld hl,mono_h_shared_draw
++ call mono_each
++mono_isolated:
++ xor a ; NOP: store instead of OR
++ call MonoMergeMode
++ ld hl,mono_h_isolated
++ call mono_each
++ ld a,$b6 ; OR (HL)
++ call MonoMergeMode
++ jp mono_copy_old
++; HL=descriptor+2, BC=box to fill (advanced). Keeps DE.
++mono_a_box:
++ push de
+  ld a,(hl)
+- ld (MonoCols),a
++ dec hl
++ ld e,(hl)
++ add a,e
++ ld d,a
++ ld a,e
++ ld (bc),a
++ inc bc
++ ld a,d
++ ld (bc),a
++ inc bc
++ dec hl
++ ld a,(hl)
++ ld (bc),a
++ inc bc
++ inc hl
++ inc hl
++ inc hl
++ sub (hl)
++ inc a
++ ld (bc),a
++ inc bc
++ pop de
++ ret
++
++; Mark every pair of records whose union boxes intersect.
++mono_pairs:
++ xor a
++ ld (MonoSharedAny),a
++ ld a,(MonoActiveN)
++ cp 2
++ ret c
++ dec a
++ ld b,a
++ ld hl,MonoUnion+1
++mono_pair_i:
++ push bc
++ push hl
++ ld d,h
++ ld e,l
++ ld c,b
++mono_pair_j:
++ ld a,l
++ add a,8
++ ld l,a
++ push hl
++ push de
++ inc hl
++ ld a,(de) ; column i
++ cp (hl) ; end j
++ jp nc,mono_pair_next
++ dec hl
++ inc de
++ ld a,(de) ; end i
++ ld b,a
++ ld a,(hl) ; column j
++ cp b
++ jp nc,mono_pair_next
++ inc hl
++ inc hl ; top j
++ inc de
++ inc de ; bottom i
++ ld a,(de)
++ ld b,a
++ ld a,(hl)
++ cp b
++ jp c,mono_pair_next
++ inc hl ; bottom j
++ dec de ; top i
++ ld a,(de)
++ cp (hl)
++ jp c,mono_pair_next
++ pop de
++ pop hl
++ push hl
++ push de
++ dec hl
++ ld (hl),2
++ dec de
++ ld a,2
++ ld (de),a
++ ld (MonoSharedAny),a
++mono_pair_next:
++ pop de
++ pop hl
++ dec c
++ jp nz,mono_pair_j
++ pop hl
++ ld a,l
++ add a,8
++ ld l,a
++ pop bc
++ dec b
++ jp nz,mono_pair_i
++ ret
++
++; Call handler HL for every record with A=flag, HL=record.
++mono_each:
++ ld (mono_each_call+1),hl
++ ld a,(MonoActiveN)
+  or a
+- jp z,mono_erase_next
++ ret z
++ ld b,a
++ ld hl,MonoUnion
++mono_each_rec:
++ push bc
++ push hl
++ ld a,(hl)
++mono_each_call:
++ call 0
++ pop hl
++ ld a,l
++ add a,8
++ ld l,a
++ pop bc
++ dec b
++ jp nz,mono_each_rec
++ ret
++mono_h_shared_zero:
++ cp 2
++ ret nz
++ ld de,6
++ add hl,de
++ ld l,(hl)
++ ld a,(mono_old_base+2)
++ ld h,a
++ ld a,$ff
++ ld (mono_z_ncol+1),a
++ jp mono_z_old
++mono_h_shared_draw:
++ cp 2
++ ret nz
++ jp mono_rec_draw
++mono_h_isolated:
++ dec a
++ ret nz
++ push hl
++ call mono_rec_draw
++ pop hl
++ ld de,6
++ add hl,de
++ ld e,(hl)
+  inc hl
+- ld c,(hl)
+- ld a,(MonoTop)
++ ld l,(hl)
++ ld a,(mono_old_base+2)
++ ld d,a
++ ld a,(mono_new_base+2)
++ ld h,a
++ ; fall through: zero what is left of the old picture outside the new box
++; DE=old descriptor, HL=new descriptor.
++mono_zero_strips:
++ push de
++ push hl
++ ld b,4
++mono_z_same:
++ ld a,(de)
++ cp (hl)
++ jp nz,mono_z_moved
++ inc de
++ inc hl
++ dec b
++ jp nz,mono_z_same
++ pop hl
++ pop de
++ ret ; same geometry: the stored picture covered the old one
++mono_z_moved:
++ pop hl
++ pop de
++ ld a,(hl)
++ ld (mono_z_ntop+1),a
++ ld c,a
++ inc hl
++ ld a,(hl)
++ ld (mono_z_ncol+1),a
+  ld b,a
+- sub c
++ inc hl
++ ld a,(hl)
++ or a
++ jp nz,mono_z_new
++ ld a,$ff
++ ld (mono_z_ncol+1),a
++ jp mono_z_old_de
++mono_z_new:
++ add a,b
++ ld (mono_z_nend+1),a
++ inc hl
++ ld a,c
++ sub (hl)
+  inc a
+- and $f8
++ ld (mono_z_nbottom+1),a
++mono_z_old_de:
++ ex de,hl
++mono_z_old: ; HL=old descriptor
++ ld a,(hl)
++ ld (mono_z_top+1),a
++ ld (mono_z_top2+1),a
+  ld c,a
+- ld a,b
+- or 7
+- ld (MonoTop),a
+- ld (MonoRectangleTop),a
+- sub c
++ inc hl
++ ld b,(hl)
++ inc hl
++ ld a,(hl)
++ or a
++ ret z
++ add a,b
++ ld (mono_z_end+1),a
++ inc hl
++ ld a,(hl)
++ ld (mono_z_rows+1),a
++ ld a,c
++ sub (hl)
+  inc a
+- ld (MonoRectangleRows),a
++ ld (mono_z_bottom+1),a
+ mono_pace_old_call:
+  call PaceAccountOld
+-mono_old_column:
+- ld a,(MonoRectangleTop)
+- ld (MonoTop),a
+- ld a,(MonoRectangleRows)
+- ld (MonoRemainingRows),a
+-mono_dirty_chunk:
+- cp 33
+- jp c,mono_chunk_ready
+- ld a,32
+-mono_chunk_ready:
+- ld (MonoRows),a
+- call MonoComposeUncovered
+- ld a,(MonoRows)
++mono_z_col:
++ ld h,b
++ ld a,b
++mono_z_ncol:
++ cp 0
++ jp c,mono_z_whole
++mono_z_nend:
++ cp 0
++ jp nc,mono_z_whole
++mono_z_top:
++ ld a,0
++ ld l,a
++mono_z_ntop:
++ sub 0
++ jp c,mono_z_below
++ call nz,mono_z_run
++mono_z_below:
++mono_z_nbottom:
++ ld a,0
++ ld l,a
++ dec l
++mono_z_bottom:
++ sub 0
++ jp c,mono_z_next
++ call nz,mono_z_run
++ jp mono_z_next
++mono_z_whole:
++mono_z_top2:
++ ld l,0
++mono_z_rows:
++ ld a,0
++ call mono_z_run
++mono_z_next:
++ inc b
++ ld a,b
++mono_z_end:
++ cp 0
++ jp nz,mono_z_col
++ ret
++mono_z_run:
++ ld c,a
++ xor a
++mono_z_byte:
++ ld (hl),a
++ dec l
++ dec c
++ jp nz,mono_z_byte
++ ret
++
++; HL=record: draw its owner's new picture in the current merge mode.
++mono_rec_draw:
++ ld de,5
++ add hl,de
++ ld a,(hl)
++ ld (MonoOwner),a
++ inc hl
++ inc hl
++ ld l,(hl)
++ ld a,(mono_new_base+2)
++ ld h,a
++ ld (MonoPtr),hl
++ inc hl
++ inc hl
++ ld a,(hl)
++ or a
++ ret z
++ dec hl
++ dec hl
++ ld e,(hl)
++ inc hl
++ ld d,(hl)
++ inc hl
++ ld a,(hl)
++ ld (MonoDrawCols),a
++ inc hl
++ ld a,(hl)
++ ld (MonoDrawRows),a
++ inc hl
++ ld c,(hl)
++ inc hl
++ ld b,(hl)
++ inc hl
++ ld a,(hl)
++ ld (direct_shift),a
++ ex de,hl
++ ld (MonoDrawVideo),hl
++ ld h,b
++ ld l,c
++ ld (MonoDrawSource),hl
++mono_pace_draw_call:
++ call PaceAccountDraw
++ ld a,(direct_shift)
+  ld b,a
+- ld a,(MonoTop)
+- sub b
+- ld (MonoTop),a
+- ld a,(MonoRemainingRows)
+- sub b
+- ld (MonoRemainingRows),a
+- jp nz,mono_dirty_chunk
+- ld hl,MonoColumn
+- inc (hl)
+- ld hl,MonoCols
+- dec (hl)
+- jp nz,mono_old_column
+-mono_erase_next:
+- ld a,(MonoOldPtr)
+- add a,7
+- ld (MonoOldPtr),a
+- pop bc
+- dec b
+- jp nz,mono_erase_all
++ jp MonoDrawWhite
++; A=$b6 (OR with the screen) or 0 (store): how the blits merge a sprite byte.
++MonoMergeMode:
++ ld (MonoStoreOp),a
++ ld (mono_bare_merge),a
++ ld (BallShiftLeadMerge),a
++ ld (BallShiftSpillMerge),a
++ ret
++MonoStoreOp: db $b6
++MonoSharedAny: db 0
++MonoActiveN: db 0
++ IF high $ != high ($+87)
++ DS 256-low $,0
++ ENDIF
++MonoUnion: ds 88,0
++ ASSERT high MonoUnion == high (MonoUnion+87)
+ mono_copy_old:
+- call MonoRedrawShared
+  ld hl,(mono_new_base+1)
+  ex de,hl
+  ld hl,(mono_old_base+1)
+@@ -376,59 +787,6 @@
+  ASSERT low MonoObjects == 0
+ 
+ 
+-MonoRedrawShared:
+- xor a
+- ld (MonoOwner),a
+- ld (MonoFastDraw),a
+- ld hl,(mono_new_base+1)
+- ld (MonoPtr),hl
+- ld b,11
+-mrs_next:
+- push bc
+- ld hl,(MonoPtr)
+- inc hl
+- inc hl
+- ld a,(hl)
+- or a
+- jp z,mrs_skip
+- dec hl
+- dec hl
+- ld e,(hl)
+- inc hl
+- ld d,(hl)
+- inc hl
+- ld a,(hl)
+- ld (MonoDrawCols),a
+- inc hl
+- ld a,(hl)
+- ld (MonoDrawRows),a
+- inc hl
+- ld c,(hl)
+- inc hl
+- ld b,(hl)
+- inc hl
+- ld a,(hl)
+- ld (direct_shift),a
+- ex de,hl
+- ld (MonoDrawVideo),hl
+- ld h,b
+- ld l,c
+- ld (MonoDrawSource),hl
+-mono_pace_draw_call:
+- call PaceAccountDraw
+- ld a,(direct_shift)
+- ld b,a
+- call MonoDrawWhite
+-mrs_skip:
+- ld a,(MonoPtr)
+- add a,7
+- ld (MonoPtr),a
+- ld hl,MonoOwner
+- inc (hl)
+- pop bc
+- dec b
+- jp nz,mrs_next
+- ret
+ 
+ SpriteCacheBuild:
+  ld hl,(IXobj)
+@@ -502,477 +860,94 @@
+  ld (BallShiftSpill+1),a
+  ret
+ 
+-; Byte-column dirty tiles. Keep video address, mask and bitmap pointer in
+-; registers. Four PUSHes clear each unique eight-row tile, without a call.
+-MonoComposeUncovered:
+- ld hl,0
+- add hl,sp
+- ld (mdt_restore_sp+1),hl
+- xor a
+- ld (mdt_account+1),a
+- ld a,(MonoRows)
+- rrca
+- rrca
+- rrca
+- and 31
++ INCLUDE "routines/zx_field_frame.asm"
++; HL=plane C address of the cell top, DE=cell bitmap, C=rows.
++zf_cell:
++ ld a,(de)
++ inc de
++zf_mirror:
++ ld b,0
++ inc b
++ call z,zf_reverse
+  ld b,a
+- ld a,(MonoTop)
+- ld e,a
+- rrca
+- rrca
+- rrca
+- and 7
+- ld hl,MonoDirtyMasks
+- call hl_add_a
+- ld c,(hl)
+- ld a,(MonoColumn)
+- ld d,a
+- and 31
+- add a,a
+- add a,a
+- ld l,a
+- ld a,e
+- rrca
+- rrca
+- rrca
+- rrca
+- rrca
+- rrca
+- and 3
+- add a,l
+- add a,$80
+- ld l,a
+- ld h,$7f
+- ; Keep SP on video for this whole short column. Duplicate tiles advance
+- ; SP without writes; each actual tile is still cleared exactly once.
+- ex de,hl
+- inc l
+- di
+- ld sp,hl
+- ex de,hl
+- ld de,0
+-mdt_tile:
+- ld a,(hl)
+- and c
+- jp nz,mdt_skip
+- ld a,(hl)
+- or c
+- ld (hl),a
+- DUP 4
+- push de
+- EDUP
+-mdt_count_dispatch:
+- jp mdt_count
+-mdt_count:
+- ld a,(mdt_account+1)
+- inc a
+- ld (mdt_account+1),a
+- jp mdt_next
+-mdt_skip:
+- DUP 8
+- dec sp
+- EDUP
+-mdt_next:
+- ld a,c
+- rrca
+- ld c,a
+- jp nc,mdt_same_byte
+- dec l
+-mdt_same_byte:
+- dec b
+- jp nz,mdt_tile
+-mdt_restore_sp:
+- ld sp,0
+- ei
+-mdt_account_dispatch:
+- jp mdt_account
+-mdt_account:
++zf_mode:
+  ld a,0
+- add a,a ; 128 conservative cycles per actual cleared tile
+- ld e,a
+- ld d,0
+- ld hl,(PaceWork)
+- add hl,de
+- ld (PaceWork),hl
+- ret
+-MonoDirtyColumnEnd:
+-
+- ; Select a stationary magnet once per restored column, then stream its rows.
+-NativeRestoreMagnetSample:
+- push af
+- call NativeMagCacheColumn
+- pop af
+- jp NativeMagCacheRow
+-NativeMagCacheColumn:
+- push bc
+- push de
+- push hl
+- xor a
+- ld (MCRMode),a
+- ld a,(MagCacheCount)
+- ld b,a
+- ld a,(magnets_quantity)
+- cp b
+- jp nz,mcc_fallback
+- or a
+- jp z,mcc_done
+- ld a,d
+- ld (NativeSampleColumn),a
+- ld a,e
+- ld (NativeSampleY),a
+- ld hl,MagCacheMeta
+-mcc_probe:
+- ld a,(NativeSampleColumn)
+- sub (hl)
+- cp 5
+- jp nc,mcc_next
+- ld (NativeSampleByte),a
+- inc hl
+- ld a,(NativeSampleY)
+- ld e,a
+- ld a,(hl)
+- sub e
+- cp 30
+- jp c,mcc_found
+- cp 249 ; a negative row can enter the footprint in an eight-row run
+- jp nc,mcc_found
+- dec hl
+- jp mcc_next
+-mcc_found:
+- ld (MCRRow),a
+- inc hl
+- ld e,(hl)
+- inc hl
+- ld d,(hl)
+- inc hl
+- ld c,(hl)
+- inc hl
+- ld h,(hl)
+- ld l,c
+- inc hl
+- ld a,(hl)
+- and 1
+- ld c,a
+- ld a,(MagCacheCount)
+- sub b
+- ld hl,NativeMagnetOverlayFlags
+- call hl_add_a
+- ld a,(hl)
+  or a
++ call nz,zf_row_masks
++zf_mask_c:
+  ld a,0
+- jp z,mcc_state
+- ld a,c
+-mcc_state:
+- ld (MCState),a
+- ex de,hl
+- ld (MCBase),hl
+- ld bc,30
+- ld a,(NativeSampleByte)
+- or a
+- jp z,mcc_on
+-mcc_col:
+- add hl,bc
+- dec a
+- jp nz,mcc_col
+-mcc_on:
+- ld (MCROn),hl
+- xor a
+- ld (MCRDelta),a
+- ld (MCRAccent),a
+- ld a,(MCState)
+- or a
+- jp z,mcc_accent
+- ld a,(NativeSampleByte)
+- cp 4
+- jp nc,mcc_accent
+- ld hl,(MCBase)
+- ld de,150
+- add hl,de
+- ld de,23
+- ld a,(NativeSampleByte)
+- or a
+- jp z,mcc_delta
+-mcc_delta_col:
+- add hl,de
+- dec a
+- jp nz,mcc_delta_col
+-mcc_delta:
+- ld (MCRDeltaPtr),hl
+- ld a,1
+- ld (MCRDelta),a
+-mcc_accent:
+- ld a,(NativeSampleByte)
+- dec a
+- cp 2
+- jp nc,mcc_ready
+- rlca
++ and b
++ ld (hl),a
++ ld a,h
++ add a,$20
++ ld h,a
++ ld a,b
++ cpl
++zf_mask_e:
++ or 0
++ ld (hl),a
++ ld a,h
++ sub $40
++ ld h,a
++zf_mask_a:
++ ld a,0
++ and b
++ ld (hl),a
++ ld a,h
++ add a,$20
++ ld h,a
++ dec l
++ dec c
++ jp nz,zf_cell
++ ret
++zf_row_masks:
++ ld a,(zf_pattern_c)
+  rlca
++ ld (zf_pattern_c),a
++ sbc a,a
++ ld (zf_mask_c+1),a
++ ld (zf_mask_e+1),a
++ ld a,(zf_pattern_a)
+  rlca
+- ld c,a
+- ld a,(MCState)
+- rrca
+- rrca
+- rrca
+- and 32
+- add a,c
+- ld hl,(MCBase)
+- ld de,242
+- add hl,de
+- call hl_add_a
+- ld (MCRAccentPtr),hl
+- ld a,1
+- ld (MCRAccent),a
+-mcc_ready:
+- ld a,1
+- ld (MCRMode),a
+- jp mcc_done
+-mcc_next:
+- ld de,6
+- add hl,de
+- dec b
+- jp nz,mcc_probe
+- jp mcc_done
+-mcc_fallback:
+- ld a,2
+- ld (MCRMode),a
+-mcc_done:
+- pop hl
+- pop de
+- pop bc
++ ld (zf_pattern_a),a
++ sbc a,a
++ ld (zf_mask_a+1),a
+  ret
+-NativeMagCacheRow:
+- ld (NativeSampleValue),a
+- ld a,(MCRMode)
+- cp 2
+- jp z,mcr_slow
+- call MagnetAccentReset
+- ld a,(MCRMode)
+- or a
+- jp z,mcr_plain
++zf_reverse: ; A = A with its bits in reverse order
+  push hl
+  push bc
+- ld hl,MCRRow
+- ld a,(hl)
+- inc (hl)
+- cp 30
+- jp nc,mcr_pop
+- ld b,a
+- ld hl,(MCROn)
+- call hl_add_a
+- ld a,(hl)
+- ld c,a
+- ld a,(MCRDelta)
+- or a
+- jp z,mcr_no_delta
+- ld a,b
+- cp 23
+- jp nc,mcr_no_delta
+- ld hl,(MCRDeltaPtr)
+- call hl_add_a
+- ld a,(hl)
+- xor c
+  ld c,a
+-mcr_no_delta:
++ ld b,8
++zf_reverse_bit:
+  ld a,c
+- ld (NativeSampleValue),a
+- ld a,(MCRAccent)
+- or a
+- jp z,mcr_pop
+- ld a,b
+- sub 8
+- cp 8
+- jp nc,mcr_pop
+- ld hl,(MCRAccentPtr)
+- call hl_add_a
+- ld a,(hl)
+- ld (NativeSampleAccentA),a
+- ld a,(MCState)
+- or a
+- jp z,mcr_pop
+- ld a,16
+- call hl_add_a
+- ld a,(hl)
+- ld (NativeSampleAccentE),a
+-mcr_pop:
++ rra
++ ld c,a
++ ld a,h
++ rla
++ ld h,a
++ dec b
++ jp nz,zf_reverse_bit
++ ld a,h
+  pop bc
+  pop hl
+-mcr_plain:
+- ld a,(NativeSampleValue)
+  ret
+-mcr_slow:
+- ld a,(NativeSampleValue)
+- jp NativeRestoreMagnetSampleSlow
+-MCRMode: db 0
+-MCRRow: db 0
+-MCRDelta: db 0
+-MCRAccent: db 0
+-MCROn: dw 0
+-MCRDeltaPtr: dw 0
+-MCRAccentPtr: dw 0
+-
+-NativeMagCacheBuildState:
+- ld hl,(MCBase)
+- ld (MCOnPtr),hl
+- ld de,150
+- add hl,de
+- ld (MCDeltaPtr),hl
+- xor a
+- ld (MCCol),a
+-mcbs_col:
+- xor a
+- ld (MCRow),a
+-mcbs_row:
+- ld hl,(MCVideo)
+- ld a,(MCCol)
+- add a,h
+- ld d,a
+- ld a,(MCRow)
+- ld e,a
+- ld a,l
+- sub e
+- ld e,a
+- ld a,d
+- and 1
+- ld hl,(NativeTextureLeft+1)
+- jp z,mcbs_texture
+- ld hl,(NativeTextureRight+1)
+-mcbs_texture:
+- ld a,e
+- sub $21
+- and 15
+- call hl_add_a
+- ld a,(hl)
+- call NativeMagCacheSampleOne
+- ld (MCValue),a
+- ld hl,(MCOnPtr)
+- ld a,(MCState)
+- or a
+- jp nz,mcbs_delta
+- ld a,(MCValue)
+- ld (hl),a
+- jp mcbs_pixel_done
+-mcbs_delta:
+- ld a,(MCCol)
+- cp 4
+- jp nc,mcbs_pixel_done
+- ld a,(MCRow)
+- cp 23
+- jp nc,mcbs_pixel_done
+- ld a,(MCValue)
+- xor (hl)
+- ld hl,(MCDeltaPtr)
+- ld (hl),a
+- inc hl
+- ld (MCDeltaPtr),hl
+-mcbs_pixel_done:
+- ld hl,(MCOnPtr)
+- inc hl
+- ld (MCOnPtr),hl
+- ld a,(MCCol)
+- dec a
+- cp 2
+- jp nc,mcbs_next
+- rlca
+- rlca
+- rlca
+- ld b,a
+- ld a,(MCRow)
+- sub 8
+- cp 8
+- jp nc,mcbs_next
+- add a,b
+- ld b,a
+- ld a,(MCState)
+- add a,b
+- ld b,a
+- ld hl,(MCBase)
+- ld de,242
+- add hl,de
+- ld a,b
+- call hl_add_a
+- ld a,(NativeSampleAccentA)
+- ld (hl),a
+- ld de,16
+- add hl,de
+- ld a,(NativeSampleAccentE)
+- ld (hl),a
+- ld a,(MCState)
++
++; Gameplay frame wait, requested by the game loop and taken once per step.
++GameplaySyncPoint:
++ ld a,(GameplaySync)
+  or a
+- jp z,mcbs_next
+- ld a,(MCValue)
+- and (hl)
+- ld de,-32
+- add hl,de
+- ld (hl),a ; E XOR correction: Off-C AND Off-accent-E
+-mcbs_next:
+- ld hl,MCRow
+- inc (hl)
+- ld a,(hl)
+- cp 30
+- jp nz,mcbs_row
+- ld hl,MCCol
+- inc (hl)
+- ld a,(hl)
+- cp 5
+- jp nz,mcbs_col
++ ret z ; carry clear: no wait was taken here
++ xor a
++ ld (GameplaySync),a
++ call WaitGameplayFrame
++ scf
+  ret
+-
++GameplaySync: db 0
+ 
+ NativeMagCacheAfterWindow:
+- ld a,$ff
+- ld (MagCacheLevel),a
+- call NativeMagCacheBuildAll
++ call MagCacheBuildAll
+  jp SpriteCacheReset
+ 
+-; HL points at the centre E correction; DE is E-plane video.
+-NativeMagAccentDelta:
+- push bc
+- push hl
+- ld bc,-16
+- add hl,bc
+- ld b,(hl)
+- ld a,32
+- call hl_add_a
+- ld a,(hl)
+- xor b
+- ld b,a
+- ld a,d
+- sub $40
+- ld d,a
+- ld a,(de)
+- xor b
+- ld (de),a
+- ld a,d
+- add $40
+- ld d,a
+- pop hl
+- pop bc
+- ret
+-
+-NativeMagCacheSampleOneTail:
+- ld hl,(MCProps)
+- ld (NativeSampleProp),hl
+- ld hl,(MCFlag)
+- ld (NativeSampleFlag),hl
+- jp NativeSampleNextMagnet
+-
+-; Cache generation samples just this disjoint magnet, not all four magnets.
+-NativeMagCacheSampleOne:
+- push bc
+- push de
+- push hl
+- ld (NativeSampleValue),a
+- call MagnetAccentReset
+- ld a,d
+- sub $c0
+- ld (NativeSampleColumn),a
+- ld a,$e0
+- sub e
+- ld (NativeSampleY),a
+- ld a,1
+- ld (NativeSampleCount),a
+- jp NativeMagCacheSampleOneTail
+-
+  INCLUDE "routines/brick_restore_queue_upper.asm"
+ QueueFresh: db 0
+ QueueMode: db 0
+diff -ruN a/routines/mono_shift_draw.asm b/routines/mono_shift_draw.asm
+--- a/routines/mono_shift_draw.asm	2026-10-12 21:59:28.000000000 +0500
++++ b/routines/mono_shift_draw.asm	2026-10-13 00:34:14.000000000 +0500
+@@ -1,5 +1,8 @@
+-; Read native pairs with POP and OR each lead/spill directly into video.
+-; Adjacent source columns meet through OR in the same destination column.
++; Read native pairs with POP and merge each lead/spill directly into video.
++; Every write keeps a chosen part of the screen byte: all of it when the
++; sprite is ORed in, or, when it replaces its own old picture, exactly the
++; half that the neighbouring source column owns. A destination byte thus goes
++; from the old picture to the new one without an empty moment.
+ MonoShiftDraw:
+  ld a,(direct_shift)
+  add a,a
+@@ -15,8 +18,25 @@
+  call hl_add_a
+  ld a,(hl)
+  ld (msd_lead+1),a
++ ld b,a
+  cpl
+  ld (msd_spill+1),a
++ ld c,a
++ ld a,(MonoStoreOp)
++ or a
++ jp z,msd_store
++ ld bc,$ffff ; OR: keep the whole byte
++ ld a,b
++ jp msd_keep
++msd_store:
++ xor a ; the first column owns its whole byte
++msd_keep:
++ ld (msd_lead_keep+1),a
++ ld a,b
++ ld (msd_spill_keep+1),a ; spill keeps the lead part of the next column
++ ld (msd_spill_normal+1),a
++ ld a,c
++ ld (msd_lead_later+1),a ; later leads keep the spill already written
+  ld a,$24 ; INC H
+  ld (msd_spill_inc),a
+  inc a ; DEC H
+@@ -49,7 +69,21 @@
+  ld (msd_spill+1),a
+  ld (msd_spill_inc),a
+  ld (msd_spill_dec),a
++ dec a
++ ld (msd_spill_keep+1),a ; second write lands on the same byte: keep it
++ jp msd_column_go
+ msd_column_ready:
++ ; The spill of the last source column has no later lead: it owns its byte.
++ ld a,(MonoNativeCols)
++ dec a
++ jp nz,msd_column_go
++ ld a,(MonoStoreOp)
++ ld (msd_spill_keep+1),a
++ or a
++ jp z,msd_column_go
++ ld a,$ff
++ ld (msd_spill_keep+1),a
++msd_column_go:
+  ld a,(MonoDrawRows)
+  ld c,a
+ msd_row:
+@@ -68,16 +102,22 @@
+  ld d,a
+ msd_lead:
+  and $ff
+-msd_merge:
+- or (hl)
++ ld e,a
++ ld a,(hl)
++msd_lead_keep:
++ and $ff
++ or e
+  ld (hl),a
+ msd_spill_inc:
+  inc h
+  ld a,d
+ msd_spill:
+  and 0
+-msd_last_merge:
+- or (hl)
++ ld e,a
++ ld a,(hl)
++msd_spill_keep:
++ and $ff
++ or e
+  ld (hl),a
+ msd_spill_dec:
+  dec h
+@@ -97,6 +137,12 @@
+  ld (MonoNativeCols),a
+  jp z,mono_draw_restore
+  ld (MonoDrawVideo),hl
++msd_lead_later:
++ ld a,0 ; the lead of every later column meets the previous spill
++ ld (msd_lead_keep+1),a
++msd_spill_normal:
++ ld a,0
++ ld (msd_spill_keep+1),a
+  ld hl,0
+  add hl,sp
+ msd_source_skip:
+diff -ruN a/routines/native_static_columns.asm b/routines/native_static_columns.asm
+--- a/routines/native_static_columns.asm	2026-10-12 20:42:21.000000000 +0500
++++ b/routines/native_static_columns.asm	2026-10-12 22:59:42.000000000 +0500
+@@ -6,8 +6,6 @@
+  ld (hl),a
+  inc hl
+  ld (hl),a
+- ld hl,(NativeDest)
+- ld (MagnetCenterDest),hl
+  ld a,(NativeHeight)
+  ld (SpriteCacheHeight),a
+  ld (nsc_height+1),a
+@@ -132,5 +130,4 @@
+  ld hl,NativeLeft
+  dec (hl)
+  jp nz,nsc_column
+- call MagnetCenterDraw
+  jp SpriteCacheReset
+diff -ruN a/routines/record_table.asm b/routines/record_table.asm
+--- a/routines/record_table.asm	2026-10-12 16:53:35.000000000 +0500
++++ b/routines/record_table.asm	2026-10-12 20:18:32.000000000 +0500
+@@ -90,7 +90,7 @@
+   LD HL,score_six_digits
+   LD BC,$0006
+   call LDIR8080B
+-  LD C,$26
++  LD C,$2C		; пробел
+   LD HL,(hs_row_ptr)
+   LD DE,$0009
+   ADD HL,DE
+@@ -138,7 +138,7 @@
+   JP NC,L910C_10
+   INC C
+   LD A,C
+-  CP $28
++  CP $2E		; после '-' снова '0'
+   JP NZ,L910C_11
+   LD C,$00
+   JP L910C_11
+@@ -147,7 +147,7 @@
+   ld A,C
+   and %10000000		; BIT 7,C
+   JP Z,L910C_11
+-  LD C,$27
++  LD C,$2D		; перед '0' идёт '-'
+ L910C_11:
+   PUSH HL
+   LD HL,(hs_row_ptr)
+diff -ruN a/routines/restore_background_tail.asm b/routines/restore_background_tail.asm
+--- a/routines/restore_background_tail.asm	2026-10-12 21:26:48.000000000 +0500
++++ b/routines/restore_background_tail.asm	2026-10-12 23:01:09.000000000 +0500
+@@ -10,46 +10,10 @@
+  ld c,0
+  ret
+ 
+-NativeRestoreMagnetSampleSlow:
+- push bc
+- push de
+- push hl
+- ld (NativeSampleValue),a
+- call MagnetAccentReset
+- ld a,d
+- sub $c0
+- ld (NativeSampleColumn),a
+- ld a,$e0
+- sub e
+- ld (NativeSampleY),a
+- ld a,(magnets_quantity)
+- ld (NativeSampleCount),a
+- ld hl,magnet_properties
+- ld (NativeSampleProp),hl
+- ld hl,NativeMagnetOverlayFlags
+- ld (NativeSampleFlag),hl
+- jp NativeSampleNextMagnet
+-NativeMagnetOverlayFlags: db 0,0,0,0
+-NativeSampleValue: db 0
+-NativeSampleColumn: db 0
+-NativeSampleY: db 0
+-NativeSampleCount: db 0
+-NativeSampleProp: dw 0
+-NativeSampleFlag: dw 0
+-NativeSampleX: db 0
+-NativeSampleOriginY: db 0
+-NativeSampleSprite: dw 0
+-NativeSampleHeight: db 0
+-NativeSampleRow: db 0
+-NativeSampleByte: db 0
+-NativeSampleWidth: db 0
+-NativeSampleSource: dw 0
+-NativeSampleMask: db 0
+-NativeSamplePixel: db 0
+-
++NativeMagnetOverlayFlags:
++MagnetRedrawFlags: db 0,0,0,0 ; magnets touched by the current brick restore
+ NativeRestoreMagnetCount: db 0
+ NativeRestoreBoundLeft: db 0
+ NativeRestoreBoundRight: db 0
+ NativeRestoreBoundTop: db 0
+ NativeRestoreBoundBottom: db 0
+-NativeRestoreClipTable EQU NativeRestoreBoundBottom ; obsolete compatibility symbol
+diff -ruN a/routines/restore_brick_background.asm b/routines/restore_brick_background.asm
+--- a/routines/restore_brick_background.asm	2026-10-12 22:11:38.000000000 +0500
++++ b/routines/restore_brick_background.asm	2026-10-12 22:59:42.000000000 +0500
+@@ -1,6 +1,10 @@
+ ; Read the 3x3 logical neighbourhood once. Only the cross is repainted.
++; Magnets lie above the texture: the brick is restored as plain texture,
++; then the touched rows of every marked magnet are repainted from its cache.
+ NativeRestoreBrick:
+- call MagnetAccentReset
++ call NativeRestoreBrickBody
++ jp MagnetRepaintMarked
++NativeRestoreBrickBody:
+  ld hl,(LB28F+1)
+  ld (NativeRestoreOrigin),hl
+  call NativeRestoreChooseMagnets
+@@ -230,9 +234,6 @@
+  add hl,de
+  pop de
+ NativeRestoreFastCheck:
+- ld a,(NativeRestoreMagnetCount)
+- or a
+- jp nz,NativeRestoreMagnetColumn
+  ld a,(NativeRestoreClip+1)
+  cp $ff
+  jp nz,NativeRestoreFringeFast
+@@ -240,111 +241,9 @@
+  cp 8
+  jp z,NativeRestoreCopyFull
+  jp NativeRestoreFringeFast
+-NativeRestoreMagnetColumn:
+- call NativeMagCacheColumn
+-NativeRestoreTextureRow:
+- ld a,(NativeRestoreMagnetCount)
+- or a
+- ld a,(hl)
+- call nz,NativeMagCacheRow
+- push hl
+-NativeRestoreMask:
+- and $ff
+- ld c,a
+- ld a,e
+- and 7
+- jp nz,NativeRestoreLastCheck
+- ld a,(NativeRestoreTopMask)
+- and c
+- ld c,a
+- jp NativeRestoreStorePixel
+-NativeRestoreLastCheck:
+- cp 1
+- jp nz,NativeRestoreStorePixel
+- ld a,(NativeRestoreBottomMask)
+- and c
+- ld c,a
+-NativeRestoreStorePixel:
+- ld a,(NativeRestoreMagnetCount)
+- or a
+- jp z,NativeRestorePlainPixel
+- ld a,(NativeRestoreClip+1)
+- cp $ff
+- jp nz,NativeRestorePartial
+- ; Full byte: no video reads or clip-mask merging.
+- ld a,c
+- ld (de),a
+- ld a,d
+- add $20
+- ld d,a
+- ld a,(NativeSampleAccentE)
+- and c
+- ld l,a
+- ld a,c
+- cpl
+- or l
+- ld (de),a
+- ld a,d
+- sub $40
+- ld d,a
+- ld a,(NativeSampleAccentA)
+- and c
+- ld (de),a
+- jp NativeRestoreRowDone
+-NativeRestorePartial:
+- ld a,(NativeRestoreClip+1)
+- cpl
+- ld h,a
+- ld a,(de)
+- and h
+- ld l,a
+- ld a,(NativeRestoreClip+1)
+- and c
+- or l
+- ld (de),a
+- ld a,d
+- add $20
+- ld d,a
+- ld a,(de)
+- and h
+- ld l,a
+- push bc
+- ld a,(NativeSampleAccentE)
+- and c
+- ld b,a
+- ld a,c
+- cpl
+- or b
+- pop bc
+-NativeRestoreClip:
+- and $ff
+- or l
+- ld (de),a
+- ld a,d
+- sub $40
+- ld d,a
+- ld a,(de)
+- and h
+- ld l,a
+- ld a,(NativeSampleAccentA)
+- and c
+- ; Use the same clip immediate for the A accent too.
+- ld c,a
+- ld a,(NativeRestoreClip+1)
+- and c
+- or l
+- ld (de),a
+-NativeRestoreRowDone:
+- ld a,d
+- add $20
+- ld d,a
+- pop hl
+- dec hl
+- dec e
+- dec b
+- jp nz,NativeRestoreTextureRow
+- pop de
+- ret
++; Former immediates of the retired sampled row loop; still used as variables.
++NativeRestoreMask: db 0,0
++NativeRestoreClip: db 0,0
+ NativeRestoreXY: dw 0
+ NativeRestoreOrigin: dw 0
+ NativeRestoreGrid: ds 9,0
+diff -ruN a/routines/restore_brick_fast.asm b/routines/restore_brick_fast.asm
+--- a/routines/restore_brick_fast.asm	2026-10-12 19:27:57.000000000 +0500
++++ b/routines/restore_brick_fast.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -81,30 +81,3 @@
+  pop de
+  ret
+ 
+-; Fringe cells were already empty: A is zero. Restore only C/E clipped bits.
+-NativeRestorePlainPixel:
+- ld a,(NativeRestoreClip+1)
+- ld l,a
+- cpl
+- ld h,a
+- ld a,c
+- and l
+- ld c,a
+- ld a,(de)
+- and h
+- or c
+- ld (de),a
+- ld a,d
+- add $20
+- ld d,a
+- ld a,c
+- xor l
+- ld c,a
+- ld a,(de)
+- and h
+- or c
+- ld (de),a
+- ld a,d
+- sub $40
+- ld d,a
+- jp NativeRestoreRowDone
+diff -ruN a/routines/restore_brick_magnet_filter.asm b/routines/restore_brick_magnet_filter.asm
+--- a/routines/restore_brick_magnet_filter.asm	2026-10-12 19:59:40.000000000 +0500
++++ b/routines/restore_brick_magnet_filter.asm	2026-10-13 00:11:32.000000000 +0500
+@@ -1,9 +1,11 @@
+ ; JS-modelled conservative byte footprint: four columns, ten rows.
+-; Use the ordinary fast restore only when no static/animated magnet can touch
+-; ANY bit in a touched byte. Does not change the global magnet quantity.
++; The brick is always restored as plain texture. Every magnet whose 4x24
++; byte footprint can share a touched byte is marked for a cached repaint.
++; The count also keeps the cautious queue portion next to a magnet.
+ NativeRestoreChooseMagnets:
+- ld a,(magnets_quantity)
++ xor a
+  ld (NativeRestoreMagnetCount),a
++ ld a,(magnets_quantity)
+  or a
+  ret z
+  ld b,a
+@@ -23,6 +25,7 @@
+  add a,10
+  ld (NativeRestoreBoundBottom),a
+  ld hl,magnet_properties+2
++ ld de,MagnetRedrawFlags
+ nrmf_magnet:
+  push hl
+  ld a,(hl)
+@@ -32,37 +35,39 @@
+  rrca
+  and 31
+  ld c,a
+- add a,5
+- ld e,a
++ add a,4
++ ld l,a
+  ld a,(NativeRestoreBoundLeft)
+- cp e
++ cp l
+  jp nc,nrmf_next
+  ld a,(NativeRestoreBoundRight)
+  cp c
+  jp c,nrmf_next
+  jp z,nrmf_next
++ pop hl
++ push hl
+  inc hl
+  inc hl
+  ld a,(hl)
+  sub 5
+  ld c,a
+- add a,30
+- ld e,a
++ add a,MagRows
++ ld l,a
+  ld a,(NativeRestoreBoundTop)
+- cp e
++ cp l
+  jp nc,nrmf_next
+  ld a,(NativeRestoreBoundBottom)
+  cp c
+  jp c,nrmf_next
+  jp z,nrmf_next
+- pop hl
+- ret
++ ld a,1
++ ld (de),a
++ ld (NativeRestoreMagnetCount),a
+ nrmf_next:
+  pop hl
+- ld de,16
+- add hl,de
++ ld a,16
++ call hl_add_a
++ inc de
+  dec b
+  jp nz,nrmf_magnet
+- xor a
+- ld (NativeRestoreMagnetCount),a
+  ret
+diff -ruN a/routines/restore_magnet_sample.asm b/routines/restore_magnet_sample.asm
+--- a/routines/restore_magnet_sample.asm	2026-10-12 05:53:03.000000000 +0500
++++ b/routines/restore_magnet_sample.asm	2026-10-12 20:38:06.000000000 +0500
+@@ -1,173 +1,2 @@
+-; Compose the stationary magnet and its current animated layer over one texture byte.
+-NativeSampleNextMagnet:
+- ld hl,(NativeSampleProp)
+- inc hl
+- inc hl
+- ld a,(hl)
+- sub 5
+- ld (NativeSampleX),a
+- inc hl
+- inc hl
+- ld a,(hl)
+- sub 5
+- ld (NativeSampleOriginY),a
+- ld hl,spr_magnet_circle_on
+- ld (NativeSampleSprite),hl
+- ld a,30
+- ld (NativeSampleHeight),a
+- call NativeSampleMagnetLayer
+- ld hl,(NativeSampleFlag)
+- ld a,(hl)
+- or a
+- jp z,NativeSampleAdvanceMagnet
+- ld hl,(NativeSampleProp)
+- inc hl
+- ld a,(hl)
+- ld hl,spr_magnet_circle_on
+- cp 6
+- jp z,NativeSampleAnimatedSource
+- ld hl,spr_magnet_circle_off
+-NativeSampleAnimatedSource:
+- ld (NativeSampleSprite),hl
+- ld a,23
+- ld (NativeSampleHeight),a
+- call NativeSampleMagnetLayer
+-NativeSampleAdvanceMagnet:
+- ld hl,(NativeSampleProp)
+- ld de,16
+- add hl,de
+- ld (NativeSampleProp),hl
+- ld hl,(NativeSampleFlag)
+- inc hl
+- ld (NativeSampleFlag),hl
+- ld hl,NativeSampleCount
+- dec (hl)
+- jp nz,NativeSampleNextMagnet
+- pop hl
+- pop de
+- pop bc
+- ld a,(NativeSampleValue)
+- ret
+-
+-NativeSampleMagnetLayer:
+- ld a,(NativeSampleOriginY)
+- ld b,a
+- ld a,(NativeSampleY)
+- sub b
+- ret c
+- ld b,a
+- ld a,(NativeSampleHeight)
+- cp b
+- ret z
+- ret c
+- ld a,b
+- ld (NativeSampleRow),a
+- ld a,(NativeSampleX)
+- ld b,a
+- and 7
+- ld (NativeShift),a
+- ld a,b
+- rrca
+- rrca
+- rrca
+- and 31
+- ld b,a
+- ld a,(NativeSampleColumn)
+- sub b
+- ret c
+- ld (NativeSampleByte),a
+- ld hl,(NativeSampleSprite)
+- ld a,(hl)
+- ld (NativeSampleWidth),a
+- ld b,a
+- ld a,(NativeSampleByte)
+- inc b
+- cp b
+- ret nc
+-NativeSampleLocate:
+- ld a,(NativeSampleWidth)
+- cp 4
+- ld de,46
+- jp nz,NativeSampleStrideReady
+- ld de,60
+-NativeSampleStrideReady:
+- ex de,hl
+- ld (NativeSamplePreviousStride+1),hl
+- ld (NativeSampleCenterStride+1),hl
+- ex de,hl
+- ld hl,(NativeSampleSprite)
+- inc hl
+- inc hl
+- ld a,(NativeSampleByte)
+- or a
+- jp z,NativeSampleRowOffset
+- ld b,a
+-NativeSampleColumnOffset:
+- add hl,de
+- dec b
+- jp nz,NativeSampleColumnOffset
+-NativeSampleRowOffset:
+- ld a,(NativeSampleRow)
+- add a,a
+- call hl_add_a
+- ld (NativeSampleSource),hl
+- ; Current source byte and the previous byte's shifted carry.
+- ld a,(NativeSampleWidth)
+- ld b,a
+- ld a,(NativeSampleByte)
+- cp b
+- ld a,0
+- jp z,NativeSampleCurrentMask
+- ld a,(hl)
+- cpl
+-NativeSampleCurrentMask:
+- call NativeSampleShift
+- ld (NativeSampleMask),a
+- ld hl,(NativeSampleSource)
+- inc hl
+- ld a,(NativeSampleWidth)
+- ld b,a
+- ld a,(NativeSampleByte)
+- cp b
+- ld a,0
+- jp z,NativeSampleCurrentPixel
+- ld a,(hl)
+-NativeSampleCurrentPixel:
+- call NativeSampleShift
+- ld (NativeSamplePixel),a
+- ld a,(NativeSampleByte)
+- or a
+- jp z,NativeSampleMerge
+- ld hl,(NativeSampleSource)
+-NativeSamplePreviousStride:
+- ld de,0
+- ld a,l
+- sub e
+- ld l,a
+- ld a,h
+- sbc a,d
+- ld h,a
+- ld a,(hl)
+- cpl
+- call NativeSampleShift
+- ld a,(NativeSampleMask)
+- or c
+- ld (NativeSampleMask),a
+- inc hl
+- ld a,(hl)
+- call NativeSampleShift
+- ld a,(NativeSamplePixel)
+- or c
+- ld (NativeSamplePixel),a
+-NativeSampleMerge:
+- call MagnetSampleAccent
+- ld a,(NativeSampleMask)
+- cpl
+- ld b,a
+- ld a,(NativeSampleValue)
+- and b
+- ld b,a
+- ld a,(NativeSamplePixel)
+- or b
+- ld (NativeSampleValue),a
+- ret
++; Retired with the per-byte magnet sampler: bricks beside a magnet are restored
++; as plain texture and the magnet is redrawn (MagnetRedrawFlush).
+diff -ruN a/routines/zx_field_frame.asm b/routines/zx_field_frame.asm
+--- a/routines/zx_field_frame.asm	1970-01-01 05:00:00.000000000 +0500
++++ b/routines/zx_field_frame.asm	2026-10-13 01:03:21.000000000 +0500
+@@ -0,0 +1,116 @@
++; ZX field frame in the three RGB planes: pipes and connectors, one bit per
++; pixel, coloured by two masks per material (see verify/generate-zx-frame.js).
++; A = bits & maskA, C = bits & maskC, E = ~bits | maskC.
++; Permanent graphics: drawn once per level, no per-frame repair.
++DrawFieldFrame:
++ ld a,1
++ ld (zf_mode+1),a ; top band: the masks are row patterns
++ ld hl,$c0e0
++ xor a
++zf_top:
++ ld (zf_top_index+1),a
++ cp 16
++ sbc a,a
++ cpl
++ ld (zf_mirror+1),a ; right half: mirrored cells in reverse order
++ ld a,(zf_top_index+1)
++ jp nz,zf_top_source
++ cpl
++ and 15
++zf_top_source:
++ push hl
++ ld e,a
++ ld d,0
++ ld hl,ZxFrameTopSeq
++ add hl,de
++ ld a,(hl)
++ ld c,a
++ and 3
++ add a,a
++ ld e,a
++ ld hl,ZxFrameTopMasks
++ add hl,de
++ ld a,(hl)
++ ld (zf_pattern_a),a
++ inc hl
++ ld a,(hl)
++ ld (zf_pattern_c),a
++ ld a,c
++ and $fc
++ add a,a
++ ld e,a
++ ld hl,ZxFrameTop
++ add hl,de
++ ex de,hl
++ pop hl
++ ld c,8
++ call zf_cell
++ ld l,$e0
++ inc h
++zf_top_index:
++ ld a,0
++ inc a
++ cp 32
++ jp nz,zf_top
++ xor a
++ ld (zf_mode+1),a ; side walls: plain bit masks
++ ld (zf_mirror+1),a
++ ld h,$c0
++ call zf_side
++ ld a,$ff
++ ld (zf_mirror+1),a
++ ld h,$df
++zf_side:
++ ld l,$d8
++ ld b,FieldHeight-8
++zf_side_wrap:
++ xor a
++zf_side_cell:
++ ld (zf_side_index+1),a
++ push hl
++ ld e,a
++ ld d,0
++ ld hl,ZxFrameSideSeq
++ add hl,de
++ ld a,(hl)
++ add a,a
++ ld hl,ZxFrameSideMasks
++ call hl_add_a
++ ld a,(hl)
++ ld (zf_mask_a+1),a
++ inc hl
++ ld a,(hl)
++ ld (zf_mask_c+1),a
++ ld (zf_mask_e+1),a
++ ld a,e
++ add a,a
++ add a,a
++ add a,a
++ ld e,a
++ ld hl,ZxFrameSide
++ add hl,de
++ ex de,hl
++ pop hl
++ ld a,b
++ cp 8
++ jp c,zf_side_rows
++ ld a,8
++zf_side_rows:
++ ld c,a
++ ld a,b
++ sub c
++ ld b,a
++ push bc
++ call zf_cell
++ pop bc
++ ld a,b
++ or a
++ ret z
++zf_side_index:
++ ld a,0
++ inc a
++ cp 7
++ jp nz,zf_side_cell
++ jp zf_side_wrap
++zf_pattern_a: db 0
++zf_pattern_c: db 0
+diff -ruN a/RUSSIAN.md b/RUSSIAN.md
+--- a/RUSSIAN.md	1970-01-01 05:00:00.000000000 +0500
++++ b/RUSSIAN.md	2026-10-13 00:55:59.000000000 +0500
+@@ -0,0 +1,38 @@
++# Русская версия
++
++Ветка `experimental/russian`, дерево `wt/russian`. Основа — рабочее состояние `wt/three-plus-one` на вечер 12.10.2026 (ROM `8cf6c053…`, с ускорениями Codex). Поверх лежат перевод, новая раскраска магнитов (`MAGNETS.md`) и заготовка заставки (`gfx/splash`); итог сведения — в `MERGE.md`. Ничего не закоммичено. Патч для переноса в основное дерево: `RUSSIAN.patch` (`patch -p1 < ../russian/RUSSIAN.patch`, накладывается без конфликтов и даёт тот же ROM).
++
++## Что изменено
++
++- `gfx/font.asm` — знакогенератор: цифры, 32 русские буквы (без Ё), `. , пробел - =` и латинская Y для названия. 48 знаков вместо 43; `_` и `II` убраны как неиспользуемые. Коды: буквы `$0A–$29`, точка `$2A`, запятая `$2B`, пробел `$2C`, дефис `$2D`, `=` `$2E`, Y `$2F`.
++- `txt/*.asm` — все строки на русском, генерируются `python3 txt/make_txt.py`. Править текст нужно в генераторе.
++- `routines/record_table.asm` — ввод имени: пробел `$2C`, кольцо выбора 0–9, А–Я, `. , пробел -` (46 знаков).
++- `gfx/sprites_no_masks_2.asm` — надписи меню «ЖМИ А» и «ЖМИ Б» вместо PRESS A / PRESS B (клавиша с латинской B на Векторе — это Б).
++- `verify/generate-mono-assets.js` — заголовки HUD: «ИГРОК 1», «ИГРОК 2» (7 знаков) и «РЕКОРД» (6 знаков), каждый стоит по центру над своим счётом (X = 12, 188 и 104).
++- `verify/test-menu-selection.js` — сверка с русскими строками вместо английского эталонного ROM.
++- `verify/test-russian-name-entry.js` — новый: кольцо из 46 знаков, заворот в обе стороны, снимок экрана.
++
++Позиции цифр, которые код вписывает в строки (номер игрока, номер раунда), сохранены: смещения в `batty.asm` не менялись, сам `batty.asm` не тронут.
++
++## Строки
++
++| Было | Стало |
++|---|---|
++| 1 UP / 2 UP | ИГРОК 1 / ИГРОК 2 |
++| 1 - 1 PLAYER | 1 - 1 ИГРОК |
++| 2 - 2 PLAYERS | 2 - 2 ИГРОКА |
++| 3 - DOUBLE PLAY | 3 - ВДВОЕМ |
++| 0 - START GAME | 0 - НАЧАТЬ ИГРУ |
++| KEYBOARD / JOYSTICK | КЛАВИШИ / ДЖОЙСТИК |
++| COPYRIGHT HIT PAK 1987 | ХИТ ПАК 1987 |
++| PLAYER X / GAME ON / ROUND XX | ИГРОК X / ИГРАЕМ / РАУНД XX |
++| GAME OVER / PLAYER 0 / PLAYERS 1 AND 2 | КОНЕЦ ИГРЫ / ИГРОК 0 / ИГРОКИ 1 И 2 |
++| ENTER YOUR NAME. | ВВЕДИТЕ ВАШЕ ИМЯ |
++| HIGH SCORES, H I T / P A K | РЕКОРДЫ, Х И Т / П А К |
++| HUD: 1UP, 2UP, HI | ИГРОК 1, ИГРОК 2, РЕКОРД |
++
++Название BATTY оставлено латиницей.
++
++## Проверка
++
++`sh build-three-plus-one.sh`; ROM 32512 байт. Состав проверок и замеры — в `MERGE.md`. `test-mono-hud` падает и в основе (сравнивает с исходным файлом спрайтов), к переводу не относится.
+diff -ruN a/txt/make_txt.py b/txt/make_txt.py
+--- a/txt/make_txt.py	1970-01-01 05:00:00.000000000 +0500
++++ b/txt/make_txt.py	2026-10-13 00:52:30.000000000 +0500
+@@ -0,0 +1,70 @@
++#!/usr/bin/env python3
++"""Генерирует txt/*.asm из русских строк. Запуск из корня дерева: python3 txt/make_txt.py
++Кодировка знакогенератора (gfx/font.asm): 0-9, А-Я без Ё ($0A-$29), '.', ',', ' ', '-', '=', Y.
++Формат сообщения: X, Y, цвет, длина, текст."""
++import os
++
++ALPHABET = "0123456789АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ., -=Y"
++# BATTY и подобное набирается похожими русскими буквами
++LATIN = str.maketrans("ABEKMHOPCTX", "АВЕКМНОРСТХ")
++
++
++def enc(text):
++    return [ALPHABET.index(ch) for ch in text.translate(LATIN)]
++
++
++def msg(x, y, color, text):
++    codes = enc(text)
++    out = ["  DEFB $%02X,$%02X,%s,$%02X" % (x, y, color, len(codes))]
++    for i in range(0, len(codes), 8):
++        line = "  DEFB " + ",".join("$%02X" % c for c in codes[i:i + 8])
++        out.append(line + ("\t; " + text if i == 0 else ""))
++    return "\n".join(out) + "\n"
++
++
++def table():
++    rows = []
++    ys = [0x27, 0x38, 0x49, 0x5A, 0x6B, 0x7C, 0x8D, 0x9E, 0xAF, 0xC0]
++    bright = ["c47", "c47", "c46", "c46", "c45", "c45", "c44", "c44", "c43", "c43"]
++    for i, y in enumerate(ys):
++        rows.append(msg(0x30 if i == 9 else 0x38, y, bright[i], "%d." % (i + 1)))
++    colors = ["c47", "c07", "c46", "c06", "c45", "c05", "c44", "c04", "c43", "c03"]
++    for i, y in enumerate(ys):
++        name = "Х И Т" if i % 2 == 0 else "П А К"
++        rows.append(msg(0x58, y, colors[i], "%06d   %s" % ((10 - i) * 10000, name)))
++    return rows
++
++
++FILES = {
++    "txt_main_menu": [msg(0x0C, 0x01, "c07", "ИГРОК 1"), msg(0xBC, 0x01, "c07", "ИГРОК 2")],
++    "txt_score_1up": [msg(0x10, 0x09, "c07", "000000")],
++    "txt_score_2up": [msg(0xC0, 0x09, "c07", "000000")],
++    "txt_1_player": [msg(0x50, 0x29, "c44", "1 - 1 ИГРОК")],
++    "txt_2_players": [msg(0x50, 0x3D, "c44", "2 - 2 ИГРОКА")],
++    "txt_double_play": [msg(0x50, 0x51, "c44", "3 - ВДВОЕМ"),
++                        msg(0x50, 0xB1, "c44", "0 - НАЧАТЬ ИГРУ")],
++    "txt_controls": [msg(0x60, 0x7D, "c45", "КЛАВИШИ"),
++                     msg(0x60, 0x95, "c45", "ДЖОЙСТИК"),
++                     msg(0x50, 0xC9, "c47", "ХИТ ПАК 1987"),
++                     msg(0x70, 0x01, "c47", "BATTY"),
++                     msg(0x70, 0x08, "c46", "=====")],
++    # цифра игрока вписывается кодом в последний знак (txt_player_x+11)
++    "txt_player_x": [msg(0x58, 0x8F, "c47", " ИГРОК 0")],
++    # номер раунда вписывается в два последних знака (txt_round_xx+10,+11)
++    "txt_round_xx": [msg(0x60, 0x9E, "c47", "РАУНД 00")],
++    "txt_game_on": [msg(0x68, 0x8F, "c47", "ИГРАЕМ")],
++    "txt_game_over": [msg(0x58, 0x8F, "c47", "КОНЕЦ ИГРЫ")],
++    # цифра игрока вписывается в последний знак (txt_player_0+$0C)
++    "txt_player_0": [msg(0x50, 0x9E, "c47", "  ИГРОК 0")],
++    "txt_players_1_and_2": [msg(0x50, 0x9E, "c47", "ИГРОКИ 1 И 2")],
++    # цифра игрока вписывается в десятый знак (txt_player_0_enter_your_name+13)
++    "txt_player_0_enter_your_name": [msg(0x50, 0x01, "c47", "   ИГРОК 0  "),
++                                     msg(0x40, 0x09, "c47", "ВВЕДИТЕ ВАШЕ ИМЯ")],
++    "txt_high_score_table": table(),
++    "txt_high_scores": [msg(0x68, 0x01, "c47", "РЕКОРДЫ"), msg(0x68, 0x08, "c46", "=======")],
++}
++
++here = os.path.dirname(os.path.abspath(__file__))
++for name, parts in FILES.items():
++    with open(os.path.join(here, name + ".asm"), "w", encoding="utf-8") as f:
++        f.write(name + ":\n\n" + "\n".join(parts))
+diff -ruN a/txt/txt_1_player.asm b/txt/txt_1_player.asm
+--- a/txt/txt_1_player.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_1_player.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,5 +1,5 @@
+ txt_1_player:
+ 
+-  DEFB $50,$29,c44,$0C
+-  DEFB $01,$26,$27,$26,$01,$26,$19,$15	; 1 - 1 PLAYER
+-  DEFB $0A,$22,$0E,$1B
++  DEFB $50,$29,c44,$0B
++  DEFB $01,$2C,$2D,$2C,$01,$2C,$12,$0D	; 1 - 1 ИГРОК
++  DEFB $1A,$18,$14
+diff -ruN a/txt/txt_2_players.asm b/txt/txt_2_players.asm
+--- a/txt/txt_2_players.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_2_players.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,5 +1,5 @@
+ txt_2_players:
+ 
+-  DEFB $50,$3D,c44,$0D
+-  DEFB $02,$26,$27,$26,$02,$26,$19,$15	; 2 - 2 PLAYERS
+-  DEFB $0A,$22,$0E,$1B,$1C
++  DEFB $50,$3D,c44,$0C
++  DEFB $02,$2C,$2D,$2C,$02,$2C,$12,$0D	; 2 - 2 ИГРОКА
++  DEFB $1A,$18,$14,$0A
+diff -ruN a/txt/txt_controls.asm b/txt/txt_controls.asm
+--- a/txt/txt_controls.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_controls.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,18 +1,17 @@
+ txt_controls:
+ 
+-  DEFB $60,$7D,c45,$08
+-  DEFB $14,$0E,$22,$0B,$18,$0A,$1B,$0D	; KEYBOARD
++  DEFB $60,$7D,c45,$07
++  DEFB $14,$15,$0A,$0C,$12,$22,$12	; КЛАВИШИ
+ 
+   DEFB $60,$95,c45,$08
+-  DEFB $13,$18,$22,$1C,$1D,$12,$0C,$14	; JOYSTICK
++  DEFB $0E,$10,$18,$13,$1B,$1C,$12,$14	; ДЖОЙСТИК
+ 
+-  DEFB $28,$C9,c47,$16
+-  DEFB $0C,$18,$19,$22,$1B,$12,$10,$11	; COPYRIGHT HIT PAK 1987
+-  DEFB $1D,$26,$11,$12,$1D,$26,$19,$0A
+-  DEFB $14,$26,$01,$09,$08,$07
++  DEFB $50,$C9,c47,$0C
++  DEFB $1F,$12,$1C,$2C,$19,$0A,$14,$2C	; ХИТ ПАК 1987
++  DEFB $01,$09,$08,$07
+ 
+   DEFB $70,$01,c47,$05
+-  DEFB $0B,$0A,$1D,$1D,$22		; BATTY
++  DEFB $0C,$0A,$1C,$1C,$2F	; BATTY
+ 
+   DEFB $70,$08,c46,$05
+-  DEFB $2A,$2A,$2A,$2A,$2A		; =====
++  DEFB $2E,$2E,$2E,$2E,$2E	; =====
+diff -ruN a/txt/txt_double_play.asm b/txt/txt_double_play.asm
+--- a/txt/txt_double_play.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_double_play.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,9 +1,9 @@
+ txt_double_play:
+ 
+-  DEFB $50,$51,c44,$0F
+-  DEFB $03,$26,$27,$26,$0D,$18,$1E,$0B	; 3 - DOUBLE PLAY
+-  DEFB $15,$0E,$26,$19,$15,$0A,$22
++  DEFB $50,$51,c44,$0A
++  DEFB $03,$2C,$2D,$2C,$0C,$0E,$0C,$18	; 3 - ВДВОЕМ
++  DEFB $0F,$16
+ 
+-  DEFB $50,$B1,c44,$0E
+-  DEFB $00,$26,$27,$26,$1C,$1D,$0A,$1B	; 0 - START GAME
+-  DEFB $1D,$26,$10,$0A,$16,$0E
++  DEFB $50,$B1,c44,$0F
++  DEFB $00,$2C,$2D,$2C,$17,$0A,$21,$0A	; 0 - НАЧАТЬ ИГРУ
++  DEFB $1C,$26,$2C,$12,$0D,$1A,$1D
+diff -ruN a/txt/txt_game_on.asm b/txt/txt_game_on.asm
+--- a/txt/txt_game_on.asm	2026-10-11 22:54:57.000000000 +0500
++++ b/txt/txt_game_on.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,4 +1,4 @@
+ txt_game_on:
+ 
+-  DEFB $60,$8F,c47,$08
+-  DEFB $10,$0A,$16,$0E,$26,$26,$18,$17	; GAME ON
++  DEFB $68,$8F,c47,$06
++  DEFB $12,$0D,$1A,$0A,$0F,$16	; ИГРАЕМ
+diff -ruN a/txt/txt_game_over.asm b/txt/txt_game_over.asm
+--- a/txt/txt_game_over.asm	2026-10-12 16:52:45.000000000 +0500
++++ b/txt/txt_game_over.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,5 +1,5 @@
+ txt_game_over:
+ 
+-  DEFB $5C,$8F,c47,$09
+-  DEFB $10,$0A,$16,$0E,$26,$18,$1F,$0E	; GAME OVER
+-  DEFB $1B
+\ No newline at end of file
++  DEFB $58,$8F,c47,$0A
++  DEFB $14,$18,$17,$0F,$20,$2C,$12,$0D	; КОНЕЦ ИГРЫ
++  DEFB $1A,$25
+diff -ruN a/txt/txt_high_score_table.asm b/txt/txt_high_score_table.asm
+--- a/txt/txt_high_score_table.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_high_score_table.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,71 +1,71 @@
+ txt_high_score_table:
+ 
+   DEFB $38,$27,c47,$02
+-  DEFB $01,$24			; 1.
++  DEFB $01,$2A	; 1.
+ 
+   DEFB $38,$38,c47,$02
+-  DEFB $02,$24			; 2.
++  DEFB $02,$2A	; 2.
+ 
+   DEFB $38,$49,c46,$02
+-  DEFB $03,$24			; 3.
++  DEFB $03,$2A	; 3.
+ 
+   DEFB $38,$5A,c46,$02
+-  DEFB $04,$24			; 4.
++  DEFB $04,$2A	; 4.
+ 
+   DEFB $38,$6B,c45,$02
+-  DEFB $05,$24			; 5.
++  DEFB $05,$2A	; 5.
+ 
+   DEFB $38,$7C,c45,$02
+-  DEFB $06,$24			; 6.
++  DEFB $06,$2A	; 6.
+ 
+   DEFB $38,$8D,c44,$02
+-  DEFB $07,$24			; 7.
++  DEFB $07,$2A	; 7.
+ 
+   DEFB $38,$9E,c44,$02
+-  DEFB $08,$24			; 8.
++  DEFB $08,$2A	; 8.
+ 
+   DEFB $38,$AF,c43,$02
+-  DEFB $09,$24			; 9.
++  DEFB $09,$2A	; 9.
+ 
+   DEFB $30,$C0,c43,$03
+-  DEFB $01,$00,$24		; 10.
++  DEFB $01,$00,$2A	; 10.
+ 
+   DEFB $58,$27,c47,$0E
+-  DEFB $01,$00,$00,$00,$00,$00,$26	; 100000   H I T
+-  DEFB $26,$26,$11,$26,$12,$26,$1D
++  DEFB $01,$00,$00,$00,$00,$00,$2C,$2C	; 100000   Х И Т
++  DEFB $2C,$1F,$2C,$12,$2C,$1C
+ 
+   DEFB $58,$38,c07,$0E
+-  DEFB $00,$09,$00,$00,$00,$00,$26	; 090000   P A K
+-  DEFB $26,$26,$19,$26,$0A,$26,$14
++  DEFB $00,$09,$00,$00,$00,$00,$2C,$2C	; 090000   П А К
++  DEFB $2C,$19,$2C,$0A,$2C,$14
+ 
+   DEFB $58,$49,c46,$0E
+-  DEFB $00,$08,$00,$00,$00,$00,$26	; 080000   H I T
+-  DEFB $26,$26,$11,$26,$12,$26,$1D
++  DEFB $00,$08,$00,$00,$00,$00,$2C,$2C	; 080000   Х И Т
++  DEFB $2C,$1F,$2C,$12,$2C,$1C
+ 
+   DEFB $58,$5A,c06,$0E
+-  DEFB $00,$07,$00,$00,$00,$00,$26	; 070000   P A K
+-  DEFB $26,$26,$19,$26,$0A,$26,$14
++  DEFB $00,$07,$00,$00,$00,$00,$2C,$2C	; 070000   П А К
++  DEFB $2C,$19,$2C,$0A,$2C,$14
+ 
+   DEFB $58,$6B,c45,$0E
+-  DEFB $00,$06,$00,$00,$00,$00,$26	; 060000   H I T
+-  DEFB $26,$26,$11,$26,$12,$26,$1D
++  DEFB $00,$06,$00,$00,$00,$00,$2C,$2C	; 060000   Х И Т
++  DEFB $2C,$1F,$2C,$12,$2C,$1C
+ 
+   DEFB $58,$7C,c05,$0E
+-  DEFB $00,$05,$00,$00,$00,$00,$26	; 050000   P A K
+-  DEFB $26,$26,$19,$26,$0A,$26,$14
++  DEFB $00,$05,$00,$00,$00,$00,$2C,$2C	; 050000   П А К
++  DEFB $2C,$19,$2C,$0A,$2C,$14
+ 
+   DEFB $58,$8D,c44,$0E
+-  DEFB $00,$04,$00,$00,$00,$00,$26	; 040000   H I T
+-  DEFB $26,$26,$11,$26,$12,$26,$1D
++  DEFB $00,$04,$00,$00,$00,$00,$2C,$2C	; 040000   Х И Т
++  DEFB $2C,$1F,$2C,$12,$2C,$1C
+ 
+   DEFB $58,$9E,c04,$0E
+-  DEFB $00,$03,$00,$00,$00,$00,$26	; 030000   P A K
+-  DEFB $26,$26,$19,$26,$0A,$26,$14
++  DEFB $00,$03,$00,$00,$00,$00,$2C,$2C	; 030000   П А К
++  DEFB $2C,$19,$2C,$0A,$2C,$14
+ 
+   DEFB $58,$AF,c43,$0E
+-  DEFB $00,$02,$00,$00,$00,$00,$26	; 020000   H I T
+-  DEFB $26,$26,$11,$26,$12,$26,$1D
++  DEFB $00,$02,$00,$00,$00,$00,$2C,$2C	; 020000   Х И Т
++  DEFB $2C,$1F,$2C,$12,$2C,$1C
+ 
+   DEFB $58,$C0,c03,$0E
+-  DEFB $00,$01,$00,$00,$00,$00,$26	; 010000   P A K
+-  DEFB $26,$26,$19,$26,$0A,$26,$14
++  DEFB $00,$01,$00,$00,$00,$00,$2C,$2C	; 010000   П А К
++  DEFB $2C,$19,$2C,$0A,$2C,$14
+diff -ruN a/txt/txt_high_scores.asm b/txt/txt_high_scores.asm
+--- a/txt/txt_high_scores.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_high_scores.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,9 +1,7 @@
+ txt_high_scores:
+ 
+-  DEFB $50,$01,c47,$0C
+-  DEFB $11,$12,$10,$11,$26,$26		; HIGH  SCORES
+-  DEFB $1C,$0C,$18,$1B,$0E,$1C
++  DEFB $68,$01,c47,$07
++  DEFB $1A,$0F,$14,$18,$1A,$0E,$25	; РЕКОРДЫ
+ 
+-  DEFB $50,$08,c46,$0C
+-  DEFB $2A,$2A,$2A,$2A,$2A,$2A		; ============
+-  DEFB $2A,$2A,$2A,$2A,$2A,$2A
++  DEFB $68,$08,c46,$07
++  DEFB $2E,$2E,$2E,$2E,$2E,$2E,$2E	; =======
+diff -ruN a/txt/txt_main_menu.asm b/txt/txt_main_menu.asm
+--- a/txt/txt_main_menu.asm	2026-10-12 12:27:05.000000000 +0500
++++ b/txt/txt_main_menu.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,7 +1,7 @@
+ txt_main_menu:
+ 
+-  DEFB $18,$01,c07,$04
+-  DEFB $01,$26,$1E,$19	; 1 UP
++  DEFB $0C,$01,c07,$07
++  DEFB $12,$0D,$1A,$18,$14,$2C,$01	; ИГРОК 1
+ 
+-  DEFB $C8,$01,c07,$04
+-  DEFB $02,$26,$1E,$19	; 2 UP
++  DEFB $BC,$01,c07,$07
++  DEFB $12,$0D,$1A,$18,$14,$2C,$02	; ИГРОК 2
+diff -ruN a/txt/txt_player_0_enter_your_name.asm b/txt/txt_player_0_enter_your_name.asm
+--- a/txt/txt_player_0_enter_your_name.asm	2026-10-12 12:33:56.000000000 +0500
++++ b/txt/txt_player_0_enter_your_name.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,9 +1,9 @@
+ txt_player_0_enter_your_name:
+ 
+   DEFB $50,$01,c47,$0C
+-  DEFB $26,$26,$19,$15,$0A,$22,$0E,$1B  ; __PLAYER 0__ (по два пробела с двух сторон)
+-  DEFB $26,$00,$26,$26
++  DEFB $2C,$2C,$2C,$12,$0D,$1A,$18,$14	;    ИГРОК 0  
++  DEFB $2C,$00,$2C,$2C
+ 
+   DEFB $40,$09,c47,$10
+-  DEFB $0E,$17,$1D,$0E,$1B,$26,$22,$18  ; ENTER YOUR NAME.
+-  DEFB $1E,$1B,$26,$17,$0A,$16,$0E,$24
++  DEFB $0C,$0C,$0F,$0E,$12,$1C,$0F,$2C	; ВВЕДИТЕ ВАШЕ ИМЯ
++  DEFB $0C,$0A,$22,$0F,$2C,$12,$16,$29
+diff -ruN a/txt/txt_player_0.asm b/txt/txt_player_0.asm
+--- a/txt/txt_player_0.asm	2026-10-12 16:52:45.000000000 +0500
++++ b/txt/txt_player_0.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,5 +1,5 @@
+ txt_player_0:
+ 
+-  DEFB $5C,$9E,c47,$09
+-  DEFB $19,$15,$0A,$22,$0E,$1B,$26,$26	; PLAYER  0
+-  DEFB 00
++  DEFB $50,$9E,c47,$09
++  DEFB $2C,$2C,$12,$0D,$1A,$18,$14,$2C	;   ИГРОК 0
++  DEFB $00
+diff -ruN a/txt/txt_player_x.asm b/txt/txt_player_x.asm
+--- a/txt/txt_player_x.asm	2026-10-11 22:54:57.000000000 +0500
++++ b/txt/txt_player_x.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,4 +1,4 @@
+ txt_player_x:
+ 
+-  DEFB $60,$8F,c47,$08
+-  DEFB $19,$15,$0A,$22,$0E,$1B,$26,$00	; PLAYER X
++  DEFB $58,$8F,c47,$08
++  DEFB $2C,$12,$0D,$1A,$18,$14,$2C,$00	;  ИГРОК 0
+diff -ruN a/txt/txt_players_1_and_2.asm b/txt/txt_players_1_and_2.asm
+--- a/txt/txt_players_1_and_2.asm	2026-10-12 16:52:45.000000000 +0500
++++ b/txt/txt_players_1_and_2.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,5 +1,5 @@
+ txt_players_1_and_2:
+-  
+-  DEFB $44,$9E,c47,$0F
+-  DEFB $19,$15,$0A,$22,$0E,$1B,$1C,$26 ; PLAYERS 1 AND 2
+-  DEFB $01,$26,$0A,$17,$0D,$26,$02
++
++  DEFB $50,$9E,c47,$0C
++  DEFB $12,$0D,$1A,$18,$14,$12,$2C,$01	; ИГРОКИ 1 И 2
++  DEFB $2C,$12,$2C,$02
+diff -ruN a/txt/txt_round_xx.asm b/txt/txt_round_xx.asm
+--- a/txt/txt_round_xx.asm	2026-10-11 22:54:57.000000000 +0500
++++ b/txt/txt_round_xx.asm	2026-10-13 00:52:30.000000000 +0500
+@@ -1,4 +1,4 @@
+ txt_round_xx:
+ 
+   DEFB $60,$9E,c47,$08
+-  DEFB $1B,$18,$1E,$17,$0D,$26,$00,$00	; ROUND XX
++  DEFB $1A,$0A,$1D,$17,$0E,$2C,$00,$00	; РАУНД 00
+diff -ruN a/verify/debug-magnet-cache.js b/verify/debug-magnet-cache.js
+--- a/verify/debug-magnet-cache.js	2026-10-12 20:41:07.000000000 +0500
++++ b/verify/debug-magnet-cache.js	1970-01-01 05:00:00.000000000 +0500
+@@ -1,4 +0,0 @@
+-const {make}=require('./vector_harness'),assert=require('assert');let E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const w=(a,v)=>E.memory.write(a,v),word=(a,v)=>{w(a,v);w(a+1,v>>8)},inst=E.cpu.instruction.bind(E.cpu);E.cpu.instruction=function(){if(this.pc===E.L.LB9E8_1)w(E.L.current_level_number_1up,1);if(this.pc===E.L.LB9E8_2)throw 'ready';inst();};try{for(let f=0;f<1000;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='ready')throw e;}E.cpu.instruction=inst;function call(n){E.cpu.pc=E.L[n];E.cpu.sp=E.L.stack-2;word(E.cpu.sp,256);E.cpu.iff=false;for(let k=0;E.cpu.pc!==256;k++){assert(k<1e6);inst();E.io.commit();}}
+-console.log('props',Array.from({length:6},(_,i)=>E.rd(E.L.magnet_properties+i)),'meta',Array.from({length:6},(_,i)=>E.rd(E.L.MagCacheMeta+i)));
+-console.log('cache',Array.from({length:16},(_,i)=>E.rd(0x7a00+i)),'base',E.rd(E.L.MCBase)+256*E.rd(E.L.MCBase+1));let diffs=[];for(const frame of[6,7])for(const flag of[0,1]){w(E.L.magnet_properties+1,frame);w(E.L.NativeMagnetOverlayFlags,flag);for(let col=0;col<5;col++)for(let row=0;row<30;row++){let d=E.rd(E.L.MagCacheMeta)+col,e=E.rd(E.L.MagCacheMeta+1)-row,src=E.rd(E.L[d&1?'NativeTextureRight':'NativeTextureLeft']+1)+256*E.rd(E.L[d&1?'NativeTextureRight':'NativeTextureLeft']+2),val=E.rd(src+((e-33)&15));let out=[];for(const fn of['NativeRestoreMagnetSample','NativeRestoreMagnetSampleSlow']){E.cpu.set_rp(2,(d<<8)|e);E.cpu.set_reg(7,val);call(fn);if(frame===6&&flag===0&&col===0&&row===0)console.log(fn,'base',E.rd(E.L.MCBase)+256*E.rd(E.L.MCBase+1),'byte',E.rd(E.L.NativeSampleByte),'row',E.rd(E.L.NativeSampleRow));out.push([E.cpu.a(),E.rd(E.L.NativeSampleAccentA),E.rd(E.L.NativeSampleAccentE)]);}if(JSON.stringify(out[0])!==JSON.stringify(out[1]))diffs.push({frame,flag,col,row,val,out});}}
+-console.log('differences',diffs.length,JSON.stringify(diffs.slice(0,8)));
+diff -ruN a/verify/extract-cpc-screen.js b/verify/extract-cpc-screen.js
+--- a/verify/extract-cpc-screen.js	2026-10-12 11:22:38.000000000 +0500
++++ b/verify/extract-cpc-screen.js	2026-10-13 00:46:12.000000000 +0500
+@@ -16,7 +16,10 @@
+ const sourceRows=[2,3,4,5,7,8,9,11],sampleRow=(x,y)=>Array.from({length:8},(_,i)=>pixel(x+i,y));
+ const fixture={sourceArchiveSHA256:crypto.createHash('sha256').update(fs.readFileSync(archive)).digest('hex'),source:'Original CPC VRAM after running BATTY1.BIN and BATTY2.BIN; mode 0, 160x200',nativeInks:{0:'black',13:'bright white',15:'gray'},sourceRows,leftTop:sourceRows.map(y=>sampleRow(0,y)),rightTop:sourceRows.map(y=>sampleRow(152,y)),middleTop:sourceRows.map(y=>sampleRow(64,y)),leftSide:sampleRow(0,20),rightSide:sampleRow(152,20)};
+ fs.writeFileSync('verify/fixtures/cpc/frame.json',JSON.stringify(fixture,null,2)+'\n');
+-const mapping={0:2,13:0,15:3},pair=r=>[2,1].map(bit=>r.reduce((v,c,i)=>{if(mapping[c]===undefined)throw Error('Unexpected CPC frame ink '+c);return v|(mapping[c]&bit?128>>i:0);},0));
+-let asm='; CPC frame, native C/E row pairs. A is zero throughout.\n; 13 white -> Vector 0; 15 gray -> 3; 0 black -> level-texture shade 2.\n';
+-for(const [name,rows]of[['LeftTop',fixture.leftTop],['MiddleTop',fixture.middleTop],['RightTop',fixture.rightTop],['LeftSide',[fixture.leftSide]],['RightSide',[fixture.rightSide]]])asm+='CpcFrame'+name+':\n DEFB '+rows.flatMap(pair).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')+'\n';
++// Black outside the frame (the run of ink 0 at the outer edge of a side piece) takes the HUD paper, index 1;
++// black inside it stays the level-texture shade, index 2.
++const mapping={0:2,13:0,15:3},outside=(r,side)=>{let n=0;if(side==='L')while(n<8&&r[n]===0)n++;if(side==='R')while(n<8&&r[7-n]===0)n++;return i=>side==='L'?i<n:side==='R'?i>=8-n:false;};
++const pair=(r,side)=>{const out=outside(r,side);return[2,1].map(bit=>r.reduce((v,c,i)=>{if(mapping[c]===undefined)throw Error('Unexpected CPC frame ink '+c);return v|((out(i)?1:mapping[c])&bit?128>>i:0);},0));};
++let asm='; CPC frame, native C/E row pairs. A is zero throughout.\n; 13 white -> Vector 0; 15 gray -> 3; 0 black -> level-texture shade 2, outside the frame -> HUD paper 1.\n';
++for(const [name,rows]of[['LeftTop',fixture.leftTop],['MiddleTop',fixture.middleTop],['RightTop',fixture.rightTop],['LeftSide',[fixture.leftSide]],['RightSide',[fixture.rightSide]]])asm+='CpcFrame'+name+':\n DEFB '+rows.flatMap(r=>pair(r,name[0]==='L'?'L':name[0]==='R'?'R':'M')).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')+'\n';
+ fs.writeFileSync('gfx/cpc_frame.asm',asm);
+diff -ruN a/verify/fixtures/zx/frame_sprites.asm b/verify/fixtures/zx/frame_sprites.asm
+--- a/verify/fixtures/zx/frame_sprites.asm	1970-01-01 05:00:00.000000000 +0500
++++ b/verify/fixtures/zx/frame_sprites.asm	2026-10-13 01:02:35.000000000 +0500
+@@ -0,0 +1,107 @@
++; Графика: элементы обрамления экрана
++
++; Unreferenced original border image removed (40 bytes).
++
++; Data block at 6B3F
++; Следующие два спрайта должны идти строго друг за другом
++; Левая боковина в виде ракетки
++spr_bord_left_bold:
++  DEFB $01,$20
++  DEFB $3C,$6E,$CF,$9F,$9F,$9F,$9F,$60
++  DEFB $9F,$9F,$9F,$9F,$9F,$9F,$9F,$9F
++  DEFB $9F,$9F,$9F,$9F,$9F,$9F,$9F,$9F
++  DEFB $60,$9F,$9F,$9F,$9F,$CF,$6E,$3C
++  DEFB $01,$04
++  DEFB c45,c05,c05,c45
++; Правая боковина в виде ракетки
++  DEFB $01,$20
++  DEFB $3C,$76,$F3,$F9,$F9,$F9,$F9,$06
++  DEFB $F9,$F9,$F9,$F9,$F9,$F9,$F9,$F9
++  DEFB $F9,$F9,$F9,$F9,$F9,$F9,$F9,$F9
++  DEFB $06,$F9,$F9,$F9,$F9,$F3,$76,$3C
++  DEFB $01,$04
++  DEFB c45,c05,c05,c45
++
++; Data block at 6B8F
++; Следующие два спрайта должны идти строго друг за другом
++; Левая боковина в виде трубы
++spr_bord_left_thin:
++  DEFB $01,$18
++  DEFB $00,$3C,$3C,$3C,$3C,$3C,$3C,$3C
++  DEFB $00,$5E,$5E,$5E,$5E,$5E,$5E,$00
++  DEFB $3C,$3C,$3C,$3C,$3C,$3C,$3C,$00
++  DEFB $01,$03
++  DEFB c07,c47,c07
++; Правая боковина в виде трубы
++  DEFB $01,$18
++  DEFB $00,$3C,$3C,$3C,$3C,$3C,$3C,$3C
++  DEFB $00,$7A,$7A,$7A,$7A,$7A,$7A,$00
++  DEFB $3C,$3C,$3C,$3C,$3C,$3C,$3C,$00
++  DEFB $01,$03
++  DEFB c07,c47,c07
++
++; Data block at 6BCD
++; Горизонталь, левый крайний элемент
++spr_bord_horiz_left_edge:
++  DEFB $04,$08
++  DEFB $9E,$9D,$9B,$97,$AF,$D0,$A0,$7F
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $6C,$6E,$6F,$6F,$69,$93,$96,$6C
++  DEFB $04,$01
++  DEFB c05,c05,c05,c45
++
++; Data block at 6BF5
++; Горизонталь, левая сторона в виде трубы
++spr_bord_horiz_left_thin:
++  DEFB $04,$08
++  DEFB $00,$00,$7F,$7F,$7F,$7F,$00,$00
++  DEFB $00,$7E,$7E,$7E,$7E,$00,$7E,$00
++  DEFB $00,$00,$FE,$FE,$FE,$FE,$00,$00
++  DEFB $3E,$7E,$FE,$FE,$9E,$C1,$61,$3E
++  DEFB $04,$01
++  DEFB c07,c47,c07,c45
++
++; Data block at 6C1D
++; Горизонталь, левая сторона в виде ракетки
++spr_bord_horiz_left_bold:
++  DEFB $04,$08
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $7C,$7E,$7F,$7F,$79,$83,$86,$7C
++  DEFB $04,$01
++  DEFB c05,c05,c05,c45
++
++; Data block at 6C45
++; Горизонталь, правая сторона в виде трубы
++spr_bord_horiz_right_thin:
++  DEFB $04,$08
++  DEFB $7C,$7E,$7F,$7F,$79,$83,$86,$7C
++  DEFB $00,$00,$7F,$7F,$7F,$7F,$00,$00
++  DEFB $00,$7E,$7E,$7E,$7E,$00,$7E,$00
++  DEFB $00,$00,$FE,$FE,$FE,$FE,$00,$00
++  DEFB $04,$01
++  DEFB c45,c07,c47,c07
++
++; Data block at 6C6D
++; Горизонталь, правая сторона в виде ракетки
++spr_bord_horiz_right_bold:
++  DEFB $04,$08
++  DEFB $3E,$7E,$FE,$FE,$9E,$C1,$61,$3E
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $04,$01
++  DEFB c45,c05,c05,c05
++
++; Data block at 6C95:
++; Горизонталь, правый крайний элемент
++spr_bord_horiz_right_edge:
++  DEFB $04,$08
++  DEFB $36,$76,$F6,$F6,$96,$C9,$69,$36
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $FF,$FF,$FF,$FF,$FF,$00,$00,$FF
++  DEFB $79,$B9,$D9,$E9,$F5,$0B,$05,$FE
++  DEFB $04,$01
++  DEFB c45,c05,c05,c05
+diff -ruN a/verify/generate-mono-assets.js b/verify/generate-mono-assets.js
+--- a/verify/generate-mono-assets.js	2026-10-12 19:02:23.000000000 +0500
++++ b/verify/generate-mono-assets.js	2026-10-13 01:22:14.000000000 +0500
+@@ -5,10 +5,33 @@
+ // Native transposition reclaims unused legacy tails. Labels relocate normally;
+ // helper bounds verify each helper still fits the original reserved tail.
+ const pacePads={spr_bomb:'mono_pace_start',spr_ball_normal:'mono_pace_white',spr_bat_big:'mono_pace_bat',spr_bat_gun_shift:'mono_pace_shift',spr_bat_normal:'mono_pace_old',spr_spark_1:'mono_pace_wait',spr_ball_normal_shift_1:'mono_pace_dispatch',spr_ball_normal_shift_2:'ui_mono_outline_1',spr_ball_normal_shift_3:'ui_mono_outline_2',spr_ball_normal_shift_4:'ui_outline_byte',spr_ball_normal_shift_5:'mono_window_setup',spr_ball_normal_shift_6:'mono_pace_draw_1',spr_ball_normal_shift_7:'mono_pace_draw_2',spr_bat_gun_1:'mono_bonus_height',spr_bat_big_shift:'ui_glyph_background',spr_bat_gun_2:'ui_clear_line_1',spr_bat_gun_3:'ui_clear_line_2',spr_bat_gun_4:'paper_plane_fill',spr_bird_2:'ui_menu_overlay',spr_bat_normal_shift:'native_rotate',spr_bird_3:'magnet_center_e',spr_bird_4:'magnet_center_locate',spr_bird_5:'magnet_accent_off',spr_bat_right_part:'magnet_center_put',spr_bat_left_part:'magnet_center_stride',spr_big_ball:'magnet_center_read',spr_bat_gun:'magnet_center_read_shift'};
++const magnetDisc=(()=>{const b=[];for(const line of text.match(/^spr_magnet_circle_on:([\s\S]*?)(?=^spr_\w+:)/m)[1].split('\n')){const p=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(p)for(const v of p[1].split(','))b.push(parseInt(v.trim().slice(1),16));}return Array.from({length:12},(_,r)=>Array.from({length:13},(_,x)=>b[2+2*(r*b[0]+(x>>3))]>>(7-(x&7))&1));})();
+ let count=0,total=0,output='; Generated native column pairs (~cover,lit). Static magnets, separators and HUD headings use native columns; score digits retain their separate legacy format.\n';
+ for(const m of text.matchAll(/^(spr_\w+):([\s\S]*?)(?=^spr_\w+:|$(?![\s\S]))/gm)){
+  let bytes=[],padding=0;for(const line of m[2].split('\n')){const p=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(p)for(const v of p[1].split(','))bytes.push(parseInt(v.trim().slice(1),16));const d=line.match(/^\s*DS\s+(\d+),0/i);if(d)padding+=+d[1];}
+  let allocated=bytes.length+padding;
++ // Magnets are opaque discs in the RGB planes. The ZX mask also covers the dithered shadow and the off
++ // picture borrows the right rim from the on picture; give both the same clean, symmetric 25x23 disc.
++ if(/^spr_magnet_circle_(on|off)$/.test(m[1])){const [mw]=bytes,lit=(r,x)=>x<8*mw&&r<bytes[1]?(bytes[2+2*(r*mw+(x>>3))]&bytes[3+2*(r*mw+(x>>3))])>>(7-(x&7))&1:0,onH=m[1].endsWith('_on')?bytes[1]:24,out=[4,onH];
++  // Both states share a grey ring: every disc pixel further than 10.8 from the centre
++  // (the wider ZX ring of the off picture, 9.2..10.8, is dropped to leave more room inside).
++  // On: mask plane = grey ring + cyan body (plane C and E), lit plane = cyan body; the rest of the disc
++  // (the arrows and the core) is red.
++  const isOn=m[1].endsWith('_on'),coreOn=[0x00,0x1c,0x3e,0x3e,0x3e,0x3e,0x1c,0x00];
++  // Off: mask = the disc, lit = the grey marks; the ring comes from the on picture. The wide ZX ring of the
++  // off picture is dropped whole: it is the 4-connected lit region that reaches the new ring zone.
++  const coreOff=[0x1c,0x26,0x4f,0x5f,0x5f,0x7f,0x3e,0x1c],oldRing=new Set();
++  if(!isOn){const far=(r,x)=>Math.hypot(x-12,(r-11.5)*25/24)>10.8,queue=[];for(let r=0;r<24;r++)for(let x=0;x<25;x++)if(lit(r,x)&&far(r,x)){oldRing.add(r*32+x);queue.push([r,x]);}
++   while(queue.length){const [r,x]=queue.pop();for(const [dr,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const rr=r+dr,xx=x+dx;if(rr>=0&&rr<24&&xx>=0&&xx<25&&lit(rr,xx)&&!oldRing.has(rr*32+xx)){oldRing.add(rr*32+xx);queue.push([rr,xx]);}}}}
++  for(let r=0;r<onH;r++)for(let c=0;c<4;c++){let mask=0,pixel=0;for(let b=0;b<8;b++){const x=c*8+b,cov=r<24&&x<25&&magnetDisc[Math.min(r,23-r)][Math.min(x,24-x)];if(cov){
++   const dist=Math.hypot(x-12,(r-11.5)*25/24),ring=dist>10.8,core=r>=8&&r<16&&x>=8&&x<16&&(coreOn[r-8]>>(15-x)&1);
++   if(isOn){const nearRing=[-1,0,1].some(dr=>[-1,0,1].some(dx=>{const rr=r+dr,xx=x+dx;return rr>=0&&rr<24&&xx>=0&&xx<25&&magnetDisc[Math.min(rr,23-rr)][Math.min(xx,24-xx)]&&Math.hypot(xx-12,(rr-11.5)*25/24)>10.8;}));
++    // The tips of the four diagonal arrows are straightened to 45 degrees: (7,5) moves to (6,5), mirrored.
++    const fr=Math.min(r,23-r),fx=Math.min(x,24-x),tipOff=fr===7&&fx===5,tipOn=fr===6&&fx===5;
++    const red=tipOn||(!tipOff&&!ring&&!nearRing&&(!lit(r,x)||core)); // the arrows stop one pixel short of the ring
++    if(!red)mask|=128>>b;if(!red&&!ring)pixel|=128>>b;}
++   else{const ball=r>=8&&r<16&&x>=8&&x<16&&(coreOff[r-8]>>(15-x)&1);mask|=128>>b;if(!ring&&!ball&&lit(r,x)&&!oldRing.has(r*32+x))pixel|=128>>b;}}}out.push(mask,pixel);}
++  bytes=out;allocated=Math.max(allocated,2+4*onH*2);}
+  if(m[1]==='spr_big_ball'){const [ow,oh]=bytes;for(let y=0;y<oh;y++)for(let c=1;c<ow;c++)assert.equal(bytes[3+2*(y*ow+c)],0,'Smash has lit spill');bytes=[1,oh,...Array.from({length:oh},(_,y)=>bytes.slice(2+2*y*ow,4+2*y*ow)).flat()];}
+  const original=bytes.slice(),w=bytes[0],fullH=bytes[1];
+  let data;if(staticNames.has(m[1])){data=bytes.slice();for(let i=2;i+1<data.length;i+=2)data[i+1]^=data[i];}
+@@ -30,6 +53,6 @@
+ const digitData=[10,8];for(let d=0;d<10;d++)for(let r=0;r<8;r++)digitData.push(255,255^(r<6?fontBytes[d*6+r]:0));
+ const hud=fs.readFileSync('gfx/sprites_with_masks_1.asm','utf8').replace(/spr_score_digits:[\s\S]*?(?=^spr_\w+:|$(?![\s\S]))/m,'spr_score_digits:\n'+Array.from({length:Math.ceil(digitData.length/12)},(_,i)=>' DEFB '+digitData.slice(i*12,i*12+12).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')).join('\n')+'\n').replace(/^(spr_(?:1up|2up|hi)):[\s\S]*?(?=^spr_\w+:|$(?![\s\S]))/gm,(block,name)=>{
+  const bytes=[];for(const line of block.split('\n')){const m=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(m)for(const v of m[1].split(','))bytes.push(parseInt(v.trim().slice(1),16));}
+- const codes={spr_1up:[1,30,25],spr_2up:[2,30,25],spr_hi:[17,18]}[name];const [w,h]=bytes;for(let y=0;y<h;y++)for(let c=0;c<w;c++){const v=y<6?fontBytes[codes[c]*6+y]:0;bytes[2+2*(y*w+c)]=v;bytes[3+2*(y*w+c)]=v;}const data=[w,h];for(let c=0;c<w;c++)for(let y=0;y<h;y++){const i=2+2*(y*w+c);data.push(bytes[i]^255,bytes[i]&bytes[i+1]);}
++ const codes={spr_1up:[18,13,26,24,20,44,1],spr_2up:[18,13,26,24,20,44,2],spr_hi:[26,15,20,24,26,14]}[name];const w=codes.length,h=bytes[1];bytes.length=0;for(let y=0;y<h;y++)for(let c=0;c<w;c++){const v=y<6?fontBytes[codes[c]*6+y]:0;bytes[2+2*(y*w+c)]=v;bytes[3+2*(y*w+c)]=v;}const data=[w,h];for(let c=0;c<w;c++)for(let y=0;y<h;y++){const i=2+2*(y*w+c);data.push(bytes[i]^255,bytes[i]&bytes[i+1]);}
+  return name+':\n'+Array.from({length:Math.ceil(data.length/12)},(_,i)=>' DEFB '+data.slice(i*12,i*12+12).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')).join('\n')+'\n';
+ });fs.writeFileSync('gfx/sprites_mono_native_1.asm',hud);
+diff -ruN a/verify/generate-zx-frame.js b/verify/generate-zx-frame.js
+--- a/verify/generate-zx-frame.js	1970-01-01 05:00:00.000000000 +0500
++++ b/verify/generate-zx-frame.js	2026-10-13 01:02:35.000000000 +0500
+@@ -0,0 +1,32 @@
++'use strict';
++// ZX Spectrum field frame (pipes and connectors) as 1-bpp cells plus per-material colour masks.
++// Source: the original border sprites, verify/fixtures/zx/frame_sprites.asm (cell-major bytes).
++const fs=require('fs');
++const text=fs.readFileSync('verify/fixtures/zx/frame_sprites.asm','utf8').replace(/;.*/g,'');
++const spr={};let cur=null;
++for(const m of text.matchAll(/^(spr_\w+):|DEFB\s+(.+)/gm)){if(m[1]){cur=m[1];spr[cur]=[];}else spr[cur].push(...m[2].split(',').map(v=>v.trim()));}
++const num=v=>parseInt(v.replace('$',''),16),pix=(n,part)=>{const b=spr[n];let i=0;for(let p=0;;p++){const w=num(b[i]),h=num(b[i+1]),data=b.slice(i+2,i+2+w*h).map(num);i+=2+w*h;i+=2+num(b[i])*num(b[i+1]);if(p===part)return data;}};
++const rev=v=>{let r=0;for(let i=0;i<8;i++)if(v&(1<<i))r|=128>>i;return r;};
++// Top band, left half: edge, thin, bold (4 cells x 8 rows each); the right half is its mirror image.
++const top=[...pix('spr_bord_horiz_left_edge',0),...pix('spr_bord_horiz_left_thin',0),...pix('spr_bord_horiz_left_bold',0)];
++const order=[0,1,2,1],leftCells=order.flatMap(p=>[0,1,2,3].map(c=>p*4+c));
++const right=['right_thin','right_bold','right_thin','right_edge'].flatMap(n=>pix('spr_bord_horiz_'+n,0));
++for(let c=0;c<16;c++)for(let r=0;r<8;r++){const want=right[c*8+r],got=rev(top[leftCells[15-c]*8+r]);if(want!==got)throw Error('top is not a mirror image at cell '+c+' row '+r);}
++// Side wall, left: the paddle-like piece (32 rows) and the pipe piece (24 rows); the right wall is the mirror.
++const side=[...pix('spr_bord_left_bold',0),...pix('spr_bord_left_thin',0)];
++const sideRight=[...pix('spr_bord_left_bold',1),...pix('spr_bord_left_thin',1)];
++side.forEach((v,i)=>{if(rev(v)!==sideRight[i])throw Error('side is not a mirror image at '+i);});
++// Materials: 0 tube, 1 connector, 2 cap. Colours come from two masks per material:
++// plane A = bits & maskA, plane C = bits & maskC, plane E = ~bits | maskC,
++// so a set bit is white (no mask), grey (C only) or cyan (A and C); a clear bit is the HUD paper.
++// Top band: the masks are row patterns (bit 7 = top row). Side walls: plain bit masks, light from the left.
++const T=0,C=1,K=2;
++const topSeq=leftCells.map((cell,i)=>cell*4+((i&3)===3?K:(order[i>>2]===1?C:T)));
++const sideSeq=[K,T,T,K,C,C,C];
++const topMasks=[[0x3e,0x3f],[0x00,0x3f],[0x0f,0x0f]],sideMasks=[[0x1c,0x1f],[0x00,0x0f],[0x0f,0x0f]];
++const db=a=>{let s='';for(let i=0;i<a.length;i+=8)s+=' DEFB '+a.slice(i,i+8).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')+'\n';return s;};
++fs.writeFileSync('gfx/zx_frame.asm','; Generated by verify/generate-zx-frame.js: ZX field frame, one bit per pixel.\n'+
++ 'ZxFrameTop:\n'+db(top)+'ZxFrameTopSeq: ; bitmap cell*4 + material, left half of the top band\n'+db(topSeq)+
++ 'ZxFrameSide:\n'+db(side)+'ZxFrameSideSeq:\n'+db(sideSeq)+
++ 'ZxFrameTopMasks: ; row patterns A,C for tube, connector, cap\n'+db(topMasks.flat())+'ZxFrameSideMasks: ; bit masks A,C\n'+db(sideMasks.flat()));
++module.exports={top,side,topSeq,sideSeq,topMasks,sideMasks,rev};
+diff -ruN a/verify/make-splash-rom.js b/verify/make-splash-rom.js
+--- a/verify/make-splash-rom.js	1970-01-01 05:00:00.000000000 +0500
++++ b/verify/make-splash-rom.js	2026-10-13 00:43:29.000000000 +0500
+@@ -0,0 +1,10 @@
++'use strict';
++// batty-splash.rom = batty.rom (0100..7FFF) + the title picture, which the loader puts straight
++// into the screen memory (8000..FFFF). The start code shows it only when SplashPresent is set.
++const fs=require('fs');
++const rom=fs.readFileSync('batty.rom'),pic=fs.readFileSync('gfx/splash/splash.bin');
++if(rom.length!==32512||pic.length!==32768)throw Error('unexpected sizes '+rom.length+' '+pic.length);
++const m=fs.readFileSync('batty0.sym','utf8').match(/^SplashPresent:\s+EQU\s+0x([0-9A-F]+)/mi);
++if(!m)throw Error('SplashPresent not found');
++const out=Buffer.concat([rom,pic]);out[parseInt(m[1],16)-0x100]=1;
++fs.writeFileSync('batty-splash.rom',out);
+diff -ruN a/verify/measure-ball-blit.js b/verify/measure-ball-blit.js
+--- a/verify/measure-ball-blit.js	2026-10-12 17:29:05.000000000 +0500
++++ b/verify/measure-ball-blit.js	2026-10-12 23:17:41.000000000 +0500
+@@ -1,6 +1,6 @@
+ 'use strict';
+-// JS prototype: direct two-byte output, retaining arbitrary old video bits only
+-// outside the footprint. Compare native 8080 execution against this oracle.
++// JS prototype: direct two-byte output ORed into the white plane (old sprite areas are
++// cleared separately by the clear-old/redraw renderer). Compare native 8080 execution against this oracle.
+ const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
+ const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);E.run(100);const w=(a,v)=>E.memory.write(a,v),word=(a,v)=>{w(a,v);w(a+1,v>>8)},read=()=>Buffer.from(Array.from({length:8192},(_,i)=>E.rd(32768+i)));
+ const prototype=(v,shift)=>[v>>>shift,(v<<(8-shift))&255];for(let v=0;v<256;v++)for(let s=1;s<8;s++){const r=((v>>>s)|(v<<(8-s)))&255,mask=255>>>s;assert.deepStrictEqual([r&mask,r&(~mask&255)],prototype(v,s));}
+@@ -8,7 +8,7 @@
+ const video=0x8950,results=[];let cases=0;
+ for(const [name,source,height] of [['normal',E.L.BallRotation1,6],['smash',E.L.SmashRotation2,8]])for(let shift=1;shift<8;shift++)for(let rows=1;rows<=height;rows++){
+  const original=Buffer.from(Array.from({length:8192},(_,i)=>(i*71+17)&255)),expected=Buffer.from(original);
+- for(let r=0;r<rows;r++){const [left,right]=prototype(E.rd(source+3+r*2),shift);expected[video-32768-r]=left;expected[video-32768+256-r]=right;}
++ for(let r=0;r<rows;r++){const [left,right]=prototype(E.rd(source+3+r*2),shift);expected[video-32768-r]|=left;expected[video-32768+256-r]|=right;}
+  const times={};for(const proc of['MonoDrawWhiteGeneral','MonoBallShiftDraw']){for(let i=0;i<8192;i++)w(32768+i,original[i]);word(E.L.MonoDrawVideo,video);word(E.L.MonoDrawSource,source+2);w(E.L.MonoDrawRows,rows);w(E.L.MonoDrawCols,2);w(E.L.direct_shift,shift);w(E.L.MonoFastDraw,1);w(E.L.MonoOwner,0);times[proc]=call(proc,shift);{const got=read();if(!got.equals(expected)){const at=got.findIndex((v,i)=>v!==expected[i]);throw Error(proc+' differs '+JSON.stringify({name,shift,rows,at,got:got[at],expected:expected[at],src:Array.from({length:6},(_,r)=>E.rd(source+3+r*2))}));}}}if(rows===height)results.push({name,shift,generalCycles:times.MonoDrawWhiteGeneral,ballCycles:times.MonoBallShiftDraw,savedCycles:times.MonoDrawWhiteGeneral-times.MonoBallShiftDraw});cases++;
+ }
+ const report={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),jsRotateCases:1792,nativeOracleCases:cases,results,passed:true};fs.writeFileSync('outputs/batty-rotation-blit.json',JSON.stringify(report,null,2));console.table(results);
+diff -ruN a/verify/measure-natural-heavy.js b/verify/measure-natural-heavy.js
+--- a/verify/measure-natural-heavy.js	2026-10-12 21:27:04.000000000 +0500
++++ b/verify/measure-natural-heavy.js	2026-10-12 23:05:24.000000000 +0500
+@@ -42,7 +42,7 @@
+   inst();cycles+=this.vcycles;if(draw)draw[phase]+=this.vcycles;
+  };
+  const queueBorn=new Map();let queuePeak=0,queueMaxTicks=0,queueCompletions=0;const pendingShots=[];
+- const calls=[],watched=new Map(['DrawMovingObjects','plane_object_fast','MonoCompositeBat','MonoPairPrepare','MonoEraseFringes','MonoRedrawShared','MonoClearColumn','MonoFindIsolated','MonoSelectCandidates','MonoComposeUncovered','MonoDrawPrepared','MonoCachePrepare','SpriteCacheBuild','handling_ball','handling_ufo','handling_bird','NativeRestoreBrick','NativeRestoreQueued','NativeRestoreQueueStep','wins_recovery','NativeMagCacheColumn','NativeMagCacheRow','NativeRestoreMagnetSampleSlow','NativeMagCacheTryToggle','print_one_magnet','NativePrintBrick','fill_briks_data','play_sounds_queue','restore_objs_and_magnet','running_dot'].map(n=>[E.L[n],n]));
++ const calls=[],watched=new Map(['DrawMovingObjects','plane_object_fast','MonoCompositeBat','MonoPairPrepare','MonoEraseFringes','MonoRedrawShared','MonoClearColumn','MonoFindIsolated','MonoSelectCandidates','MonoComposeUncovered','MonoDrawPrepared','MonoCachePrepare','SpriteCacheBuild','handling_ball','handling_ufo','handling_bird','NativeRestoreBrick','NativeRestoreQueued','NativeRestoreQueueStep','wins_recovery','MagnetRepaintMarked','MagnetPaint','print_one_magnet','NativePrintBrick','fill_briks_data','play_sounds_queue','restore_objs_and_magnet','running_dot'].map(n=>[E.L[n],n]));
+  for(frame=0;frame<limit;frame++){E.run(1);const s=state();if(s.smash)smashFrames++;if(s.balls===3)allThreeFrames++;
+     if(recording>0){E.png(artifactDir+'/run'+run+'-'+String(captureCount++).padStart(3,'0')+'.png');recording--;}
+   if(s.balls!==3||!s.smash||![8,9].includes(s.enemy)||frame<6)continue;
+diff -ruN a/verify/model-magnet-background-cache.js b/verify/model-magnet-background-cache.js
+--- a/verify/model-magnet-background-cache.js	2026-10-12 22:23:35.000000000 +0500
++++ b/verify/model-magnet-background-cache.js	1970-01-01 05:00:00.000000000 +0500
+@@ -1,14 +0,0 @@
+-'use strict';
+-const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
+-function encode(on,off){const data=new Uint8Array(306);for(let c=0;c<5;c++)for(let r=0;r<30;r++){const i=c*30+r;data[i]=on[i][0];if(c<4&&r<23)data[150+c*23+r]=on[i][0]^off[i][0];else assert.equal(on[i][0],off[i][0],'off delta escaped 4x23');if(c>=1&&c<=2&&r>=8&&r<16){let j=(c-1)*8+r-8;for(let s=0;s<2;s++){const v=s?off[i]:on[i];data[242+s*32+j]=v[1];data[258+s*32+j]=s?v[2]:(off[i][0]&off[i][2]);}}else for(const v of[on[i],off[i]])assert.equal(v[1]|v[2],0,'accent escaped 2x8');}return data;}
+-function decode(data,c,r,off){const i=c*30+r;let v=data[i];if(off&&c<4&&r<23)v^=data[150+c*23+r];let a=0,e=0;if(c>=1&&c<=2&&r>=8&&r<16){let j=(c-1)*8+r-8+32*off;a=data[242+j];e=off?data[258+j]:0;}return[v,a,e];}
+-let levels=[],native=0,js=0,cold=[];
+-for(const level of[1,3,5,6,7,8,9,10,11,12,13,14]){const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const w=(a,v)=>E.memory.write(a,v),word=(a,v)=>{w(a,v);w(a+1,v>>8)},rdword=a=>E.rd(a)+256*E.rd(a+1),inst=E.cpu.instruction.bind(E.cpu);E.cpu.instruction=function(){if(this.pc===E.L.LB9E8_1)w(E.L.current_level_number_1up,level);if(this.pc===E.L.LB9E8_2)throw 'ready';inst();};try{for(let f=0;f<1000;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='ready')throw e;}E.cpu.instruction=inst;
+-function call(name){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;word(E.cpu.sp,256);E.cpu.iff=false;let t=0;for(let k=0;E.cpu.pc!==256;k++){assert(k<8e6,name);inst();E.io.commit();t+=E.cpu.vcycles;}return t;}
+-w(E.L.MagCacheLevel,255);cold.push({level:level+1,cycles:call('NativeMagCacheBuildAll')});const n=E.rd(E.L.magnets_quantity),boxes=Array.from({length:n},(_,i)=>({l:E.rd(E.L.MagCacheMeta+i*6),t:E.rd(E.L.MagCacheMeta+i*6+1)}));for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)assert(!(boxes[i].l<boxes[j].l+5&&boxes[j].l<boxes[i].l+5&&boxes[i].t>=boxes[j].t-29&&boxes[j].t>=boxes[i].t-29),'magnet cache footprints overlap');
+-for(let mag=0;mag<n;mag++){const p=E.L.magnet_properties+mag*16,flag=E.L.NativeMagnetOverlayFlags+mag,saved=[E.rd(p+1),E.rd(flag)],samples=[];
+-const sample=(c,r,name)=>{const d=boxes[mag].l+c,e=boxes[mag].t-r,tex=rdword(E.L[(d&1)?'NativeTextureRight':'NativeTextureLeft']+1),v=E.rd(tex+((e-33)&15));E.cpu.set_rp(2,(d<<8)|e);E.cpu.set_reg(7,v);E.cpu.set_rp(0,0x5a08);call(name);assert.equal(E.cpu.rp(0),0x5a08,'BC not preserved');return[E.cpu.a(),E.rd(E.L.NativeSampleAccentA),E.rd(E.L.NativeSampleAccentE)];};
+-for(let s=0;s<2;s++){w(p+1,6+s);w(flag,1);samples.push(Array.from({length:150},(_,i)=>sample(Math.floor(i/30),i%30,'NativeRestoreMagnetSampleSlow')));}const data=encode(samples[0],samples[1]),base=rdword(E.L.MagCacheSlots+mag*2);assert.deepEqual(data,Uint8Array.from({length:306},(_,i)=>E.rd(base+i)),'native encoder differs');
+-for(let s=0;s<2;s++)for(let c=0;c<5;c++)for(let r=0;r<30;r++){w(p+1,6+s);w(flag,1);const want=samples[s][c*30+r];assert.deepEqual(decode(data,c,r,s),want);js++;assert.deepEqual(sample(c,r,'NativeRestoreMagnetSample'),want);native++;w(flag,0);assert.deepEqual(sample(c,r,'NativeRestoreMagnetSample'),samples[0][c*30+r]);native++;}w(p+1,saved[0]);w(flag,saved[1]);}
+-levels.push({level:level+1,magnets:n});console.log(levels.at(-1));}
+-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),cacheBytesPerMagnet:306,totalCacheBytes:1224,jsCases:js,nativeCases:native,levels,coldBuild: cold,passed:true};fs.writeFileSync('outputs/new-folder-magnet-cache-model.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/model-magnet-toggle.js b/verify/model-magnet-toggle.js
+--- a/verify/model-magnet-toggle.js	2026-10-12 22:23:35.000000000 +0500
++++ b/verify/model-magnet-toggle.js	1970-01-01 05:00:00.000000000 +0500
+@@ -1,25 +0,0 @@
+-'use strict';
+-const fs=require('fs'),assert=require('assert'),{make}=require('./vector_harness');let cases=0,timings=[],legacyTimings=[];
+-for(const level of[1,3,5,6,7,8,9,10,11,12,13,14]){
+-const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const w=(a,v)=>E.memory.write(a,v),word=a=>E.rd(a)+256*E.rd(a+1),ptr=(a,v)=>{w(a,v);w(a+1,v>>8)},inst=E.cpu.instruction.bind(E.cpu);E.cpu.instruction=function(){if(this.pc===E.L.LB9E8_1)w(E.L.current_level_number_1up,level);if(this.pc===E.L.LB9E8_2)throw 'ready';inst();};try{for(let f=0;f<1000;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='ready')throw e;}E.cpu.instruction=inst;
+-function call(name){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;ptr(E.cpu.sp,256);E.cpu.iff=false;let t=0;for(let k=0;E.cpu.pc!==256;k++){assert(k<1e6);E.cpu.instruction();E.io.commit();t+=E.cpu.vcycles;}return t;}
+-const n=E.rd(E.L.magnets_quantity),initial=E.memory.bytes.slice(),read=(mem,a)=>mem[E.memory.tobank(a&65535)];
+-for(let mag=0;mag<n;mag++)for(let repeats=0;repeats<4;repeats++){
+- if(repeats===0)E.memory.bytes.set(initial);
+- const p=E.L.magnet_properties+mag*16,old=E.rd(p+1)&1,flag=E.rd(E.L.NativeMagnetOverlayFlags+mag),base=word(E.L.MagCacheSlots+mag*2),top=E.rd(E.L.MagCacheMeta+mag*6+1),col=E.rd(E.L.MagCacheMeta+mag*6),before=E.memory.bytes.slice();
+- // Select exactly this magnet through the ordinary random selection loop.
+- E.cpu.instruction=function(){if(this.pc===E.L.L8E72_1)this.set_reg(7,mag);inst();};timings.push(call('print_one_magnet'));E.cpu.instruction=inst;const got=E.memory.bytes.slice(),want=before.slice();
+- E.memory.bytes.set(before);ptr(E.L.IXobj,p);E.cpu.set_rp(4,p);let legacyCycles=call('print_one_magnet_legacy');legacyTimings.push(legacyCycles);const legacy=E.memory.bytes.slice();
+- for(let a=0xa000;a<0x10000;a++)assert.equal(read(got,a),read(legacy,a),JSON.stringify({level:level+1,mag,repeats,addr:a.toString(16),legacy:true}));
+- E.memory.bytes.set(got);
+- const flip=(a,v)=>{want[E.memory.tobank(a)]^=v;};
+- // Overlay flag zero means base On regardless of the stored frame.
+- const from=flag?old:0,to=old^1;
+- if(from!==to)for(let c=0;c<4;c++)for(let r=0;r<23;r++){const delta=read(before,base+150+c*23+r),addr=((col+c)<<8)|(top-r);flip(addr,delta);let ed=delta,ad=0;if(c>=1&&c<=2&&r>=8&&r<16){const j=(c-1)*8+r-8,on=read(before,base+c*30+r),off=on^delta,ae0=0,ae1=read(before,base+290+j);ed=((~on|ae0)^(~off|ae1))&255;ad=read(before,base+242+j)^read(before,base+274+j);}flip(addr+0x2000,ed);flip(addr-0x2000,ad);}
+- let diff=[];for(let a=0xa000;a<0x10000;a++)if(read(got,a)!==read(want,a))diff.push({a:a.toString(16),got:read(got,a),want:read(want,a)});
+- assert.equal(diff.length,0,JSON.stringify({level:level+1,mag,repeats,old,flag,diff:diff.slice(0,12)}));cases++;
+-
+- }
+- console.log({level:level+1,magnets:n});
+-}
+-const result={cases,minNativeCycles:Math.min(...timings),maxNativeCycles:Math.max(...timings),minLegacyCycles:Math.min(...legacyTimings),maxLegacyCycles:Math.max(...legacyTimings),passed:true};fs.writeFileSync('outputs/new-folder-magnet-toggle-js.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/test-brick-queue.js b/verify/test-brick-queue.js
+--- a/verify/test-brick-queue.js	2026-10-12 21:27:04.000000000 +0500
++++ b/verify/test-brick-queue.js	2026-10-12 23:07:02.000000000 +0500
+@@ -13,7 +13,7 @@
+  const field=m=>Buffer.from(Array.from({length:3*32*219},(_,i)=>{const p=Math.floor(i/(32*219)),r=i%219,c=Math.floor((i%(32*219))/219);return read(m,0xa000+p*8192+c*256+224-r);}));
+  const reference=(state,index)=>{
+   E.memory.bytes.set(state);if(index!==null)w(lev+index,E.rd(lev+index)|128);
+-  const flags=Array.from({length:4},(_,i)=>E.rd(E.L.NativeMagnetOverlayFlags+i));
++  const flags=Array.from({length:4},(_,i)=>E.rd(E.L.magnet_properties+16*i+1)===7);// magnet state lives in its frame number
+   for(let a=0xa000;a<0x10000;a++)w(a,0);for(let a=E.L.NativeAttrs;a<E.L.NativeAttrs+768;a++)w(a,0xd0);
+   E.cpu.instruction=function(){if(this.pc===E.L.MagnetInitialLayerChoice){const i=(word(E.L.IXobj)-E.L.magnet_properties)/16;w(E.L.random_number,(E.rd(E.L.random_number)&254)|(flags[i]?0:1));}inst();};
+   call('game_screen_draw_to_buffer');E.cpu.instruction=inst;return E.memory.bytes.slice();
+diff -ruN a/verify/test-cpc-frame.js b/verify/test-cpc-frame.js
+--- a/verify/test-cpc-frame.js	2026-10-12 12:22:08.000000000 +0500
++++ b/verify/test-cpc-frame.js	1970-01-01 05:00:00.000000000 +0500
+@@ -1,18 +0,0 @@
+-'use strict';
+-const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
+-const source=JSON.parse(fs.readFileSync('verify/fixtures/cpc/frame.json'));
+-const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);E.run(100);
+-const before=Buffer.alloc(32768);
+-for(let i=0;i<before.length;i++){before[i]=(i*71+(i>>8)*13)&255;E.memory.write(0x8000+i,before[i]);}
+-const expected=Buffer.from(before),ink={0:2,13:0,15:3};let pixels=0;
+-function put(x,y,cpc){const c=ink[cpc];assert(c!==undefined);const offset=(x>>3)*256+224-y,mask=128>>(x&7);
+- for(const [p,bit] of [[8192,4],[16384,2],[24576,1]])expected[p+offset]=(expected[p+offset]&~mask)|(c&bit?mask:0);pixels++;
+-}
+-for(let y=0;y<8;y++)for(let x=0;x<256;x++)put(x,y,x<8?source.leftTop[y][x]:x>=248?source.rightTop[y][x-248]:source.middleTop[y][x&7]);
+-// ScreenScroll=5 puts logical Y=218 at the last visible screen row, 255.
+-for(let y=8;y<219;y++)for(let x=0;x<8;x++){put(x,y,source.leftSide[x]);put(248+x,y,source.rightSide[x]);}
+-E.cpu.pc=E.L.DrawCpcFieldFrame;E.cpu.sp=E.L.stack-2;E.memory.write(E.cpu.sp,0);E.memory.write(E.cpu.sp+1,1);E.cpu.iff=false;
+-let instructions=0,ticks=0;while(E.cpu.pc!==256){assert(++instructions<1e5);E.cpu.instruction();E.io.commit();ticks+=E.cpu.vcycles;}
+-for(let i=0;i<32768;i++)assert.equal(E.rd(0x8000+i),expected[i],'CPC frame or untouched pixel at '+(0x8000+i).toString(16));
+-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),sourceArchiveSHA256:source.sourceArchiveSHA256,sourcePixelComparisons:pixels,videoBytesCompared:32768,overlayUntouched:true,bottomOpen:true,sideWallsEndAtScreenRow:255,oneTimeDrawTicks:ticks,oneTimeDrawMs:ticks/3000,passed:true};
+-fs.writeFileSync('outputs/batty-cpc-frame-pixels.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/test-magnet-gameplay.js b/verify/test-magnet-gameplay.js
+--- a/verify/test-magnet-gameplay.js	1970-01-01 05:00:00.000000000 +0500
++++ b/verify/test-magnet-gameplay.js	2026-10-12 23:01:23.000000000 +0500
+@@ -0,0 +1,25 @@
++'use strict';
++// Smoke test of real gameplay on magnet levels: the ball is launched and the paddle follows it; brick hits beside
++// a magnet mark it and its touched rows are repainted from the cache at once. Checks the stack floor, absence of CPU restarts and
++// that no marked magnet is left when the draw phase begins.
++const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
++const reports=[];
++for(const level of[1,5,13]){
++ const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const inst=E.cpu.instruction.bind(E.cpu),w=(a,v)=>E.memory.write(a,v);
++ let started=false,frames=0,redraws=0,toggles=0,minSP=65535,bricks0=null,pendingAtDraw=0;
++ E.cpu.instruction=function(){const pc=this.pc;
++  if(pc===E.L.LB9E8_1&&!started)w(E.L.current_level_number_1up,level);
++  if(pc===E.L.LB9E8_2){started=true;frames++;if(bricks0===null)bricks0=E.rd(E.L.briks_quantity_1up);w(E.L.lives_1up,5);
++   // keep the paddle under the first ball; hold fire
++   const bx=E.rd(E.L.object_ball_1+2),px=E.rd(E.L.object_bat_1+2)+12;E.key(37,bx<px-2?1:0);E.key(39,bx>px+2?1:0);E.key(32,frames%20<10?1:0);
++   if(frames>=2500)throw 'done';}
++  if(pc===E.L.MagnetPaint)redraws++;if(pc===E.L.MagnetPaintFull)redraws--;if(pc===E.L.print_one_magnet)toggles++;
++  if(pc===E.L.GameplayDrawBegin)pendingAtDraw+=[0,1,2,3].filter(i=>E.rd(E.L.MagnetRedrawFlags+i)).length;
++  if(started){assert(pc!==0x100,'CPU restart');if(this.sp<minSP&&this.sp>0x6b00&&this.sp<=E.L.stack)minSP=this.sp;}
++  inst();};
++ try{for(let f=0;f<40000;f++){if(f===100)E.key(48,1);if(f===110)E.key(48,0);E.run(1);}}catch(e){if(e!=='done')throw e;}
++ assert(frames>=2500,'gameplay did not run');assert(minSP>=E.L.StackFloor,'stack floor crossed: '+minSP.toString(16));assert.equal(pendingAtDraw,0,'a marked magnet reached the draw phase');
++ reports.push({level:level+1,frames,bricksDestroyed:bricks0-E.rd(E.L.briks_quantity_1up),magnetToggles:toggles,repaintsAfterBricks:redraws,minSP:minSP.toString(16)});
++}
++const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),reports,passed:true};
++fs.writeFileSync('outputs/batty-magnet-gameplay.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,1));
+diff -ruN a/verify/test-menu-selection.js b/verify/test-menu-selection.js
+--- a/verify/test-menu-selection.js	2026-10-12 12:34:54.000000000 +0500
++++ b/verify/test-menu-selection.js	2026-10-12 20:19:54.000000000 +0500
+@@ -2,7 +2,9 @@
+ const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
+ const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const inst=E.cpu.instruction.bind(E.cpu);
+ const B=make('../../outputs/batty-three-plus-one-cpc-bricks.rom','../../outputs/batty-three-plus-one-cpc-bricks.sym');
+-for(const offset of[0,16])for(let i=0;i<(offset?16:12);i++)assert.equal(E.rd(E.L.txt_player_0_enter_your_name+offset+4+i),B.rd(B.L.txt_player_0_enter_your_name+offset+4+i),'name-entry text changed');
++// Russian font order: digits, 32 letters, punctuation, Latin Y.
++const ABC='0123456789АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ., -=Y',textAt=(M,a,n)=>Array.from({length:n},(_,i)=>ABC[M.rd(a+i)]).join('');
++assert.equal(textAt(E,E.L.txt_player_0_enter_your_name+4,12),'   ИГРОК 0  ','name-entry text changed');assert.equal(textAt(E,E.L.txt_player_0_enter_your_name+20,16),'ВВЕДИТЕ ВАШЕ ИМЯ','name-entry text changed');
+ let loops=0,done=false;
+ E.cpu.instruction=function(){if(this.pc===E.L.L93F8_0){
+  loops++;
+@@ -22,6 +24,6 @@
+ for(let i=0;i<10;i++){
+  const rankY=R.rd(R.L.txt_high_score_table+i*6+1);
+  const scoreY=R.rd(R.L.txt_high_score_table+61+i*18+1);assert.equal(rankY,39+i*17);assert.equal(scoreY,rankY);
+- for(let c=0;c<14;c++)assert.equal(R.rd(R.L.txt_high_score_table+61+i*18+4+c),B.rd(B.L.txt_high_score_table+61+i*18+4+c),'record contents changed');
++ assert.equal(textAt(R,R.L.txt_high_score_table+61+i*18+4,14),String((10-i)*10000).padStart(6,'0')+'   '+(i%2?'П А К':'Х И Т'),'record contents changed');
+ }
+ const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),menuLoops:loops,togglesPerPlayer:2,keyboardJoystickToggleVerified:true,highScoreRows:10,rankAndScoreBaselinesMatch:true,rowSpacing:17,passed:true};fs.writeFileSync('outputs/batty-full-height-menu-selection.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/test-russian-name-entry.js b/verify/test-russian-name-entry.js
+--- a/verify/test-russian-name-entry.js	1970-01-01 05:00:00.000000000 +0500
++++ b/verify/test-russian-name-entry.js	2026-10-12 20:22:10.000000000 +0500
+@@ -0,0 +1,34 @@
++'use strict';
++// Name entry with the Russian font: the letter cycle covers digits, all 32 letters and '.', ',', ' ', '-',
++// wraps in both directions and never selects '=' or Latin Y.
++const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
++const ABC='0123456789АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ., -=Y';
++const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);const inst=E.cpu.instruction.bind(E.cpu);
++const wr=(a,v)=>E.memory.write(a,v);
++let menu=false;E.cpu.instruction=function(){if(this.pc===E.L.L93F8_0&&!menu){menu=true;throw 'menu';}inst();};
++try{for(let f=0;f<800;f++)E.run(1);}catch(e){if(e!=='menu')throw e;}assert(menu,'menu not reached');
++// Enter the routine directly with a score that beats the whole table.
++wr(E.L.current_score_1up,0x56);wr(E.L.current_score_1up+1,0x34);wr(E.L.current_score_1up+2,0x12);
++const row=()=>E.rd(E.L.hs_row_ptr)|E.rd(E.L.hs_row_ptr+1)<<8;
++const seen=[];let entered=false,left=true,shot=false;
++E.cpu.instruction=function(){
++ if(this.pc===E.L.L910C_14)throw 'confirmed';
++ if(this.pc===E.L.L910C_9){entered=true;const v=E.rd(row()+9);if(v!==seen.at(-1))seen.push(v);
++  if(left&&seen.length>=2&&seen.at(-2)===0&&v===45){left=false;E.key(37,0);E.key(39,1);}
++  if(!left&&v===0&&seen.lastIndexOf(41)>seen.indexOf(45)){E.key(39,0);if(!shot){shot=true;throw 'done';}}
++ }inst();};
++const sp=E.L.stack-2;E.cpu.sp=sp;E.cpu.iff=true;wr(sp,E.L.L93F8_0&255);wr(sp+1,E.L.L93F8_0>>8);E.cpu.pc=E.L.input_new_record_name;
++E.key(37,1);
++try{for(let f=0;f<20000;f++)E.run(1);}catch(e){if(e!=='done')throw e;}
++assert(entered,'name entry was not reached');assert(shot,'letter cycle did not wrap both ways: '+seen.join(' '));
++// Stop on a recognisable letter for the picture: 'Я' is four steps left of '-'.
++E.cpu.instruction=function(){if(this.pc===E.L.L910C_9&&E.rd(row()+9)===41){E.key(37,0);throw 'pic';}inst();};
++E.key(37,1);try{for(let f=0;f<400;f++)E.run(1);}catch(e){if(e!=='pic')throw e;}
++E.pngFrom(E.idealBmp(),'outputs/batty-russian-name-entry.png');
++// Every step moves by one position in a ring of 46 codes; all 46 are reachable; '=' and Y never appear.
++for(let i=1;i<seen.length;i++){const d=(seen[i]-seen[i-1]+46)%46;assert(d===1||d===45,'step '+seen[i-1]+' -> '+seen[i]);}
++assert.equal(new Set(seen).size,46);assert(Math.max(...seen)===45);
++assert.deepEqual(seen.slice(0,12),[10,9,8,7,6,5,4,3,2,1,0,45]);assert.deepEqual(seen.slice(-47),[...Array.from({length:46},(_,i)=>i),0]);
++const rowText=Array.from({length:14},(_,i)=>ABC[E.rd(row()+i)]).join('');assert.equal(rowText,'123456   Я    ');
++const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),selectableCodes:46,firstLetter:ABC[10],lastLetter:ABC[41],wrapLeft:'0 -> -',wrapRight:'- -> 0',row:rowText,passed:true};
++fs.writeFileSync('outputs/batty-russian-name-entry.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/test-three-plane-bricks.js b/verify/test-three-plane-bricks.js
+--- a/verify/test-three-plane-bricks.js	2026-10-12 20:13:54.000000000 +0500
++++ b/verify/test-three-plane-bricks.js	2026-10-12 23:01:23.000000000 +0500
+@@ -1,5 +1,5 @@
+ const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
+-const root=process.env.BATTY_RESTORE_BASE||'.',reports=[];let cases=0,sequential=0,duration=[];
++const root=process.env.BATTY_RESTORE_BASE||'.',reports=[];let cases=0,sequential=0,duration=[],redraws=0,redrawMs=[];
+ for(const level of (process.env.BATTY_BRICK_LEVELS?process.env.BATTY_BRICK_LEVELS.split(',').map(Number):[0,1,2,3])){
+  const E=make(root+'/batty.rom',root+'/batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);
+  const w=(a,v)=>E.memory.write(a,v),ptr=(a,v)=>{w(a,v&255);w(a+1,v>>8)},word=a=>E.rd(a)+256*E.rd(a+1),inst=E.cpu.instruction.bind(E.cpu);
+@@ -13,7 +13,7 @@
+  const field=m=>Buffer.from(Array.from({length:3*32*219},(_,i)=>{const p=Math.floor(i/(32*219)),r=i%219,c=Math.floor((i%(32*219))/219);return read(m,0xa000+p*8192+c*256+224-r);}));
+  const reference=(state,index)=>{
+   E.memory.bytes.set(state);if(index!==null)w(lev+index,E.rd(lev+index)|128);
+-  const flags=Array.from({length:4},(_,i)=>E.rd(E.L.NativeMagnetOverlayFlags+i));
++  const flags=Array.from({length:4},(_,i)=>E.rd(E.L.magnet_properties+16*i+1)===7);// magnet state lives in its frame number
+   for(let a=0xa000;a<0x10000;a++)w(a,0);for(let a=E.L.NativeAttrs;a<E.L.NativeAttrs+768;a++)w(a,0xd0);
+   E.cpu.instruction=function(){if(this.pc===E.L.MagnetInitialLayerChoice){const i=(word(E.L.IXobj)-E.L.magnet_properties)/16;w(E.L.random_number,(E.rd(E.L.random_number)&254)|(flags[i]?0:1));}inst();};
+   call('game_screen_draw_to_buffer');E.cpu.instruction=inst;return E.memory.bytes.slice();
+@@ -21,10 +21,10 @@
+  const destroy=(state,index)=>{
+   E.memory.bytes.set(state);const x=8+16*(index%15),y=32+8*Math.floor(index/15);
+   ptr(E.L.IXobj,E.L.object_ball_1);ptr(E.L.cur_level_ptr,lev+index);ptr(E.L.LB28F+1,(y<<8)|x);w(E.L.LB292+1,0);w(E.L.brik_value+1,15+Math.floor(index/15));w(E.L.random_number_1,255);w(E.L.object_bat_1+20,255);w(E.L.object_bat_2+20,255);w(E.L.wins_counter,0);ptr(E.L.wins_recovery_ptr,E.L.wins_recovery_data);
+-  duration.push(call('LAFFC_38'));assert(E.rd(lev+index)&128);return E.memory.bytes.slice();
++  let ms=call('LAFFC_38');assert(E.rd(lev+index)&128);if(E.rd(E.L.NativeRestoreMagnetCount)){redraws++;redrawMs.push(ms);}assert(![0,1,2,3].some(i=>E.rd(E.L.MagnetRedrawFlags+i)),'magnet mark left');duration.push(ms);return E.memory.bytes.slice();
+  };
+  let tested=0;
+- for(const i of indices){const want=reference(saved,i),got=destroy(saved,i);if(!field(got).equals(field(want))){let diff=[];for(let plane of[0xa000,0xc000,0xe000])for(let c=1;c<31;c++)for(let y=29;y<136;y++){let a=plane+c*256+224-y;if(read(got,a)!==read(want,a))diff.push({a:a.toString(16),x:c*8,y,got:read(got,a),want:read(want,a)});}console.log(diff.slice(0,30),diff.length);};assert(field(got).equals(field(want)),`full A/C/E field differs: level ${level+1}, brick ${i}`);cases++;tested++;}
++ for(const i of indices){const want=reference(saved,i),got=destroy(saved,i);if(!field(got).equals(field(want))){let diff=[];for(let plane of[0xa000,0xc000,0xe000])for(let c=1;c<31;c++)for(let y=29;y<136;y++){let a=plane+c*256+224-y;if(read(got,a)!==read(want,a))diff.push({a:a.toString(16),x:c*8,y,got:read(got,a),want:read(want,a)});}console.log(diff.slice(0,30),diff.length);if(process.env.BATTY_BRICK_DEBUG&&diff.length){const idx=(m,x,y)=>{const c=x>>3,bit=128>>(x&7),a=c*256+224-y;return((read(m,0xa000+a)&bit)?4:0)|((read(m,0xc000+a)&bit)?2:0)|((read(m,0xe000+a)&bit)?1:0);};const xs=diff.map(d=>d.x),ys=diff.map(d=>d.y),x0=Math.max(0,Math.min(...xs)-40),x1=Math.min(255,Math.max(...xs)+23),y0=Math.max(0,Math.min(...ys)-16),y1=Math.max(...ys)+8;for(const [n,m]of[['want',want],['got',got]]){console.log(n,'x',x0,'y',y0);for(let y=y0;y<=y1;y++){let r='';for(let x=x0;x<=x1;x++)r+=idx(m,x,y);console.log(r);}}}};assert(field(got).equals(field(want)),`full A/C/E field differs: level ${level+1}, brick ${i}`);cases++;tested++;}
+  // Repeated destruction also repairs outlines that previously belonged to neighbors.
+  let state=saved;
+  for(const i of indices){const want=reference(state,i),got=destroy(state,i);assert(field(got).equals(field(want)),`sequential field differs: level ${level+1}, brick ${i}`);state=got;sequential++;}
+@@ -32,5 +32,5 @@
+  reports.push({level:level+1,texture:level,individualBricks:tested,sequentialBricks:tested});
+  if(level===0){E.memory.bytes.set(state);w(0xf0,0xc3);w(0xf1,0xf0);w(0xf2,0);E.cpu.pc=0xf0;E.cpu.iff=false;E.run(2);E.png('outputs/batty-three-plane-background.png');}
+ }
+-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync(root+'/batty.rom')).digest('hex'),physicalRAM:65536,individualCases:cases,saveUnderRetiredBeforeWrite:true,sequentialCases:sequential,compared:'All three A/C/E planes across all 32 columns, Y=0..218, including the CPC frame, against a fresh draw of the same level and magnet state',reports,destructionMeanMs:duration.reduce((a,b)=>a+b,0)/duration.length,destructionMinMs:Math.min(...duration),destructionMaxMs:Math.max(...duration),passed:true};
++const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync(root+'/batty.rom')).digest('hex'),physicalRAM:65536,individualCases:cases,saveUnderRetiredBeforeWrite:true,sequentialCases:sequential,compared:'All three A/C/E planes across all 32 columns, Y=0..218, including the CPC frame, against a fresh draw of the same level and magnet state',reports,destructionMeanMs:duration.reduce((a,b)=>a+b,0)/duration.length,destructionMinMs:Math.min(...duration),destructionMaxMs:Math.max(...duration),bricksBesideMagnet:redraws,besideMagnetMeanMs:redrawMs.reduce((a,b)=>a+b,0)/(redrawMs.length||1),besideMagnetMaxMs:Math.max(0,...redrawMs),passed:true};
+ fs.writeFileSync(process.env.BATTY_TEST_OUT||'outputs/batty-three-plane-bricks.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/test-three-plus-one.js b/verify/test-three-plus-one.js
+--- a/verify/test-three-plus-one.js	2026-10-12 19:35:59.000000000 +0500
++++ b/verify/test-three-plus-one.js	2026-10-12 23:35:16.000000000 +0500
+@@ -4,7 +4,7 @@
+ const w=(a,v)=>E.memory.write(a,v),word=(a,v)=>{w(a,v&255);w(a+1,v>>8)},read=(a,n)=>Buffer.from(Array.from({length:n},(_,i)=>E.rd(a+i)));
+ let maxStack=0,tracked=false,pc=0,bgWrites=0;
+ const originalWrite=E.memory.write.bind(E.memory);
+-E.memory.write=(a,v)=>{if(tracked){if(a>=0xa000){assert(a>=0xe000,'sprite modified A/C at '+pc.toString(16));bgWrites++;}if(a>=0x7a00&&a<0x8000&&!(a>=0x7f00&&(a<0x7f7a||(a>=0x7f80&&(pc===E.L.mono_done_reset||(pc>=E.L.MonoComposeUncovered&&pc<E.L.MonoDirtyColumnEnd))))&&E.L.MonoErasePass!==undefined&&!((pc>=E.L.SpriteCacheShiftSetup&&pc<=E.L.mnn_restore+5)||(pc>=E.L.mnn_cover&&pc<E.L.MonoCoverCodeEnd)))){const owner=E.rd(E.L.MonoOwner),slot=E.rd(E.L.MonoSlots+2*owner)+256*E.rd(E.L.MonoSlots+2*owner+1),cap=E.rd(E.L.MonoCapacities+owner);assert(a>=slot&&a<slot+cap,'cache spill '+JSON.stringify({owner,a,slot,cap,pc}));}}originalWrite(a,v);};
++E.memory.write=(a,v)=>{if(tracked){if(a>=0xa000){assert(a>=0xe000,'sprite modified A/C at '+pc.toString(16));bgWrites++;}if(a>=0x7a00&&a<0x8000&&!(a>=0x7f00&&(a<0x7f7a||(a>=0x7f80&&((pc>=E.L.mono_done_clear&&pc<=E.L.mono_done_reset)||(pc>=E.L.MonoComposeUncovered&&pc<E.L.MonoDirtyColumnEnd))))&&E.L.MonoErasePass!==undefined&&!((pc>=E.L.SpriteCacheShiftSetup&&pc<=E.L.mnn_restore+5)||(pc>=E.L.mnn_cover&&pc<E.L.MonoCoverCodeEnd)))){const owner=E.rd(E.L.MonoOwner),slot=E.rd(E.L.MonoSlots+2*owner)+256*E.rd(E.L.MonoSlots+2*owner+1),cap=E.rd(E.L.MonoCapacities+owner);assert(a>=slot&&a<slot+cap,'cache spill '+JSON.stringify({owner,a,slot,cap,pc}));}}originalWrite(a,v);};
+ function call(name){E.cpu.pc=E.L[name];E.cpu.sp=E.L.stack-2;word(E.cpu.sp,256);E.cpu.iff=false;let n=0,t=0;while(E.cpu.pc!==256){assert(++n<2e6,'hang '+name);pc=E.cpu.pc;assert(pc<0x8000,'executing video');if(E.cpu.sp>=0x6900&&E.cpu.sp<=E.L.stack){assert(E.cpu.sp>=E.L.StackFloor,'stack crossed reserved RAM');maxStack=Math.max(maxStack,E.L.stack-E.cpu.sp);}E.cpu.instruction();E.io.commit();t+=E.cpu.vcycles;}return t;}
+ call('planes_reset');
+ const bg=Array.from({length:3},(_,p)=>Buffer.from(Array.from({length:8192},(_,i)=>(i*73+(i>>3)*17+p*61)&255)));
+diff -ruN a/verify/test-vector-colors.js b/verify/test-vector-colors.js
+--- a/verify/test-vector-colors.js	2026-10-12 12:08:56.000000000 +0500
++++ b/verify/test-vector-colors.js	2026-10-13 01:22:14.000000000 +0500
+@@ -7,20 +7,43 @@
+ function write(Q,a,v){Q.memory.write(a,v);}function ptr(Q,a,v){write(Q,a,v);write(Q,a+1,v>>8);}
+ function call(Q,n){Q.cpu.pc=Q.L[n];Q.cpu.sp=Q.L.stack-2;ptr(Q,Q.cpu.sp,256);Q.cpu.iff=false;let k=0,t=0;while(Q.cpu.pc!==256 && !(n==='SetPaletteLevel' && Q.cpu.pc===Q.L.SetPaletteGame)){assert(++k<2e6,n);Q.cpu.instruction();Q.io.commit();t+=Q.cpu.vcycles;}return t;}
+ const video=Q=>Buffer.from(Array.from({length:24576},(_,i)=>Q.rd(0xa000+i)));let magnets=0,magnetTicks=0,oldMagnetTicks=0;
+-for(const frame of[6,7])for(let phase=0;phase<8;phase++)for(const y of[48,51,55,56,63])for(const h of(frame===6?[23,30]:[23])){
+- const x=64+phase;
+- for(const Q of[B,E]){const w=(a,v)=>write(Q,a,v),o=Q.L.magnet_properties;
+-  for(let i=0;i<16;i++)w(o+i,0);w(o,3);w(o+1,frame);w(o+2,x);w(o+4,y);w(Q.L.spr_magnet_circle_on+1,h);ptr(Q,Q.L.IXobj,o);call(Q,'ix_buf_addr_calc');
+-  for(let c=0;c<32;c++)for(let r=0;r<24;r++)w(Q.L.NativeAttrs+c*24+r,((c+r)%15)<<4);
+-  for(let i=0;i<24576;i++)w(0xa000+i,(i*17+(i>>13)*71)&255);
++// Magnets, independent pixel oracle. Both states share one 25x24 disc (the top-left quadrant of the ZX mask
++// mirrored, no shadow) and a thin grey ring: every disc pixel further than 10.8 from the centre.
++// On: cyan body (7), red arrows and core (4); the arrows stop one pixel short of the ring.
++// Off: grey marks (3) on paper (1), cyan ball (7); the wide ZX ring of the off picture is dropped.
++const sprite=name=>{const b=[];for(const line of fs.readFileSync('gfx/sprites_no_shadows_2.asm','utf8').match(new RegExp('^'+name+':([\\s\\S]*?)(?=^spr_\\w+:)','m'))[1].split('\n')){const m=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(m)for(const v of m[1].split(','))b.push(parseInt(v.trim().slice(1),16));}const w=b[0];return{cover:(r,x)=>r<b[1]&&x<8*w?b[2+2*(r*w+(x>>3))]>>(7-(x&7))&1:0,lit:(r,x)=>r<b[1]&&x<8*w?(b[2+2*(r*w+(x>>3))]&b[3+2*(r*w+(x>>3))])>>(7-(x&7))&1:0};};
++const magnetOn=sprite('spr_magnet_circle_on'),magnetOff=sprite('spr_magnet_circle_off'),disc=(r,x)=>r<24&&x<25&&magnetOn.cover(Math.min(r,23-r),Math.min(x,24-x));
++const coreOn=[0x00,0x1c,0x3e,0x3e,0x3e,0x3e,0x1c,0x00],coreOff=[0x1c,0x26,0x4f,0x5f,0x5f,0x7f,0x3e,0x1c],core=(t,r,x)=>r>=8&&r<16&&x>=8&&x<16&&t[r-8]>>(15-x)&1;
++for(let r=8;r<16;r++)for(let x=8;x<16;x++){if(core(coreOn,r,x))assert(magnetOn.lit(r,x),'on core must lie on lit pixels');if(core(coreOff,r,x))assert(magnetOff.lit(r,x),'off core must lie on lit pixels');}
++const far=(r,x)=>Math.hypot(x-12,(r-11.5)*25/24)>10.8,ringAt=(r,x)=>r>=0&&x>=0&&disc(r,x)&&far(r,x);
++const oldRing=new Set();{const queue=[];for(let r=0;r<24;r++)for(let x=0;x<25;x++)if(magnetOff.lit(r,x)&&far(r,x)){oldRing.add(r*32+x);queue.push([r,x]);}
++ while(queue.length){const [r,x]=queue.pop();for(const [dr,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const rr=r+dr,xx=x+dx;if(rr>=0&&rr<24&&xx>=0&&xx<25&&magnetOff.lit(rr,xx)&&!oldRing.has(rr*32+xx)){oldRing.add(rr*32+xx);queue.push([rr,xx]);}}}}
++function magnetIndex(frame,r,x){
++ if(ringAt(r,x))return 3;
++ if(frame===6){const fr=Math.min(r,23-r),fx=Math.min(x,24-x);if(fx===5&&fr===6)return 4;if(fx===5&&fr===7)return 7; // straightened diagonal tips
++  let near=false;for(let dr=-1;dr<=1;dr++)for(let dx=-1;dx<=1;dx++)if(ringAt(r+dr,x+dx))near=true;return !near&&(!magnetOn.lit(r,x)||core(coreOn,r,x))?4:7;}
++ if(core(coreOff,r,x))return 7;
++ return magnetOff.lit(r,x)&&!oldRing.has(r*32+x)?3:1;
++}
++// The cache is built from the sprite and painted over arbitrary video; a partial repaint touches only its rows.
++const callA=(n,a,bc)=>{E.cpu.pc=E.L[n];E.cpu.sp=E.L.stack-2;ptr(E,E.cpu.sp,256);E.cpu.iff=false;E.cpu.set_reg(7,a);if(bc!==undefined)E.cpu.set_rp(0,bc);let k=0,t=0;while(E.cpu.pc!==256){assert(++k<2e6,n);E.cpu.instruction();E.io.commit();t+=E.cpu.vcycles;}return t;};
++let magnetBuildTicks=0;const savedProps=Array.from({length:16},(_,i)=>E.rd(E.L.magnet_properties+i)),savedCount=E.rd(E.L.magnets_quantity);
++for(const frame of[6,7])for(let phase=0;phase<8;phase++)for(const y of[48,51,55,56,63])for(const [first,rows] of[[0,24],[0,4],[7,10],[19,5]]){
++ const x=64+phase,w=(a,v)=>write(E,a,v),o=E.L.magnet_properties;
++ for(let i=0;i<16;i++)w(o+i,0);w(o,3);w(o+1,frame);w(o+2,x+5);w(o+4,y+5);w(E.L.magnets_quantity,1);w(E.L.SUWindowValid,0);
++ magnetBuildTicks+=call(E,'MagCacheBuildAll');
++ for(let i=0;i<24576;i++)w(0xa000+i,(i*17+(i>>13)*71)&255);
++ const want=video(E);
++ for(let r=first;r<first+rows;r++)for(let px0=0;px0<25;px0++)if(disc(r,px0)){
++  const index=magnetIndex(frame,r,px0);
++  const px=x+px0,at=(px>>3)*256+224-y-r,m=128>>(px&7);
++  for(const [plane,bit]of[[0,4],[8192,2],[16384,1]])if(index&bit)want[plane+at]|=m;else want[plane+at]&=~m;
+  }
+- oldMagnetTicks+=call(B,'NativeStaticObject');const want=video(B),src=B.L[frame===6?'spr_magnet_circle_on':'spr_magnet_circle_off'],pitch=frame===6?30:23;
+- for(let r=8;r<16;r++){const lit=B.rd(src+3+2*(pitch+r));for(let b=0;b<8;b++)if(lit&(128>>b)){
+-  const px=x+8+b,at=(px>>3)*256+224-y-r,m=128>>(px&7);want[at]|=m;want[8192+at]|=m;
+-  if(frame===7)want[16384+at]|=m;else want[16384+at]&=~m;
+- }}
+- magnetTicks+=call(E,'NativeStaticObject');assert(video(E).equals(want),'centre-only magnet colour '+JSON.stringify({frame,phase,y,h}));magnets++;
++ // A partial off-state repaint also restores the whole cyan ball in planes A and C: it only ever sets its own bits.
++ if(frame===7)for(let r=8;r<16;r++)for(let px0=8;px0<16;px0++)if(core(coreOff,r,px0)){const px=x+px0,at=(px>>3)*256+224-y-r;want[at]|=128>>(px&7);want[8192+at]|=128>>(px&7);}
++ const ticks=callA('MagnetPaint',0,first<<8|rows);if(rows===24)magnetTicks+=ticks;assert(video(E).equals(want),'magnet colours '+JSON.stringify({frame,phase,y,first,rows}));magnets++;
+ }
++savedProps.forEach((v,i)=>write(E,E.L.magnet_properties+i,v));write(E,E.L.magnets_quantity,savedCount);
+ // Recolouring must select actual A/C ink bits, independently of E.
+ const attr8=E.rd(E.L.background_colors+8);let recolourCases=0;
+ for(let ink=0;ink<8;ink++){
+@@ -56,4 +79,4 @@
+ const brickPaper=Buffer.alloc(8192,255);
+ for(let r=0;r<8;r++)for(let c=0;c<2;c++)brickPaper[(11+c)*256+224-56-r]=(r<7?(c===0?255:254):0)^255;
+ for(let i=0;i<8192;i++){assert.equal(E.rd(0xa000+i),0,'white brick A');assert.equal(E.rd(0xc000+i),0,'white brick C');assert.equal(E.rd(0xe000+i),brickPaper[i],'white brick E');}
+-const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetMeanTicks:magnetTicks/magnets,previousMagnetMeanTicks:oldMagnetTicks/magnets,colourOverheadMeanTicks:(magnetTicks-oldMagnetTicks)/magnets,magnetCenterOn:6,magnetCenterOff:7,ringMatchesPreviousROM:true,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,whiteBrick:true,grayFrameIndex:3,recolourCases,headingCoreUsesPaper:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);
++const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),magnets,magnetFullPaintMeanTicks:magnetTicks/(magnets/4),magnetCacheBuildMeanTicks:magnetBuildTicks/magnets,magnetOn:'grey ring, cyan body, red arrows and core',magnetOff:'grey ring and marks on paper, cyan ball',magnetShadow:false,menuCases,menuInkIndices:16,headingCases,paperAcrossScreen:true,brightGreenBrick:true,whiteBrick:true,grayFrameIndex:3,recolourCases,headingCoreUsesPaper:true,passed:true};fs.writeFileSync('outputs/batty-vector-colors.json',JSON.stringify(result,null,2));console.log(result);
+diff -ruN a/verify/test-zx-frame.js b/verify/test-zx-frame.js
+--- a/verify/test-zx-frame.js	1970-01-01 05:00:00.000000000 +0500
++++ b/verify/test-zx-frame.js	2026-10-13 01:03:51.000000000 +0500
+@@ -0,0 +1,23 @@
++'use strict';
++// The ZX field frame, checked pixel by pixel against an independent colour model:
++// top band lit from above, side walls lit from the left; everything else in video memory must stay untouched.
++const fs=require('fs'),assert=require('assert'),crypto=require('crypto'),{make}=require('./vector_harness');
++const F=require('./generate-zx-frame.js');
++const E=make('batty.rom','batty.sym');E.memory.bytes=E.memory.bytes.slice(0,65536);E.run(100);
++const before=Buffer.alloc(32768);for(let i=0;i<before.length;i++){before[i]=(i*71+(i>>8)*13)&255;E.memory.write(0x8000+i,before[i]);}
++const expected=Buffer.from(before);let pixels=0;
++const WHITE=0,PAPER=1,GREY=3,CYAN=7,T=0,C=1,K=2;
++// position 0..7: row from the top (top band) or pixel from the left (side walls)
++const topInk=(m,r)=>m===T?(r<2?WHITE:r<7?CYAN:GREY):m===C?(r<2?WHITE:GREY):(r<4?WHITE:CYAN);
++const sideInk=(m,p)=>m===T?(p<3?WHITE:p<6?CYAN:GREY):m===C?(p<4?WHITE:GREY):(p<4?WHITE:CYAN);
++function put(x,y,c){const offset=(x>>3)*256+224-y,mask=128>>(x&7);for(const [p,bit] of [[8192,4],[16384,2],[24576,1]])expected[p+offset]=(expected[p+offset]&~mask)|(c&bit?mask:0);pixels++;}
++for(let cell=0;cell<32;cell++){const mirror=cell>=16,seq=F.topSeq[mirror?31-cell:cell],material=seq&3,base=(seq>>2)*8;
++ for(let r=0;r<8;r++){const bits=mirror?F.rev(F.top[base+r]):F.top[base+r];for(let b=0;b<8;b++)put(cell*8+b,r,bits&(128>>b)?topInk(material,r):PAPER);}}
++// ScreenScroll=5 puts logical Y=218 at the last visible screen row, 255.
++for(let y=8;y<219;y++){const k=(y-8)%56,cell=k>>3,material=F.sideSeq[cell],left=F.side[cell*8+(k&7)],right=F.rev(left);
++ for(let b=0;b<8;b++){put(b,y,left&(128>>b)?sideInk(material,b):PAPER);put(248+b,y,right&(128>>b)?sideInk(material,b):PAPER);}}
++E.cpu.pc=E.L.DrawFieldFrame;E.cpu.sp=E.L.stack-2;E.memory.write(E.cpu.sp,0);E.memory.write(E.cpu.sp+1,1);E.cpu.iff=false;
++let instructions=0,ticks=0;while(E.cpu.pc!==256){assert(++instructions<4e5);E.cpu.instruction();E.io.commit();ticks+=E.cpu.vcycles;}
++for(let i=0;i<32768;i++)assert.equal(E.rd(0x8000+i),expected[i],'frame or untouched pixel at '+(0x8000+i).toString(16));
++const result={romSHA256:crypto.createHash('sha256').update(fs.readFileSync('batty.rom')).digest('hex'),pixelComparisons:pixels,videoBytesCompared:32768,overlayUntouched:true,bottomOpen:true,oneTimeDrawTicks:ticks,oneTimeDrawMs:ticks/3000,passed:true};
++fs.writeFileSync('outputs/batty-zx-frame-pixels.json',JSON.stringify(result,null,2));console.log(result);

@@ -1,6 +1,6 @@
 PaceAccountOld:
  ld hl,(PaceWork)
- ld de,12 ; 768 cycles of old-owner descriptor/control
+ ld de,4 ; 256 cycles of old-owner descriptor/control
  add hl,de
  ld (PaceWork),hl
  ret
