@@ -33,6 +33,8 @@ for(const m of text.matchAll(/^(spr_\w+):([\s\S]*?)(?=^spr_\w+:|$(?![\s\S]))/gm)
    else{const ball=r>=8&&r<16&&x>=8&&x<16&&(coreOff[r-8]>>(15-x)&1);mask|=128>>b;if(!ring&&!ball&&lit(r,x)&&!oldRing.has(r*32+x))pixel|=128>>b;}}}out.push(mask,pixel);}
   bytes=out;allocated=Math.max(allocated,2+4*onH*2);}
  if(m[1]==='spr_big_ball'){const [ow,oh]=bytes;for(let y=0;y<oh;y++)for(let c=1;c<ow;c++)assert.equal(bytes[3+2*(y*ow+c)],0,'Smash has lit spill');bytes=[1,oh,...Array.from({length:oh},(_,y)=>bytes.slice(2+2*y*ow,4+2*y*ow)).flat()];}
+ // The Double Play separator has no shadow: keep only its first byte column (body and outline).
+ if(m[1]==='spr_separator'){const [sw,sh]=bytes;for(let y=0;y<sh;y++)for(let c=1;c<sw;c++){bytes[2+2*(y*sw+c)]=0;bytes[3+2*(y*sw+c)]=0;}}
  const original=bytes.slice(),w=bytes[0],fullH=bytes[1];
  let data;if(staticNames.has(m[1])){data=bytes.slice();for(let i=2;i+1<data.length;i+=2)data[i+1]^=data[i];}
  else {let h=fullH;

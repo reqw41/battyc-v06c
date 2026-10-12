@@ -1,5 +1,7 @@
-; Static graphics use native pairs too. Build shifted columns once, then
-; program the three colour masks once per attribute block and POP rows.
+; The only static picture left in the RGB planes is the Double Play
+; separator (magnets have their own cache, HUD and lives use the sprite
+; plane). Build its shifted columns once, then POP rows: lit pixels become
+; yellow (A+C), covered unlit pixels paper (E), the rest is left alone.
 NativeStaticColumns:
  xor a
  ld hl,MonoTags+44
@@ -15,16 +17,9 @@ NativeStaticColumns:
  dec hl
  dec hl
  ld (SpriteCacheOriginal),hl
- ld a,(spr_magnet_circle_on+1)
- ld (nsc_header+1),a
- ld hl,spr_magnet_circle_on+1
- ld (hl),30 ; column pitch remains 30 when the animated height is 23
  ld hl,$7ed0
  ld (SpriteCacheBuffer),hl
  call SpriteCacheBuild
-nsc_header:
- ld a,23
- ld (spr_magnet_circle_on+1),a
 nsc_cache_ready:
  ld a,($7ed0)
  ld (NativeLeft),a
@@ -39,8 +34,6 @@ nsc_height:
  ld (NativeHeight),a
 nsc_block:
  ld hl,(NativeDest)
- call background_select
- call NativeStaticMasks
  ld a,l
  and 7
  ld b,a
@@ -78,35 +71,29 @@ nsc_rows_done:
  sub b
  ld l,a
 nsc_row:
- pop de
+ pop de ; E=~cover, D=lit
  ld a,(hl)
- ld b,a
+ and e
+ or d
+ ld (hl),a ; A: lit
  ld a,h
  add a,$20
  ld h,a
  ld a,(hl)
- or b
  and e
  or d
- ld d,a
-nsc_c:
- and 0
- ld (hl),a
+ ld (hl),a ; C: lit
  ld a,h
- sub $20
+ add a,$20
  ld h,a
- ld a,d
-nsc_a:
- and 0
- ld (hl),a
- ld a,h
- add a,$40
- ld h,a
- ld a,d
- cpl
-nsc_e:
- or 0
- ld (hl),a
+ ld a,(hl)
+ and e ; cleared under the cover...
+ ld b,a
+ ld a,e
+ or d
+ cpl ; ...and set where it is covered but not lit
+ or b
+ ld (hl),a ; E
  ld a,h
  sub $40
  ld h,a

@@ -19,6 +19,7 @@ def pixel(x,y):
     at=zattr(x,y);b=zbit(x,y);ink=at&7;pap=(at>>3)&7;br=at>>6&1
     c=ink if b else pap
     if c==0:return BG
+    if x>=222 and 54<=y<72:return BG      # the artist's "M.C." signature is left out
     col=zxcol(c,br)
     if y<72:                       # logo: per-row stripes instead of attribute cells
         r=y>>3
