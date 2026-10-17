@@ -1,21 +1,22 @@
-pad_rows:
- ld a,(MonoDrawRows)
- call hl_add_a
- ld e,(hl)
- ld d,0
- ld hl,20 ; 1280 cycles of successful owner preparation/control
- ld a,b
- or a
- jp z,pad_add
-pad_columns:
- add hl,de
- dec b
- jp nz,pad_columns
-pad_add:
- ex de,hl
- ld hl,(PaceWork)
- add hl,de
- ld (PaceWork),hl
+ps_count:
+ sub 117
+ jp c,ps_done
+ inc (hl)
+ jp ps_count
+ps_done:
+ add a,117
+ ld (ps_acc+1),a
  ret
+
+; Wait until a logic step is owed.
+WaitGameplayFrame:
+ ei
+pw_loop:
+ call PaceUpdate
+ ld a,(hl)
+ or a
+ jp z,pw_loop
+ ret
+ DS 6,0 ; free, keeps the sprite pads at their old addresses
 
  INCLUDE "routines/magnet_center_guard.asm"

@@ -1,1 +1,2 @@
-PaceBatRows: db 0,1,3,5,7,8,10,12,14,15,17,19,21,22,24,26,28,29,31,33,35,36,38,40,42,43,45,47,49,50,52,54,56
+; Free: the PaceWork cycle estimate is retired, the game clock is the VI53 (mono_pace_start).
+ DS 33,0 ; free, keeps the sprite pads at their old addresses

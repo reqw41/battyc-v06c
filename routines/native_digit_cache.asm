@@ -34,12 +34,3 @@ ndc_same:
  ld (score_screen_ptr),hl
  ret
 
-; User-selected maximum-throughput mode: three-ball frames must not add
-; a raster HALT after their render/physics workload. One/two balls retain pace.
-WaitGameplayFrame:
- ld a,(balls_quantity)
- cp 3
- jp nz,WaitGameplaySlow
- ei
- ld a,(IntCount)
- jp wvf_ready

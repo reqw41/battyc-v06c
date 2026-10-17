@@ -1,10 +1,2 @@
-PaceAccountOld:
- ld hl,(PaceWork)
- ld de,4 ; 256 cycles of old-owner descriptor/control
- add hl,de
- ld (PaceWork),hl
- ret
-PaceReset:
- ld hl,0
- ld (PaceWork),hl
- jp MonoResetBody
+; Free: the PaceWork cycle estimate is retired, the game clock is the VI53 (mono_pace_start).
+ DS 20,0 ; free, keeps the sprite pads at their old addresses

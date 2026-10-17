@@ -5887,7 +5887,9 @@ LB9E8_1:
 	LD HL,$8158		; Координаты
 	LD BC,$0A28		; Размеры окна
 	CALL win_bg_recovery
-
+; Play starts or resumes: restart the game clock.
+GameplayStart:
+	CALL PaceClockStart
 ; This entry point is used by the routine at LBAED.
 LB9E8_2:
  call CheatPoll
@@ -5954,17 +5956,37 @@ LBAED_3:
 LBAED_4:
 LBAED_5:
 GameplayLogicDone:
+ ; This logic step is paid for. If game time is still owed, one more logic
+ ; step before the picture is drawn. A logic step can itself take a raster
+ ; (metal brick animation), so the catch-up is limited to one step per draw
+ ; and at most one owed step is carried over: the game slows down there
+ ; instead of freezing the picture.
+ call PaceUpdate
+ dec (hl)
+ jp z,pace_draw
+ ld a,(hl)
+ cp 2
+ jp c,pace_catch
+ ld (hl),1
+pace_catch:
+ ld a,1 ; catch-up steps left before the next draw
+ dec a
+ jp m,pace_draw
+ ld (pace_catch+1),a
+ jp LB9E8_2
+pace_draw:
+ ld a,1
+ ld (pace_catch+1),a
  call wins_recovery
  ; The frame wait is taken inside the renderer, between sprite preparation
  ; and the erase of the old images: the erased interval then starts at the
  ; top border instead of crossing the middle of the field.
- ; Only the one-ball game is tied to the raster this way; two and three
- ; balls keep the wait (or its absence) in front of the whole output.
+ ; Only the one-ball game is tied to the raster this way; with two and
+ ; three balls the output starts at once and the clock wait, if any, comes
+ ; after it, in front of the next logic step.
  ld a,(balls_quantity)
  dec a
- jp z,GameplaySyncInside
- call WaitGameplayFrame
- jp GameplayDrawBegin
+ jp nz,GameplayDrawBegin
 GameplaySyncInside:
  inc a
  ld (GameplaySync),a
@@ -5987,6 +6009,7 @@ GameplayDrawBegin:
 direct_dots_done:
 	CALL restore_objs_and_magnet
 	CALL pause_game
+	CALL WaitGameplayFrame ; no logic step ahead of game time
 	JP LB9E8_2
 
 LBAED_6:
@@ -6244,7 +6267,7 @@ ResumeLife:
 	LD BC,$2006
 	CALL plane_erase_dual
 	CALL DrawLifeIcons
-	JP LB9E8_2
+	JP GameplayStart
 
 ; Жизней не осталось
 LBC10_6:

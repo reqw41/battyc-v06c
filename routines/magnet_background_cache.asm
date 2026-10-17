@@ -535,23 +535,4 @@ mp_glint_byte: ; clear the bits of A in planes A and C
  ld d,a
  ret
 
-PaceStartExtended:
- ld hl,RCBegin
- ld de,RCBegin
- ld a,(balls_quantity)
- cp 3
- jp z,pace_dispatch_ready
- ld a,(MonoActiveCount)
- cp 5
- jp c,pace_dispatch_ready
- ld hl,PaceAccountDraw
- ld de,PaceAccountOld
-pace_dispatch_ready:
- ld (mono_pace_draw_call+1),hl
- ex de,hl
- ld (mono_pace_old_call+1),hl
- ld a,(balls_quantity)
- cp 3
- ret z
- jp PaceStartBody
 

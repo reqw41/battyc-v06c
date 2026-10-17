@@ -1,17 +1,23 @@
-; Lower bound for fixed loops, then the actual number of union pairs.
-; Units: 64 synchronized Vector cycles. Pair minimum is >=192 cycles.
-PaceWork EQU $71e3
- ASSERT PaceWork+2 <= PreparedCover
-PaceStartBody:
- ld a,(MonoActiveCount)
- ld hl,PacePairs
- call hl_add_a
- ld e,(hl)
- ld d,0
- ld hl,80 ; 5120 cycles; clear-old/redraw pipeline, no isolation pass
- add hl,de
- ld (PaceWork),hl
+; Game clock: VI53 channel 2 (port 09h), unused during play. Mode 0 counts
+; down at 1.5 MHz, wraps every 65536 counts and keeps its output high after
+; the first terminal count, so it is silent. One raster is 59904 CPU cycles,
+; 29952 counts: exactly 117 steps of the counter's high byte.
+; Raster IRQs can be lost while SP blits run under DI; this clock cannot.
+PaceRepeat EQU $71e3 ; logic steps owed: game time not yet played
+ ASSERT PaceRepeat+1 <= PreparedCover
+PaceClockStart:
+ ei
+ halt ; start on a raster boundary, where the one-ball wait used to end
+ ld a,$b0 ; channel 2, LSB then MSB, mode 0, binary
+ out ($08),a
+ xor a
+ out ($09),a
+ out ($09),a
+ ld (ps_prev+1),a
+ ld (ps_acc+1),a
+ inc a
+ ld (PaceRepeat),a
  ret
-PacePairs: db 0,0,3,9,18,30,45,63,84,108,135,165
+ DS 10,0 ; free, keeps the sprite pads at their old addresses
 
  INCLUDE "routines/game_over_player_line.asm"

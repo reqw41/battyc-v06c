@@ -73,7 +73,7 @@ SUDropped EQU $7143
  ASSERT MonoBlack+32 <= SUCount
  ASSERT SUDropped < SpriteCacheOriginal
 SpriteShiftMasks: db $ff,$7f,$3f,$1f,$0f,$07,$03,$01
-MonoReset EQU PaceReset
+MonoReset EQU MonoResetBody
 MonoResetBody:
  ld hl,MonoDesc
  ld b,77+77+4
@@ -220,7 +220,6 @@ mono_next:
  ; Every sprite is redrawn from its original native source. No shifted
  ; moving-object cache or pairwise isolation pass is required.
  call GameplaySyncPoint
- call PaceStart
  ; No image is ever erased before its replacement is on the screen.
  ; An owner whose old+new bounding box touches no other owner is replaced
  ; in place: the new picture is stored over the box and only the leftover
@@ -598,8 +597,6 @@ mono_z_old: ; HL=old descriptor
  sub (hl)
  inc a
  ld (mono_z_bottom+1),a
-mono_pace_old_call:
- call PaceAccountOld
 mono_z_col:
  ld h,b
  ld a,b
@@ -689,8 +686,6 @@ mono_rec_draw:
  ld h,b
  ld l,c
  ld (MonoDrawSource),hl
-mono_pace_draw_call:
- call PaceAccountDraw
  ld a,(direct_shift)
  ld b,a
  jp MonoDrawWhite
