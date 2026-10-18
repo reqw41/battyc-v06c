@@ -176,7 +176,7 @@ gfx_screen_elements:
 
 gfx_last_sprite:
   DEFW spr_400_points
-  DEFW $0000 ; Маркер конца таблицы спрайтов
+  DEFW spr_5000_points ; port: the 5000 bonus shows its own label (was the unused end marker)
 
 ; Анимация взрыва врагов
 anim_alien_blast:

@@ -2415,7 +2415,15 @@ LA67B_3:
 	LD (HL),$0B		; IX+$00 gfx_last_sprite
 	LD HL,(IXobj)
 	INC HL		; +$01
+	LD A,(HL)	; the bonus picture number is its type
+	CP $08		; spr_bonus_5000_points
 	LD (HL),$00	; IX+$01 spr_400_points
+	JP NZ,LA67B_label
+	LD (HL),$01	; IX+$01 spr_5000_points (port)
+	LD DE,$000B
+	ADD HL,DE
+	LD (HL),25	; IX+$0C: margins see 25 of 31 pixels, the 400 label shows 22 of 16
+LA67B_label:
 	CALL calc_write_spr_addr
 
 	LD HL,(IXobj)
@@ -2470,8 +2478,8 @@ LA67B_5:
 	POP AF
 	CP $08			; spr_bonus_5000_points
 	JP NZ,LA67B_6
-; Поймали 5000 очков
-	LD BC,$5000
+; Поймали 5000 очков: ровно 5000 вместе с 400 за любой бонус (порт; в оригинале 5400)
+	LD BC,$4600
 	JP add_points_to_score
 
 LA67B_6:
@@ -6742,7 +6750,6 @@ MonoRegionsIntersect EQU RCBegin
  INCLUDE "routines/cheat_keys.asm"
  INCLUDE "routines/cpc_bricks.asm"
  INCLUDE "routines/menu_controls.asm"
- INCLUDE "routines/game_over_panel.asm"
  INCLUDE "routines/mono_ball_shift.asm"
  INCLUDE "routines/restore_brick_fast.asm"
  INCLUDE "routines/magnet_background_cache.asm"
@@ -6804,6 +6811,7 @@ LevelTextureColors: db $c0,$20,$c1,$05
  INCLUDE "routines/mono_cache_address.asm"
 MonoZeroColumn EQU RCBegin
  INCLUDE "routines/game_over_score.asm"
+ INCLUDE "routines/menu_pointer_row.asm"
  ASSERT $ <= $6ba0
 StackFloor EQU $6ba0
 ; Exactly 180 level bytes are copied/swapped; the remaining 76 bytes are code.
@@ -6836,6 +6844,7 @@ MonoDrawWhiteGeneral:
  cp (hl)
  jp nz,MonoShiftDraw
  jp MonoDraw
+ INCLUDE "routines/game_over_panel.asm"
 
  ASSERT $ <= $6e00
 

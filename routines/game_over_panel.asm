@@ -22,8 +22,7 @@ GameOverPanelRow:
  ld a,h
  add $60
  ld h,a
- ld a,$ff
- ld (hl),a
+ ld (hl),$ff
  pop hl
  dec l
  dec c

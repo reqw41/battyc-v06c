@@ -55,6 +55,14 @@ spr_big_ball:
   DEFB $80,$00,$7f,$3e,$80,$00,$3f,$1c,$00,$00,$1c,$00
   DEFB $00,$00
   DS 12,0
+spr_5000_points:
+  DEFB $04,$0a,$7e,$00,$7e,$00,$7e,$00,$7e,$00,$ff,$7e
+  DEFB $ff,$7e,$ff,$7e,$ff,$7e,$ff,$7e,$ff,$7e,$ff,$7e
+  DEFB $ff,$7e,$fe,$60,$ff,$66,$ff,$66,$ff,$66,$fe,$7c
+  DEFB $ff,$66,$ff,$66,$ff,$66,$ff,$7e,$ff,$7e,$ff,$7e
+  DEFB $ff,$7e,$7f,$06,$ff,$7e,$ff,$7e,$ff,$7e,$ff,$7e
+  DEFB $7e,$00,$7e,$00,$7e,$00,$fe,$7c,$00,$00,$00,$00
+  DEFB $00,$00,$7c,$00,$00,$00,$00,$00,$00,$00
 spr_400_points:
   DEFB $03,$0a,$30,$00,$7e,$00,$fc,$00,$78,$30,$ff,$7e
   DEFB $fe,$fc,$7e,$30,$ff,$7e,$fe,$fc,$7f,$36,$ff,$66

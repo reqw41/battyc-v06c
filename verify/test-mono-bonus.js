@@ -32,7 +32,7 @@ assert(caught,mode+' '+id+' not caught');
  if(id===5)assert.equal(E.rd(E.L.lives_1up),4);
  if(id===6)assert.equal(E.rd(E.L.object_rocket),6);
  if(id===7)assert.equal(E.rd(E.L.object_ball_1+1),8);
- if(id===8)assert.equal(E.rd(E.L.current_score_1up+1),0x54);
+ if(id===8)assert.equal(E.rd(E.L.current_score_1up+1),0x50); // port: the 5000 bonus gives exactly 5000 (the original gave 5400)
  if(id===9)assert.equal(E.rd(E.L.object_enemy),10);
  for(const v of [E.L.object_ball_1,E.L.object_ball_2,E.L.object_ball_3])assert([0,2,130].includes(E.rd(v)));
  reports.push({mode,id,caught,fireObserved:shots>0,width:E.rd(bat+12),frames:[...new Set(frames)]});

@@ -128,6 +128,20 @@ spr_big_ball:
   DEFB $00,$00,$F8,$00
   DEFB $00,$00,$70,$00
 
+; Спрайт: цифра 5000 (порт: табличка за бонус 5000 тем же шрифтом, что 400)
+spr_5000_points:
+  DEFB $04,$0A
+  DEFB $7E,$00,$7E,$00,$7E,$00,$7E,$00
+  DEFB $FF,$7E,$FF,$7E,$FF,$7E,$FF,$7E
+  DEFB $FF,$7E,$FF,$7E,$FF,$7E,$FF,$7E
+  DEFB $FE,$60,$FF,$66,$FF,$66,$FF,$66
+  DEFB $FE,$7C,$FF,$66,$FF,$66,$FF,$66
+  DEFB $FF,$7E,$FF,$7E,$FF,$7E,$FF,$7E
+  DEFB $7F,$06,$FF,$7E,$FF,$7E,$FF,$7E
+  DEFB $FF,$7E,$7E,$00,$7E,$00,$7E,$00
+  DEFB $FE,$7C,$00,$00,$00,$00,$00,$00
+  DEFB $7C,$00,$00,$00,$00,$00,$00,$00
+
 ; Спрайт: цифра 400
 ; Data block at 7ABE
 spr_400_points:
