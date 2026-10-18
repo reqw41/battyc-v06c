@@ -51,10 +51,12 @@ fs.writeFileSync('gfx/sprites_mono_native_2.asm',output.replace(/spr_bullet_2:[\
 
 // The early HUD bank was still row-major. Keep digit data in its separate
 // legacy digit format, but transpose the three fixed score headings.
-const fontBytes=[...fs.readFileSync('gfx/font.asm','utf8').matchAll(/^\s*DEFB\s+([^;]+)/gm)].flatMap(m=>m[1].trim().split(',').map(v=>parseInt(v.trim().slice(1),16)));
+// The build language (BATTY_LANG=ru|en) picks the font and the headings; the result goes to lang/<language>/.
+const lang=process.env.BATTY_LANG||'ru';assert(['ru','en'].includes(lang),'BATTY_LANG must be ru or en');
+const fontBytes=[...fs.readFileSync('lang/'+lang+'/font.asm','utf8').matchAll(/^\s*DEFB\s+([^;]+)/gm)].flatMap(m=>m[1].trim().split(',').map(v=>parseInt(v.trim().slice(1),16)));
 const digitData=[10,8];for(let d=0;d<10;d++)for(let r=0;r<8;r++)digitData.push(255,255^(r<6?fontBytes[d*6+r]:0));
 const hud=fs.readFileSync('gfx/sprites_with_masks_1.asm','utf8').replace(/spr_score_digits:[\s\S]*?(?=^spr_\w+:|$(?![\s\S]))/m,'spr_score_digits:\n'+Array.from({length:Math.ceil(digitData.length/12)},(_,i)=>' DEFB '+digitData.slice(i*12,i*12+12).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')).join('\n')+'\n').replace(/^(spr_(?:1up|2up|hi)):[\s\S]*?(?=^spr_\w+:|$(?![\s\S]))/gm,(block,name)=>{
  const bytes=[];for(const line of block.split('\n')){const m=line.split(';')[0].match(/^\s*DEFB\s+(.+)/i);if(m)for(const v of m[1].split(','))bytes.push(parseInt(v.trim().slice(1),16));}
- const codes={spr_1up:[18,13,26,24,20,44,1],spr_2up:[18,13,26,24,20,44,2],spr_hi:[26,15,20,24,26,14]}[name];const w=codes.length,h=bytes[1];bytes.length=0;for(let y=0;y<h;y++)for(let c=0;c<w;c++){const v=y<6?fontBytes[codes[c]*6+y]:0;bytes[2+2*(y*w+c)]=v;bytes[3+2*(y*w+c)]=v;}const data=[w,h];for(let c=0;c<w;c++)for(let y=0;y<h;y++){const i=2+2*(y*w+c);data.push(bytes[i]^255,bytes[i]&bytes[i+1]);}
+ const codes=(lang==='en'?{spr_1up:[1,30,25],spr_2up:[2,30,25],spr_hi:[17,18]}:{spr_1up:[18,13,26,24,20,44,1],spr_2up:[18,13,26,24,20,44,2],spr_hi:[26,15,20,24,26,14]})[name];const w=codes.length,h=bytes[1];bytes.length=0;for(let y=0;y<h;y++)for(let c=0;c<w;c++){const v=y<6?fontBytes[codes[c]*6+y]:0;bytes[2+2*(y*w+c)]=v;bytes[3+2*(y*w+c)]=v;}const data=[w,h];for(let c=0;c<w;c++)for(let y=0;y<h;y++){const i=2+2*(y*w+c);data.push(bytes[i]^255,bytes[i]&bytes[i+1]);}
  return name+':\n'+Array.from({length:Math.ceil(data.length/12)},(_,i)=>' DEFB '+data.slice(i*12,i*12+12).map(v=>'$'+v.toString(16).padStart(2,'0')).join(',')).join('\n')+'\n';
-});fs.writeFileSync('gfx/sprites_mono_native_1.asm',hud);
+});fs.writeFileSync('lang/'+lang+'/sprites_mono_native_1.asm',hud);

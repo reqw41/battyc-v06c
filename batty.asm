@@ -7,6 +7,7 @@
 ; (С)2020 Юдин С.А. - Адаптация для ПК Специалист
 
 	INCLUDE "batty0.inc"
+	INCLUDE "lang.inc" ; lang/<язык>/lang.inc: build with -Ilang/ru or -Ilang/en
 
 	org	BATTY0_END
 start_bin:
@@ -55,10 +56,10 @@ c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
   INCLUDE "./routines/preparation.asm"
 
 ; Элементы оформления игрового поля
-  INCLUDE "./gfx/sprites_mono_native_1.asm"
+  INCLUDE "sprites_mono_native_1.asm" ; lang/<язык>/, generated: HUD headings in the language font
 
 ; Знакогенератор
-  INCLUDE "./gfx/font.asm"
+  INCLUDE "font.asm" ; lang/<язык>/font.asm
  INCLUDE "routines/ball_rotation.asm"
 
 ; Графика: элементы обрамления экрана
@@ -270,17 +271,17 @@ RoundFirstLine:
  ld de,txt_round_xx
  jp print_line
 
-  INCLUDE "./txt/txt_player_x.asm"
-  INCLUDE "./txt/txt_round_xx.asm"
-  INCLUDE "./txt/txt_game_on.asm"
-  INCLUDE "./txt/txt_high_score_table.asm"
-  INCLUDE "./txt/txt_high_scores.asm"
+  INCLUDE "txt_player_x.asm"
+  INCLUDE "txt_round_xx.asm"
+  INCLUDE "txt_game_on.asm"
+  INCLUDE "txt_high_score_table.asm"
+  INCLUDE "txt_high_scores.asm"
 
 ; Сюда счёт преобразуется в шесть 10-тичных цифр
 score_six_digits:
 	DEFB $00,$00,$00,$00,$00,$00
 
-  INCLUDE "./txt/txt_player_0_enter_your_name.asm"
+  INCLUDE "txt_player_0_enter_your_name.asm"
 
 ; Used by the routine at LBC10.
   INCLUDE "./routines/record_table.asm"
@@ -324,18 +325,18 @@ back_counters:
 	DEFW $0000
 
 ; Надписи PRESS A и PRESS B
-  INCLUDE "./gfx/sprites_no_masks_2.asm"
+  INCLUDE "press.asm" ; lang/<язык>/press.asm
 
 ; Подпрограмма рисования главного меню и опроса клавиатуры в нём
   INCLUDE "./routines/main_menu.asm"
 
-  INCLUDE "./txt/txt_main_menu.asm"
-  INCLUDE "./txt/txt_score_1up.asm"
-  INCLUDE "./txt/txt_score_2up.asm"
-  INCLUDE "./txt/txt_1_player.asm"
-  INCLUDE "./txt/txt_2_players.asm"
-  INCLUDE "./txt/txt_double_play.asm"
-  INCLUDE "./txt/txt_controls.asm"
+  INCLUDE "txt_main_menu.asm"
+  INCLUDE "txt_score_1up.asm"
+  INCLUDE "txt_score_2up.asm"
+  INCLUDE "txt_1_player.asm"
+  INCLUDE "txt_2_players.asm"
+  INCLUDE "txt_double_play.asm"
+  INCLUDE "txt_controls.asm"
 
 ; Сюда сохраняется указатель на текст перед выводом на экран при смене режима игры
 pointer_game_mode_text:
@@ -5791,7 +5792,7 @@ ctrl_btns_pressed_copy:
 ; 	CALL pause_short
 ; 	JP clear_screen_attrib
 
-;   INCLUDE "./txt/txt_kinnock.asm"
+;   INCLUDE "txt_kinnock.asm"
 
 ; Начало программы
 ; Used by the routine at L6800.
@@ -6310,15 +6311,15 @@ LBC10_7:
 	CALL current_level_2up_copier
 	JP LB9E8_1
 
-  INCLUDE "./txt/txt_game_over.asm"
-  INCLUDE "./txt/txt_player_0.asm"
+  INCLUDE "txt_game_over.asm"
+  INCLUDE "txt_player_0.asm"
 
 ; Used by the routine at LBC10.
 print_txt_players_1_and_2:
 	LD DE,txt_players_1_and_2
 	JP print_line
 
-  INCLUDE "./txt/txt_players_1_and_2.asm"
+  INCLUDE "txt_players_1_and_2.asm"
 
 ; Мусор????
 
@@ -6478,8 +6479,8 @@ LBE8B_11:
  pop af
 	inc HL
  push af
- ld a,$0c
- call NativeWriteHL ; (IX+$02) = $0C: «ИГРОК 1» по центру над счётом
+ ld a,HudHeading1X
+ call NativeWriteHL ; (IX+$02): the heading centred over the score
  pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
@@ -6488,8 +6489,8 @@ LBE8B_11:
 	INC (HL)		; INC (IX+$01): spr_2up
 	inc HL
  push af
- ld a,$bc
- call NativeWriteHL ; (IX+$02) = $BC: «ИГРОК 2» по центру над счётом
+ ld a,HudHeading2X
+ call NativeWriteHL ; (IX+$02): the heading centred over the score
  pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
@@ -6498,8 +6499,8 @@ LBE8B_11:
 	INC (HL)		; INC (IX+$01): spr_hi
 	inc HL
  push af
- ld a,$68
- call NativeWriteHL ; (IX+$02) = $68: «РЕКОРД» над счётом
+ ld a,HudHeadingHiX
+ call NativeWriteHL ; (IX+$02): the high-score heading centred over its score
  pop af
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff

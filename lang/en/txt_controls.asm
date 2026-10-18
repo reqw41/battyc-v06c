@@ -1,0 +1,18 @@
+txt_controls:
+
+  DEFB $60,$7D,c45,$08
+  DEFB $14,$0E,$22,$0B,$18,$0A,$1B,$0D	; KEYBOARD
+
+  DEFB $60,$95,c45,$08
+  DEFB $13,$18,$22,$1C,$1D,$12,$0C,$14	; JOYSTICK
+
+  DEFB $28,$C9,c47,$16
+  DEFB $0C,$18,$19,$22,$1B,$12,$10,$11	; COPYRIGHT HIT PAK 1987
+  DEFB $1D,$26,$11,$12,$1D,$26,$19,$0A
+  DEFB $14,$26,$01,$09,$08,$07
+
+  DEFB $70,$01,c47,$05
+  DEFB $0B,$0A,$1D,$1D,$22		; BATTY
+
+  DEFB $70,$08,c46,$05
+  DEFB $2A,$2A,$2A,$2A,$2A		; =====

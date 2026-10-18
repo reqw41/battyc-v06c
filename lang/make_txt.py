@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Генерирует txt/*.asm из русских строк. Запуск из корня дерева: python3 txt/make_txt.py
-Кодировка знакогенератора (gfx/font.asm): 0-9, А-Я без Ё ($0A-$29), '.', ',', ' ', '-', '=', Y.
+"""Генерирует lang/ru/txt_*.asm из русских строк. Запуск из корня дерева: python3 lang/make_txt.py
+Английские строки (lang/en/txt_*.asm) — исходные из оригинала, они не генерируются.
+Кодировка знакогенератора (lang/ru/font.asm): 0-9, А-Я без Ё ($0A-$29), '.', ',', ' ', '-', '=', Y.
 Формат сообщения: X, Y, цвет, длина, текст."""
 import os
 
@@ -9,7 +10,7 @@ ALPHABET = "0123456789АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬ
 LATIN = str.maketrans("ABEKMHOPCTX", "АВЕКМНОРСТХ")
 
 
-# Заголовки меню: восемь ячеек знаков $30-$39, «ИГРОК n» со сдвигом на 4 точки (см. gfx/font.asm)
+# Заголовки меню: восемь ячеек знаков $30-$39, «ИГРОК n» со сдвигом на 4 точки (см. lang/ru/font.asm)
 HEADINGS = {"\u2460": [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37],
             "\u2461": [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x38, 0x39]}
 
@@ -71,7 +72,7 @@ FILES = {
     "txt_high_scores": [msg(0x68, 0x01, "c47", "РЕКОРДЫ"), msg(0x68, 0x08, "c46", "=======")],
 }
 
-here = os.path.dirname(os.path.abspath(__file__))
+here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ru")
 for name, parts in FILES.items():
     with open(os.path.join(here, name + ".asm"), "w", encoding="utf-8") as f:
         f.write(name + ":\n\n" + "\n".join(parts))

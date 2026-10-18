@@ -90,7 +90,7 @@ L910C_7:
   LD HL,score_six_digits
   LD BC,$0006
   call LDIR8080B
-  LD C,$2C		; пробел
+  LD C,NameSpace
   LD HL,(hs_row_ptr)
   LD DE,$0009
   ADD HL,DE
@@ -138,7 +138,7 @@ L910C_9:
   JP NC,L910C_10
   INC C
   LD A,C
-  CP $2E		; после '-' снова '0'
+  CP NameRingLast+1	; после '-' снова '0'
   JP NZ,L910C_11
   LD C,$00
   JP L910C_11
@@ -147,7 +147,7 @@ L910C_10:
   ld A,C
   and %10000000		; BIT 7,C
   JP Z,L910C_11
-  LD C,$2D		; перед '0' идёт '-'
+  LD C,NameRingLast	; перед '0' идёт '-'
 L910C_11:
   PUSH HL
   LD HL,(hs_row_ptr)
