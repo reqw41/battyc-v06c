@@ -1,7 +1,8 @@
 {
-  "nativeAssets": 65,
-  "nativeBytes": 4350,
+  "nativeAssets": 66,
+  "nativeBytes": 4486,
   "staticAssets": 1,
-  "allocationUnchanged": true,
+  "allocationUnchanged": false,
+  "obsoleteBallShiftsReclaimed": 182,
   "passed": true
 }
