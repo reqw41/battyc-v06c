@@ -15,9 +15,11 @@ PaceClockStart:
  out ($09),a
  ld (ps_prev+1),a
  ld (ps_acc+1),a
+ ld (pt_mark+1),a
  inc a
  ld (PaceRepeat),a
+ ld (pw_steps+1),a ; one logic step per draw
  ret
- DS 10,0 ; free, keeps the sprite pads at their old addresses
+ DS 4,0 ; free, keeps the sprite pads at their old addresses
 
  INCLUDE "routines/game_over_player_line.asm"

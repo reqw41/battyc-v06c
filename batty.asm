@@ -5967,13 +5967,14 @@ GameplayLogicDone:
  ld a,(hl)
  cp 2
  jp c,pace_catch
- ld (hl),1
+ ld a,(pw_steps+1) ; carry over no more than one draw's steps
+ ld (hl),a
 pace_catch:
  ld a,1 ; catch-up steps left before the next draw
  dec a
  jp m,pace_draw
  ld (pace_catch+1),a
- jp LB9E8_2
+ jp PaceMark
 pace_draw:
  ld a,1
  ld (pace_catch+1),a
@@ -6009,8 +6010,7 @@ GameplayDrawBegin:
 direct_dots_done:
 	CALL restore_objs_and_magnet
 	CALL pause_game
-	CALL WaitGameplayFrame ; no logic step ahead of game time
-	JP LB9E8_2
+	JP PaceTail ; no logic step ahead of game time
 
 LBAED_6:
 	ld B,$0B		; 11
@@ -6851,6 +6851,7 @@ MonoDrawWhiteGeneral:
  INCLUDE "routines/restore_brick_setup.asm"
  INCLUDE "routines/restore_brick_fringe_fast.asm"
  INCLUDE "routines/native_digit_cache.asm"
+ INCLUDE "routines/pace_tail.asm"
 MonoCodeEnd:
  ASSERT $ <= $7a00
  IF $ < $7a00
