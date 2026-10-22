@@ -1,4 +1,16 @@
 'use strict';
+// БЮДЖЕТ ТАКТОВ ТЯЖЁЛОГО ШАГА «3+1» ПО ПРОЦЕДУРАМ (THREE_PLUS_ONE_BUDGET.md,
+// THREE_PLUS_ONE_FAST.md). Гоняет собранный batty.rom в vector06js на той же
+// управляемой сцене, что verify/measure-object-speed.js (бита, три мяча,
+// бонус, НЛО; 65 шагов, последние 45 прогретые), и раскладывает такты
+// Вектора (vcycles) по процедурам из списка watched: вложенные вычитаются
+// из родителей, вход IRQ считается отдельно. ROM не меняется.
+// Сравнивает с соседним прежним деревом ../vector06c-batty-three-plane и
+// сверяет итог с отчётом скорости (BATTY_MONO_REFERENCE, по умолчанию
+// outputs/batty-three-plus-one-speed.json — его надо снять заранее).
+// Выход: BATTY_BUDGET_OUT (outputs/batty-three-plus-one-budget.json).
+// Часть имён в watched — процедуры прежних вариантов вывода; в нынешней
+// сборке их меток нет, и они просто не учитываются.
 // Exact instruction-cycle profiling. No ROM mutations; same controlled scene as measure-object-speed.js.
 const fs=require('fs'),assert=require('assert'),crypto=require('crypto');
 const {make}=require('./vector_harness');

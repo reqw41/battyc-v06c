@@ -1,4 +1,11 @@
 'use strict';
+// БЮДЖЕТ ТАКТОВ ВАРИАНТА «ТРИ ПЛОСКОСТИ» (исторический, THREE-PLANE*.md).
+// Та же методика, что в profile-three-plus-one-budget.js: управляемая сцена
+// measure-object-speed.js, такты Вектора по процедурам, ROM не меняется.
+// Рассчитан на сборки трёхплоскостного вывода (процедуры CG*, SU*); для
+// нынешнего «3+1» не нужен. Каталог сборки — BATTY_BUDGET_BASE (по
+// умолчанию текущий), отчёт скорости для сверки — BATTY_BUDGET_*_REFERENCE,
+// выход — BATTY_BUDGET_OUT (outputs/batty-three-plane-budget.json).
 // Instruction-cycle budget; no game code or ROM patching. Matches measure-object-speed.js.
 const fs = require('fs'), assert = require('assert'), crypto = require('crypto');
 const { make } = require('./vector_harness');

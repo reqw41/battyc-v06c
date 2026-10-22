@@ -1,3 +1,11 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — четырёхплоскостная
+; база (PREPARED-SPRITES.md); подключался только из fast_objects.asm,
+; который тоже не собирается.
+; Появился в c77b911, 11.10.2026; fast_objects.asm отключён в 75e0011,
+; 11.10.2026 — переход на вывод «3+1».
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Native source pair: E=~coverage, D=lit pixels. SP/POP source,
 ; A/C/E framebuffer: only C/E change. A is ignored by all sprite colours.
 PreparedDraw:

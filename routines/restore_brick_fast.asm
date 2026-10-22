@@ -1,3 +1,15 @@
+; БЫСТРОЕ ВОССТАНОВЛЕНИЕ ОДНОГО СТОЛБЦА КЛЕТКИ КИРПИЧА (8 строк, без
+; магнитов, без обрезки по ширине). Вход: HL — узор (строка клетки в
+; 16-байтном периоде), DE — адрес верхней строки в плоскости C; маски
+; NativeRestoreMask/TopMask/BottomMask из restore_brick_background.asm.
+; Запись — через PUSH (по два байта за команду): в C — узор с масками, в E
+; — его инверсия (бумага, индекс 1), в A — нули. SP ставится на строку
+; выше клетки: PUSH пишет к меньшим адресам, как раз по строкам вниз, и
+; кладёт D в верхнюю строку пары, E — в нижнюю; узор читается тоже с
+; уменьшением адреса. DI на время подмены стека. В конце POP DE
+; возвращает DE, сохранённый в NativeRestoreTextureColumn.
+;
+; Исходная строка:
 ; Full empty tile column, no magnets. Copy C, invert into E, PUSH zeros into A.
 NativeRestoreCopyFull:
  ld (NativeRestoreCopySource+1),hl
@@ -16,6 +28,8 @@ NativeRestoreCopySource:
  ld a,(NativeRestoreMask+1)
  ld c,a
  ld b,4
+; C: четыре пары строк; маска верхнего края — к первой строке, нижнего — к
+; последней.
 NativeRestoreCopyPair:
  ld a,(hl)
  and c
@@ -53,6 +67,7 @@ NativeRestoreCopyBottomDone:
  sub $20
  ld h,a
  ld b,4
+; E: инверсия только что записанного C — бумага там, где узора нет.
 NativeRestoreInvertPair:
  ld a,(hl)
  cpl
@@ -65,6 +80,7 @@ NativeRestoreInvertPair:
  push de
  dec b
  jp nz,NativeRestoreInvertPair
+; A: нули.
  ld hl,(NativeRestoreCopyBase+1)
  ld a,h
  sub $20

@@ -1,3 +1,10 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — четырёхплоскостная
+; база до опытов с тремя плоскостями (PREPARED-SPRITES.md).
+; Появился в c77b911, 11.10.2026; подключение снято в 75e0011, 11.10.2026 —
+; переход на вывод «3+1».
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Compact shifted masks and short-column composition in ordinary 64K RAM.
 WaitVideoFrame:
  ; SP blits can mask the raster IRQ. Skip HALT only when a conservative

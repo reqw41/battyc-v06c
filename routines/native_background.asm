@@ -1,3 +1,16 @@
+; ФОН «3+1» ДЛЯ ЛОГИКИ ПРЕЖНЕЙ ИГРЫ: ВИРТУАЛЬНЫЙ ЭКРАН И КИРПИЧИ.
+;
+; Логика Batty пришла из версий для ZX Spectrum и «Специалиста» и пишет
+; экран через свои указатели. Здесь они — только координаты:
+; 7000h + 256*столбец + строка, столбцы 70h..8Fh (32 по 8 точек), строки
+; 00..BFh — точки, C0h.. — атрибуты (по 24 клетки на столбец), столбец 90h
+; игнорируется. Адреса вне 7000..90FF — обычная память. Процедуры
+; NativeRead*/NativeWrite* переводят такие обращения в плоскости Вектора:
+; точка — в C (строка 00 -> младший байт E0h, вниз — меньше), атрибут — в
+; упакованную таблицу NativeAttrs (6E00, 32 столбца по 24 байта).
+; Фон пишется в A/C/E, белые движущиеся объекты — в 8000 (planes.asm).
+;
+; Исходные строки:
 ; Virtual legacy pointers are coordinates only: 7000+256*column+row.
 ; Background uses A/C/E; the white moving overlay occupies 8000.
 NativeAttrs EQU $6e00
@@ -5,6 +18,8 @@ NativeAttrBytes EQU 768
 OverlayActive: db 0
 NativeReadValue: db 0
 NativeWriteValue: db 0
+; Обёртки для разных регистровых пар: чтение/запись/И/ИЛИ/XOR через
+; виртуальную координату в DE или BC; адрес в HL сохраняется.
 NativeReadDE:
  ex de,hl
  call NativeReadHL
@@ -50,6 +65,10 @@ NativeXorHL:
  xor b
  pop bc
  ret
+; NativeReadHL — прочитать байт по виртуальной координате HL. Точка: ИЛИ
+; плоскостей C и A (белая 8000 в фон не входит). Атрибут: из NativeAttrs,
+; за 24-й клеткой — D0h (значение по умолчанию). Столбец 90h — ноль.
+; Регистры, кроме A, целы.
 NativeReadHL:
  call SUInvalidate
  push af
@@ -95,6 +114,10 @@ NativeReadOrdinary:
  pop af
  ld a,(hl)
  ret
+; NativeWriteHL — записать A по виртуальной координате HL: точку — цветом
+; атрибута клетки (background_write), атрибут — в NativeAttrs; цвет уже
+; нарисованных точек при этом не меняется (для этого — NativeRecolorCell).
+; Регистры целы.
 NativeWriteHL:
  push af
  ld (NativeWriteValue),a
@@ -134,6 +157,8 @@ NativeWriteOrdinary:
  pop af
  ld (hl),a
  ret
+; Виртуальная координата -> адрес точки в плоскости C: столбец 70h -> C0h,
+; строка r -> младший байт E0h - r.
 ; HL virtual coordinate -> DE native C-plane address.
 NativePixelAddress:
  ld a,h
@@ -144,6 +169,7 @@ NativePixelAddress:
  sub l
  ld e,a
  ret
+; Виртуальный адрес атрибута -> NativeAttrs + 24*столбец + клетка.
 ; Virtual attribute pointer -> packed 24-byte column at NativeAttrs.
 NativeAttrAddress:
  ld a,l
@@ -167,6 +193,9 @@ NativeAttrAddress:
  ld de,NativeAttrs
  add hl,de
  ret
+; NativeRecolorCell — перекрасить клетку 8x8 под её новый атрибут: рисунок
+; клетки (C ИЛИ A) раскладывается заново по A/C по битам нового цвета, E —
+; по правилу бумаги (planes.asm). Клетки за 24-й строкой не трогаются.
 NativeRecolorCell:
  call SUInvalidate
  push af
@@ -256,6 +285,11 @@ NativeRecolorDone:
  pop af
  ret
 
+; NativeStaticObject — нарисовать неподвижный объект IXobj. Значки жизней и
+; счёта — белым в 8000 (plane_static_object). Объект типа 3 — в фон, по
+; столбцам атрибутов (NativeStaticColumns; по MERGE.md этот вывод теперь
+; обслуживает только разделитель режима «Вдвоём»). Остальные — тоже
+; plane_static_object. Невидимые (тип 0 или бит 7) пропускаются.
 NativeStaticObject:
  ld hl,(IXobj)
  ld de,object_lives_indicator
@@ -340,6 +374,10 @@ NativeHeight: db 0
 NativeShift: db 0
 NativeLeft: db 0
 
+; NativePrintDigit — цифра счёта: восемь строк в белую плоскость 8000 по
+; адресу score_screen_ptr (виртуальная координата), затем указатель на
+; следующий столбец. Цифры хранятся парами байт на строку, на экран идёт
+; их XOR. Сначала NativeDigitCheck (кэш цифр) решает, рисовать ли вообще.
 NativePrintDigit:
  jp NativeDigitCheck
 NativePrintDigitDraw:
@@ -374,6 +412,13 @@ NativeDigitRow:
  ld (score_screen_ptr),hl
  ret
 
+; NativePrintBrick — нарисовать кирпич 16x8 в стиле CPC (CPC_BRICKS.md):
+; HL — виртуальная координата. Два атрибута клеток получают цвет кирпича
+; уровня (briks_colors), маски чернил выбираются один раз
+; (NativeCpcSelectInk). Кирпич отделяется от соседей строкой бумаги сверху
+; и снизу и краем соседних столбцов слева (маска FEh) и справа (7Fh);
+; у стенок поля (столбцы C0/C1, DE/DF) края не рисуются. Тело — построчно
+; через NativeCpcBrickByte.
 NativePrintBrick:
  call SUInvalidate
  ld (NativeBrickDest),hl
@@ -450,6 +495,7 @@ NativeBrickRow:
  inc h
  ld c,$7f
  jp NativeBrickEdge
+; Байт бумаги во всех трёх плоскостях: A = 0, C = 0, E = FFh (индекс 1).
 NativeBrickZero:
  push hl
  xor a
@@ -466,6 +512,8 @@ NativeBrickZero:
  ld (hl),a
  pop hl
  ret
+; Край соседнего столбца: в C и A оставить только биты маски C (FEh или
+; 7Fh), в E поставить бумагу на месте снятых. 8 строк вниз.
 NativeBrickEdge:
  ld a,h
  cp $c0
@@ -499,6 +547,13 @@ NativeBrickEdgeRow:
  ret
 NativeBrickDest: dw 0
 
+;
+; NativeFillTexture — залить поле узором фона: HL — узор (два столбца по
+; 16 байт, левый и правый, после 2 байт заголовка). Чётные столбцы экрана
+; берут левый столбец узора, нечётные — правый; в C — узор, в E — его
+; инверсия (узор цветом индекса 2, бумага — индекс 1). Поле — от строки
+; FieldBottomLo вверх, FieldTextureTiles плиток по 16 строк на столбец;
+; первая плитка неполная, чтобы фаза узора совпадала с прежней раскладкой.
 ; Repeat the two-column texture directly in the C video plane.
 NativeFillTexture:
  call SUInvalidate

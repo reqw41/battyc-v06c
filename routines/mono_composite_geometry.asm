@@ -1,3 +1,10 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — «3+1»: составная бита
+; из двух половин (THREE_PLUS_ONE_TRANSFORMS.md).
+; Появился в 6c3249e, 12.10.2026; подключение снято в 2d9cd0e, 13.10.2026 —
+; вывод «замещение на месте», MERGE.md.
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Fold the two animated halves into one white descriptor before isolation.
 ; Physical collision objects and transformation timing remain separate.
 MonoPairActive EQU $71e5

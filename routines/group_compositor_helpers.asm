@@ -1,3 +1,11 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — локальные группы
+; спрайтов и композиция в ОЗУ («три плоскости», THREE-PLANE-LOCAL-
+; COMPOSITOR.md).
+; Появился в c3bf6bb, 11.10.2026; подключение снято в 75e0011, 11.10.2026 —
+; переход на вывод «3+1».
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Canonical owner order: bonus, three balls, bullets, bats, enemy, rocket.
 CGObjects: dw object_bonus,object_ball_1,object_ball_2,object_ball_3
  dw object_bullet_1,object_bullet_2,object_bat_2,object_bat_1,object_bat_temp

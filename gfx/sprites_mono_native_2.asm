@@ -1,3 +1,4 @@
+; Сгенерировано: node verify/generate-mono-assets.js (из gfx/sprites_no_shadows_2.asm). Руками не править.
 ; Generated native column pairs (~cover,lit). Static magnets, separators and HUD headings use native columns; score digits retain their separate legacy format.
 spr_bomb:
  DEFB $01,$0a,$83,$00,$01,$5c,$83,$38,$c7,$00,$83,$38

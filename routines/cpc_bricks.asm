@@ -1,5 +1,8 @@
 ; CPC relief: white top/left, solid coloured body, one paper row/column.
 ; A/C/E only. Glints clear selected body pixels to white, never to paper.
+; NativeCpcSelectInk — по индексу цвета кирпича (background_color) заранее
+; подставить маски плоскостей в операнды NativeCpcBrickByte: бит 0 -> E,
+; бит 1 -> C, бит 2 -> A (00h или FFh). Делается раз на кирпич.
 NativeCpcSelectInk:
  ld a,(background_color)
  rra
@@ -18,6 +21,15 @@ NativeCpcSelectInk:
  ld (CpcBrickInkA+1),a
  ret
 
+; Строка кирпича по номеру строки в клетке (E and 7; клетка начинается с
+; младшего байта, кратного 8, и идёт вниз):
+; 0 — верхняя строка: белый кант (индекс 0) и бумага в последней точке;
+; 1 — нижняя строка: бумага по всей ширине;
+; остальные — тело цвета кирпича; в левом столбце первая точка — белый
+; кант (маска 7Fh), в правом последняя — бумага (FEh); точки блика A
+; вынимаются из тела и становятся белыми. Нечётный столбец экрана —
+; левый у кирпича (поле начинается со столбца C1h).
+; DE — адрес в плоскости C, A — блик. Регистры, кроме AF, целы.
 ; DE=C video address, A=additional white glint. Preserve all other registers.
 NativeCpcBrickByte:
  push bc
@@ -71,6 +83,9 @@ CpcBrickInkE:
  pop bc
  ret
 
+; NativeCpcPrepareAnimation — подготовить кадр анимации попадания:
+; выбрать цвет клетки и маски, а последний кадр ZX (spr_brik_1, узор)
+; заменить чистым телом без блика (CpcBrickNoGlint).
 ; HL=C screen address, DE=legacy animation data. Select ink once per brick.
 ; The final patterned ZX frame becomes the clean solid body, not a pattern.
 NativeCpcPrepareAnimation:
@@ -103,6 +118,7 @@ CpcBrickPrepared:
  pop af
  ret
 
+; Байт анимации: HL — адрес C, A — блик. Регистры HL и DE сохраняются.
 NativeCpcScreenWrite:
  push hl
  push de

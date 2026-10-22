@@ -1,21 +1,68 @@
-; Native column-major (~coverage,lit) pairs. Only lit affects sprite plane.
-; Old eight-row tiles are cleared once through a bitmap; all current owners
+; ВЫВОД ДВИЖУЩИХСЯ ОБЪЕКТОВ В РЕЖИМЕ «3+1» (MonoRender) и его окружение.
+;
+; Экран «3+1» (THREE_PLUS_ONE.md): плоскости A000/C000/E000 — фон до восьми
+; цветов, плоскость 8000 — белые спрайты поверх любого фона (индексы палитры
+; 8..15 все белые). Движущиеся объекты — мячи, бонус, враги, пули, ракета,
+; биты — пишут ТОЛЬКО в 8000; фон под ними не сохраняется и не
+; восстанавливается, поэтому save-under здесь нет вовсе.
+;
+; Адрес экрана Вектора: старший байт — столбец (8000h + столбец*256, 32
+; столбца по 8 точек), младший — строка, и строки идут ВНИЗ с уменьшением
+; младшего байта (dec l — следующая строка). Поэтому «верх» объекта — это
+; БОЛЬШИЙ младший байт, а нижняя строка = верх - строк + 1.
+;
+; Графика спрайтов — столбцами, по строкам пары (~маска покрытия, белые
+; точки); их читает POP через SP: E = ~маска, D = белые точки. В 8000 идут
+; только белые точки (D).
+;
+; Как устроен кадр вывода (MERGE.md, «Мерцание объектов»): изображение
+; никогда не стирается раньше, чем на экране появится его замена.
+; * Объект, у которого общий прямоугольник старой и новой позиции не
+;   задевает прямоугольники других объектов («изолированный»), замещается
+;   на месте: новый рисунок записывается поверх старого (запись, не ИЛИ), и
+;   затем обнуляются только полоски старого рисунка вне нового.
+; * Объекты, чьи прямоугольники пересекаются («общие»), выводятся вместе по-
+;   старому: обнуляются их старые прямоугольники, затем они рисуются по ИЛИ.
+;   Только тут объект может на короткое время пропасть с экрана.
+; Описатели объектов — два банка по 11 записей; после кадра банки меняются
+; местами правкой операндов (mono_copy_old), без копирования.
+;
+; Рядом в файле: кэш сдвинутой графики для статических значков HUD
+; (MonoCachePrepare/SpriteCacheBuild), рисование ячеек рамки ZX (zf_cell),
+; точка ожидания кадра (GameplaySyncPoint) и решения очереди восстановления
+; кирпичей (NativeRestoreQueue*). Строки ниже оставлены из прежней версии.
+;
+; (прежний заголовок) Native column-major (~coverage,lit) pairs. Only lit affects sprite plane.
+; (устарело: плитки 8 строк и карта грязных плиток больше не используются,
+; см. MERGE.md) Old eight-row tiles are cleared once through a bitmap; all current owners
 ; are OR-blitted from original sources. Moving caches/isolation are obsolete.
 MonoRawSources EQU 1
 ; Upper-field objects go first and the paddles last: with a raster-tied
 ; frame they are replaced before the beam leaves the top border.
 ; Owners 1..3 must stay the balls (dedicated blit), owner 4 is the bonus.
+; Владельцы 0..10 в порядке вывода; таблица выровнена на страницу
+; (ASSERT ниже): адрес элемента = high MonoObjects : номер*2.
 MonoObjects: dw object_enemy,object_ball_1,object_ball_2,object_ball_3
  dw object_bonus,object_bullet_1,object_bat_2,object_bat_1,object_bat_temp
  dw object_bullet_2,object_rocket
+; Кэш сдвинутой графики есть только у владельца 11 — статического значка
+; HUD (plane_object): один слот в 7F00 на 228 байт. Таблицы MonoSlots и
+; MonoCapacities адресуются номером владельца, отсюда смещения -22 и -11.
 MonoSlots EQU MonoOnlySlot-22
 MonoOnlySlot: dw $7f00
 MonoCapacities EQU MonoOnlyCapacity-11
 MonoOnlyCapacity: db 228
+; ОПИСАТЕЛЬ ОБЪЕКТА — 7 байт: адрес верхней строки первого столбца в 8000
+; (2), столбцов, строк, адрес графики (2), сдвиг 0..7 внутри байта.
+; Столбцов = 0 — слот пуст. Оба банка лежат в одной странице: указатели
+; на описатели шагают только младшим байтом, а записи прохода A хранят
+; лишь младшие байты описателей (старший берётся из mono_*_base+2).
 MonoDesc: ds 77,0 ; top address, cols, rows, source, shift
 MonoOld: ds 77,0  ; second descriptor bank; no per-frame geometry copy
  ASSERT high MonoDesc == high (MonoOld+77)
  ASSERT high MonoRegions == high (MonoRegions+55)
+; Метки кэша (4 байта на владельца: адрес графики, сдвиг, строк). Реально
+; используется только запись владельца 11 (MonoOnlyTags).
 MonoTags EQU MonoOnlyTags-44
 MonoOnlyTags: ds 4,0 ; only the static glyph owner has a shifted cache
 MonoOwner: db 0
@@ -29,6 +76,10 @@ MonoColumn: db 0
 MonoTop: db 0
 MonoRows: db 0
 MonoCols: db 0
+; Ниже — рабочие ячейки и имена прежних вариантов вывода (выбор
+; кандидатов, композиция столбцов, save-under). Часть из них в текущей
+; сборке не используется: на них ссылаются лишь неподключённые файлы
+; routines/mono_isolation.asm и др. Адреса — в области 7100..71FF.
 MonoScan EQU $7f76
 MonoCandidates EQU $7f60
 MonoCandidateCount EQU $7f77
@@ -73,6 +124,8 @@ SUDropped EQU $7143
  ASSERT MonoBlack+32 <= SUCount
  ASSERT SUDropped < SpriteCacheOriginal
 SpriteShiftMasks: db $ff,$7f,$3f,$1f,$0f,$07,$03,$01
+; MonoReset — забыть все объекты: обнулить оба банка описателей и метки
+; кэша, прежний список plane_old и кэш цифр счёта. Экран не трогает.
 MonoReset EQU MonoResetBody
 MonoResetBody:
  ld hl,MonoDesc
@@ -92,10 +145,19 @@ mr_old:
  dec b
  jp nz,mr_old
  jp NativeDigitInvalidate
+; Пустые входы прежних механизмов (сохранение фона, кэш регионов): в «3+1»
+; им нечего делать, но на них остались вызовы.
 RCBegin:
 RCFlush:
 SUInvalidate:
  ret
+; MonoCachePrepare — подготовить графику статического значка (владелец
+; MonoOwner, сейчас только 11) после plane_object_fast.
+; Если сдвиг 0 и высота вывода равна высоте картинки — графика берётся
+; прямо из исходника, кэш не нужен. Иначе ищется метка (адрес, сдвиг,
+; строк); при промахе сдвинутая копия строится в слот владельца
+; (SpriteCacheBuild). Выход: direct_source указывает на графику в кэше
+; (после заголовка «столбцов, строк»). Портит всё.
 MonoCachePrepare:
  ld a,(direct_shift)
  or a
@@ -154,6 +216,16 @@ mcp_hit:
  inc hl
  ld (direct_source),hl
  ret
+; MonoRender — вывести все движущиеся объекты одного кадра.
+; 1) Для каждого из 11 владельцев plane_object_fast считает геометрию
+;    (адрес в 8000, столбцы, строки, графику, сдвиг) — пишем описатель в
+;    новый банк; неактивный владелец получает «столбцов = 0».
+; 2) GameplaySyncPoint: при одном мяче ожидание кадра стоит здесь, между
+;    подготовкой и первой записью на экран — так картинка привязана к лучу.
+; 3) Проход A: запись на каждого активного владельца (см. ниже), поиск
+;    пересечений (mono_pairs), вывод общих, затем изолированных.
+; 4) Банки описателей меняются местами (mono_copy_old).
+; Портит всё; прерывания запрещаются внутри блитов через SP.
 MonoRender:
 mono_new_base:
  ld hl,MonoDesc
@@ -217,6 +289,8 @@ mono_next:
  ld (MonoOwner),a
  cp 11
  jp nz,mono_prepare
+; (MonoActiveCount — число активных владельцев: по нему очередь кирпичей
+; решает, сколько работы можно взять в этот кадр.)
  ; Every sprite is redrawn from its original native source. No shifted
  ; moving-object cache or pairwise isolation pass is required.
  call GameplaySyncPoint
@@ -226,6 +300,11 @@ mono_next:
  ; strips of the old one are zeroed afterwards. Owners that share a box are
  ; handled together the old way: zero their old boxes, then OR-draw them.
  ;
+;
+; Запись прохода A (8 байт, MonoUnion): [0] признак 1 — изолирован,
+; 2 — общий; [1] левый столбец и [2] столбец за правым краем общего
+; прямоугольника; [3] верх (больший младший байт) и [4] низ; [5] номер
+; владельца; [6], [7] младшие байты старого и нового описателей.
  ; Pass A packs one eight-byte record per active owner:
  ; flag (1 isolated, 2 shared), union box (column, end, top, bottom),
  ; owner number, low bytes of its old and new descriptors.
@@ -236,6 +315,8 @@ mono_old_base:
  ld bc,MonoUnion
  xor a
  ld (MonoFastDraw),a
+; Цикл по владельцам: HL — новый описатель, DE — старый (оба на +2,
+; на «столбцах»). Пустые оба — владелец пропускается.
 mono_a_owner:
  ld (mono_a_index+1),a
  inc hl
@@ -251,6 +332,8 @@ mono_a_owner:
  ld a,(de)
  or a
  jp z,mono_a_new_only
+; Есть и старый, и новый: общий прямоугольник = минимум левых столбцов,
+; максимум правых краёв, максимум верхов, минимум низов.
  ld a,(hl)
  or a
  jp z,mono_a_old_only
@@ -313,6 +396,8 @@ mono_a_bottom:
  ld (bc),a
  inc bc
  jp mono_a_tail
+; Есть только старый (объект исчез) или только новый (появился) —
+; прямоугольник одного описателя.
 mono_a_old_only:
  push hl
  ld h,d
@@ -359,6 +444,7 @@ mono_a_index:
  inc a
  cp 11
  jp nz,mono_a_owner
+; Число записей = (конец - начало) / 8.
  ld a,c
  sub low MonoUnion
  rrca
@@ -374,6 +460,9 @@ mono_a_index:
  call mono_each
  ld hl,mono_h_shared_draw
  call mono_each
+; Изолированные: запись вместо ИЛИ — новый рисунок замещает старый байт за
+; байтом, без пустого момента; затем обнуляются хвосты старого. После —
+; снова ИЛИ (им пользуются остальные выводы игры).
 mono_isolated:
  xor a ; NOP: store instead of OR
  call MonoMergeMode
@@ -382,6 +471,8 @@ mono_isolated:
  ld a,$b6 ; OR (HL)
  call MonoMergeMode
  jp mono_copy_old
+; mono_a_box — прямоугольник одного описателя в запись: левый столбец,
+; правый край, верх, низ.
 ; HL=descriptor+2, BC=box to fill (advanced). Keeps DE.
 mono_a_box:
  push de
@@ -410,6 +501,9 @@ mono_a_box:
  pop de
  ret
 
+; Перебор всех пар O(n^2): n не больше 11. Пересечение по столбцам
+; (полуинтервалы) и по строкам (верх/низ включительно). Обе записи пары
+; получают признак 2, MonoSharedAny — что хотя бы одна пара нашлась.
 ; Mark every pair of records whose union boxes intersect.
 mono_pairs:
  xor a
@@ -481,6 +575,10 @@ mono_pair_next:
  jp nz,mono_pair_i
  ret
 
+; Обработчики проходов. mono_h_shared_zero: общий владелец — обнулить его
+; СТАРЫЙ прямоугольник целиком (ncol = FFh: «нового прямоугольника нет»).
+; mono_h_shared_draw: общий — нарисовать новый по ИЛИ. mono_h_isolated:
+; изолированный — нарисовать новый (в режиме записи), затем стереть хвосты.
 ; Call handler HL for every record with A=flag, HL=record.
 mono_each:
  ld (mono_each_call+1),hl
@@ -534,6 +632,12 @@ mono_h_isolated:
  ld a,(mono_new_base+2)
  ld h,a
  ; fall through: zero what is left of the old picture outside the new box
+; mono_zero_strips — стереть то, что от старого рисунка осталось вне нового.
+; Геометрия не менялась (адрес, столбцы, строки) — стирать нечего: новый
+; рисунок записан ровно поверх старого. Иначе по каждому старому столбцу:
+; вне столбцов нового — обнулить весь столбец старого; внутри — только
+; строки выше верха нового и ниже его низа. Значения подставляются прямо
+; в операнды команд сравнения (самомодифицирующийся код ради скорости).
 ; DE=old descriptor, HL=new descriptor.
 mono_zero_strips:
  push de
@@ -646,6 +750,8 @@ mono_z_byte:
  jp nz,mono_z_byte
  ret
 
+; mono_rec_draw: описатель → MonoDrawVideo/Source/Cols/Rows и direct_shift;
+; дальше MonoDrawWhite выбирает блит (мяч, сдвинутый или выровненный).
 ; HL=record: draw its owner's new picture in the current merge mode.
 mono_rec_draw:
  ld de,5
@@ -689,6 +795,9 @@ mono_rec_draw:
  ld a,(direct_shift)
  ld b,a
  jp MonoDrawWhite
+; Все блиты белой плоскости соединяют байт спрайта с экраном одной
+; командой; её код (NOP — запись, B6h — OR (HL)) подставляется сразу в
+; четыре места. Так один и тот же блит служит и замещению, и наложению.
 ; A=$b6 (OR with the screen) or 0 (store): how the blits merge a sprite byte.
 MonoMergeMode:
  ld (MonoStoreOp),a
@@ -699,11 +808,14 @@ MonoMergeMode:
 MonoStoreOp: db $b6
 MonoSharedAny: db 0
 MonoActiveN: db 0
+; MonoUnion (11 записей по 8 байт) не должна пересекать границу страницы:
+; записи перебираются по младшему байту.
  IF high $ != high ($+87)
  DS 256-low $,0
  ENDIF
 MonoUnion: ds 88,0
  ASSERT high MonoUnion == high (MonoUnion+87)
+; Поменять банки местами: новый станет старым для следующего кадра.
 mono_copy_old:
  ld hl,(mono_new_base+1)
  ex de,hl
@@ -712,6 +824,10 @@ mono_copy_old:
  ex de,hl
  ld (mono_old_base+1),hl
  ret
+; MonoDraw — выровненный вывод одного рисунка через SP (статические
+; значки, plane_object): SP = графика, HL = экран. DI на время подмены
+; стека: прерывание положило бы адрес возврата прямо в графику.
+; MonoDrawBare возвращается переходом на mono_draw_restore.
 MonoDraw:
  ld hl,0
  add hl,sp
@@ -734,6 +850,9 @@ MonoFindIsolated:
 MonoEraseFringes:
  ret ; obsolete in clear-old/redraw renderer
 
+; MonoRemove — убрать все движущиеся объекты (конец раунда, окно
+; сообщения): довести очередь кирпичей, пометить новый банк пустым и
+; обнулить в 8000 старые прямоугольники; сбросить кэш графики.
 MonoRemove:
  call NativeRestoreQueueFlush
  ; Empty new list makes MonoRender restore all old sprite regions to zero.
@@ -782,6 +901,10 @@ MonoPairPrepare:
 
 
 
+; SpriteCacheBuild — построить сдвинутую копию графики в кэш. Для объекта
+; типа 3 (флаг MonoBuildBat) каждая строка проходит и через mnn_cover —
+; сдвинутую маску покрытия, иначе только белые точки (mnn_lit).
+; Настройка сдвига и сам цикл — SpriteCacheShiftSetup (mono_cache.asm).
 SpriteCacheBuild:
  ld hl,(IXobj)
  ld a,(hl)
@@ -799,6 +922,10 @@ mnn_select_cover:
  ld (mnn_cover_select+1),hl
  jp SpriteCacheShiftSetup
 
+; Ветка маски покрытия: маска (CPL от E = ~маска) сдвигается так же, как
+; белые точки, и в кэш снова идёт ~маска, слитая с соседним столбцом по И.
+; Сдвиг — переход в середину цепочки RRCA; ведущая и переносимая части
+; байта отделяются масками.
 mnn_cover:
  ld a,e
  cpl
@@ -844,6 +971,8 @@ mnn_cover_from_next:
  jp mnn_lit
 MonoCoverCodeEnd:
 
+; Маски сдвинутого блита мяча: ведущая часть байта (lead) и та, что уходит
+; в соседний столбец (spill), для текущего direct_shift.
 BallShiftMaskInit:
  ld hl,SpriteShiftMasks
  ld a,(direct_shift)
@@ -855,6 +984,12 @@ BallShiftMaskInit:
  ret
 
  INCLUDE "routines/zx_field_frame.asm"
+; Ячейка рамки ZX (вызывается из DrawFieldFrame, zx_field_frame.asm).
+; Одна точка — один бит рисунка; при zf_mirror ячейка отражается (правая
+; половина рамки — зеркало левой). Цвет — маски материала:
+; A = биты & маска A, C = биты & маска C, E = ~биты | маска C. В верхней
+; полосе маски меняются по строкам (zf_row_masks берёт очередной бит
+; узора), на боковых стенках постоянны.
 ; HL=plane C address of the cell top, DE=cell bitmap, C=rows.
 zf_cell:
  ld a,(de)
@@ -926,6 +1061,8 @@ zf_reverse_bit:
  pop hl
  ret
 
+; Ожидание кадра, если его заказал игровой цикл (флаг GameplaySync). Выход:
+; CY = 1, если ожидание было. Вызывается внутри MonoRender (см. шаг 2).
 ; Gameplay frame wait, requested by the game loop and taken once per step.
 GameplaySyncPoint:
  ld a,(GameplaySync)
@@ -938,6 +1075,8 @@ GameplaySyncPoint:
  ret
 GameplaySync: db 0
 
+; После окна раунда: перестроить кэш картинок магнитов и сбросить кэш
+; графики объектов (окно занимало его память, THREE_PLUS_ONE_TRANSFORMS.md).
 NativeMagCacheAfterWindow:
  call MagCacheBuildAll
  jp SpriteCacheReset
@@ -946,6 +1085,16 @@ NativeMagCacheAfterWindow:
 QueueFresh: db 0
 QueueMode: db 0
 
+; ОЧЕРЕДЬ ВОССТАНОВЛЕНИЯ КИРПИЧЕЙ. В тяжёлых кадрах кирпич восстанавливается
+; не целиком, а по столбцам (MERGE.md: синхронное восстановление при
+; переполнении очереди давало кадры сверх бюджета).
+; NativeRestoreQueueGate — выбрать режим QueueMode перед восстановлением:
+; 0 — кирпич целиком, 5 или 8 — по столбцам (8, если режим уже был >= 3).
+; * вне шага очереди (QueueInStep = 0) режим не меняется;
+; * без магнитов: очередь не свежая или владельцев меньше 7 — целиком,
+;   иначе по столбцам;
+; * с магнитами: очередь свежая или владельцев 7 и больше — режим не
+;   меняется, иначе по столбцам.
 NativeRestoreQueueGate:
  ld a,(QueueInStep)
  or a
@@ -981,6 +1130,9 @@ brq_whole_zero:
 brq_idle_whole:
  ld (QueueMode),a ; no magnet and a light scene: finish the whole brick
  ret
+; NativeRestoreQueueColumn — пропустить ли столбец D (CY = 1 — пропустить,
+; оставить на потом). В режиме 0 делаются все столбцы; иначе — столбец
+; QueueCut (операнд SUB) и следующий за ним (режим >= 5), прочие — потом.
 NativeRestoreQueueColumn:
  ld a,(QueueMode)
  or a

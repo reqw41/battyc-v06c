@@ -1,3 +1,10 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — четырёхплоскостная
+; база до опытов с тремя плоскостями (LOCAL-COMPOSITE.md).
+; Появился в c77b911, 11.10.2026; подключение снято в c95a146, 11.10.2026 —
+; три плоскости с save-under.
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Interleaved E/F pairs for one column in ordinary RAM. The old video image stays visible
 ; until its replacement (including every overlapping object) is ready.
 RCBufE EQU $7100

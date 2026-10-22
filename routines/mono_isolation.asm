@@ -1,3 +1,11 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — «3+1»: поиск
+; изолированных объектов по объединению старого и нового следа
+; (THREE_PLUS_ONE_FAST.md).
+; Появился в e5b70e5, 12.10.2026; подключение снято в 2d9cd0e, 13.10.2026 —
+; вывод «замещение на месте», MERGE.md.
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Conservative fast path: the union of this owner's old/new footprint must
 ; be disjoint from every other owner's union. No saved background required.
 MonoFindIsolated:

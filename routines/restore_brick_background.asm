@@ -1,14 +1,32 @@
+; ВОССТАНОВЛЕНИЕ ФОНА НА МЕСТЕ РАЗБИТОГО КИРПИЧА.
+; Кирпич 16x8 (два столбца по 8 строк) заменяется узором фона поля
+; (NativeTextureLeft/Right из native_background.asm), только в A/C/E.
+; Кирпич рисовался с отделением: строкой бумаги сверху и снизу и краем
+; соседних столбцов (NativePrintBrick). Поэтому, кроме самой клетки,
+; восстанавливается «крест» вокруг неё: крайний бит левой и правой клеток
+; и крайняя строка верхней и нижней — если там кирпича нет. Соседей
+; читаем по карте уровня один раз (3x3).
+; Магниты лежат поверх узора: клетка восстанавливается чистым узором, а
+; затронутые строки помеченных магнитов перерисовываются из их кэша.
+;
+; Исходные строки:
 ; Read the 3x3 logical neighbourhood once. Only the cross is repainted.
 ; Magnets lie above the texture: the brick is restored as plain texture,
 ; then the touched rows of every marked magnet are repainted from its cache.
 NativeRestoreBrick:
  call NativeRestoreBrickBody
  jp MagnetRepaintMarked
+; Вход: LB28F+1 — координата кирпича (L = X в точках, H = Y), cur_level_ptr
+; — его клетка в карте уровня. Сначала выбор магнитов и режима очереди
+; (NativeRestoreQueueGate, mono_renderer.asm).
 NativeRestoreBrickBody:
  ld hl,(LB28F+1)
  ld (NativeRestoreOrigin),hl
  call NativeRestoreChooseMagnets
  call NativeRestoreQueueGate
+; NativeRestoreGrid — 3x3 вокруг клетки: FFh — кирпича нет, 0 — есть
+; (бит 7 клетки карты; строка карты — 15 байт). За стенками поля (X = 8 и
+; 232, Y = 32 и 120) соседи считаются кирпичами — их не трогаем.
 NativeRestoreGridStart:
  ld hl,(cur_level_ptr)
  ld de,-16
@@ -65,6 +83,11 @@ NativeRestoreGridBottom:
  ld (NativeRestoreGrid+6),a
  ld (NativeRestoreGrid+7),a
  ld (NativeRestoreGrid+8),a
+; Сама клетка. Маски краёв по соседям: если сосед слева (справа) пуст,
+; крайний бит клетки с этой стороны остаётся бумагой (маска 7Fh / FEh);
+; если сверху (снизу) пусто — бумагой остаётся вся крайняя строка; если
+; там кирпич — узор во всю клетку. Причина правила в документах не
+; записана — так в коде.
 NativeRestoreCenter:
  call NativeRestoreQueueSparseGate
  call NativeRestoreResetMasks
@@ -89,6 +112,9 @@ NativeRestoreCenter:
  ld (NativeRestoreRowClip),a
  ld hl,(NativeRestoreOrigin)
  call NativeRestoreRect
+; Дальше — четыре соседа «креста»; каждый только если он пуст:
+; слева — его правый бит (16 точек левее), справа — левый бит,
+; сверху — нижняя строка, снизу — верхняя (RowClip 3 и 1).
  ; Left fringe. Horizontal masks do not affect its last bit.
  ld a,(NativeRestoreGrid+3)
  or a
@@ -159,6 +185,7 @@ NativeRestoreBottomFringe:
  add a,8
  ld h,a
  jp NativeRestoreRect
+; Маски краёв строки соседа (верхнего или нижнего) по его угловым клеткам.
 NativeRestoreHorizontalMasks:
  ld a,(hl)
  and $80
@@ -181,6 +208,8 @@ NativeRestoreResetMasks:
  ld (NativeRestoreTopMask),a
  ld (NativeRestoreBottomMask),a
  ret
+; NativeRestoreRect — восстановить два столбца клетки с текущими масками.
+; HL — координата (L = X, H = Y); у стенок (X < 8, X >= 248) — ничего.
 NativeRestoreRect:
  ld a,l
  cp 8

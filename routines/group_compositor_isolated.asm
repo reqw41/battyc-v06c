@@ -1,3 +1,11 @@
+; НЕ СОБИРАЕТСЯ. Этот файл не подключает ни batty.asm, ни другие
+; собираемые файлы: остаток прежнего варианта вывода — локальные группы
+; спрайтов и композиция в ОЗУ («три плоскости», THREE-PLANE-LOCAL-
+; COMPOSITOR.md).
+; Появился в c3bf6bb, 11.10.2026; подключение снято в 75e0011, 11.10.2026 —
+; переход на вывод «3+1».
+; Текущий вывод — routines/mono_renderer.asm. Оставлен как архив решений:
+; при правках игры его не трогать.
 ; Isolated moving owner: copy only old/new intersection from saved BG,
 ; sample new fringes, shade final sprite, then erase only retiring fringes.
 CGIsolated:
