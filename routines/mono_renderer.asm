@@ -67,15 +67,10 @@ MonoTags EQU MonoOnlyTags-44
 MonoOnlyTags: ds 4,0 ; only the static glyph owner has a shifted cache
 MonoOwner: db 0
 MonoPtr: dw 0
-MonoOldPtr: dw 0
 MonoDrawSource: dw 0
 MonoDrawVideo: dw 0
 MonoDrawCols: db 0
 MonoDrawRows: db 0
-MonoColumn: db 0
-MonoTop: db 0
-MonoRows: db 0
-MonoCols: db 0
 ; Ниже — рабочие ячейки и имена прежних вариантов вывода (выбор
 ; кандидатов, композиция столбцов, save-under). Часть из них в текущей
 ; сборке не используется: на них ссылались прежние варианты вывода

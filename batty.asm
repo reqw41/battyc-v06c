@@ -5024,10 +5024,6 @@ LB2D8:
 
  INCLUDE "./routines/restore_brick_background.asm"
 
-; Обновление цвета знакоместа сразу на экране по данным из буфера цвета
-; На входе в HL - адрес в буфере атрибутов
-col_zm_rest:
- jp NativeRecolorCell
 
 ; Used by the routines at show_window_round_number, input_new_record_name, disp_main_menu_and_wait_keys, print_message and print_txt_players_1_and_2.
 ; На входе в DE адрес сообщения
@@ -6321,13 +6317,6 @@ print_txt_players_1_and_2:
 
   INCLUDE "txt_players_1_and_2.asm"
 
-; Мусор????
-
-; Used by the routine at game_restart.
-;--------------------------------------------------
-; Перенос данных (пикселей) вместе с цветом из буфера на экран
-buff_to_screen_pixs:
- ret ; Background pixels are already in their native video planes.
 
 ; Used by the routines at add_points_to_score and current_level_2up_copier.
 ; Обмен содержимым ячеек адресуемых парами HL и DE
@@ -6617,16 +6606,6 @@ cur_level_ptr:
 wins_recovery_ptr:
 	DEFW wins_recovery_data
 
-; Временная переменная для (IXobj+$04) в print_obj_to_buff: читается ДО перенаправления SP
-; в данные спрайта (см. LD SP,HL там) — после этого PUSH/POP использовать нельзя.
-obj_y_coord_tmp:
-	DEFB $00
-
-; Временная переменная для адреса спрайта (результат sprite_search) в print_obj_to_buff:
-; DE затирается ниже промежуточными LD DE,offset для эмуляции (IXobj+n), поэтому
-; сохраняем его в память и восстанавливаем перед использованием как указатель на спрайт.
-sprite_ptr_tmp:
-	DEFW $0000
 
 ; Переменные для LA7A6 (размножение шариков): адрес шарика-источника и его координаты
 ball_split_src:
@@ -6804,9 +6783,6 @@ table_shifts EQU $7200
  IF $ < $6b60
  DS $6b60-$,0
  ENDIF
-RCBoundary:
-ClearShapeFlags:
- ret
 LevelPaperColors: db $80,$10,$81,$03
 LevelTextureColors: db $c0,$20,$c1,$05
  INCLUDE "routines/mono_cache_address.asm"
@@ -6829,8 +6805,6 @@ SpriteBonusCache7 EQU $6c80
  ORG $6db4
 
 
-RCReset:
- jp MonoReset
 MonoIncludeRegion:
  ret ; obsolete isolation entry
  INCLUDE "routines/mono_pace_kernel.asm"

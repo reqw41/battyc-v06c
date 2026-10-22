@@ -32,39 +32,6 @@ NativeReadBC:
  call NativeReadHL
  pop hl
  ret
-NativeWriteDE:
- ex de,hl
- call NativeWriteHL
- ex de,hl
- ret
-NativeWriteBC:
- push hl
- ld h,b
- ld l,c
- call NativeWriteHL
- pop hl
- ret
-NativeAndHL:
- push bc
- ld b,a
- call NativeReadHL
- and b
- pop bc
- ret
-NativeOrHL:
- push bc
- ld b,a
- call NativeReadHL
- or b
- pop bc
- ret
-NativeXorHL:
- push bc
- ld b,a
- call NativeReadHL
- xor b
- pop bc
- ret
 ; NativeReadHL — прочитать байт по виртуальной координате HL. Точка: ИЛИ
 ; плоскостей C и A (белая 8000 в фон не входит). Атрибут: из NativeAttrs,
 ; за 24-й клеткой — D0h (значение по умолчанию). Столбец 90h — ноль.

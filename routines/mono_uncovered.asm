@@ -7,7 +7,6 @@ MonoOriginalRows EQU $7f22
 MonoCachedTop EQU $7f23
 MonoCachedBottom EQU $7f24
 MonoDirtyBitmap EQU $7f80 ; 32 columns x 32 eight-row tiles = 128 bytes
-MonoDirtyMasks: db 1,2,4,8,16,32,64,128
 MonoCommitColumn EQU RCBegin
 MonoAccountComposition EQU RCBegin
 

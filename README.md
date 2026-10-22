@@ -98,4 +98,4 @@ VECTOR06JS_ROOT=/path/to/vector06js node verify/test-three-plus-one.js
 
 ## Память
 
-ROM занимает почти всё доступное место: в основной области кода свободно несколько байт. Карта памяти — в [THREE_PLUS_ONE.md](THREE_PLUS_ONE.md), состояние — в [MERGE.md](MERGE.md).
+ROM занимает почти всё доступное место. После удаления мёртвого кода (22.10.2026) свободно: 56 байт в конце основной области (6AC8–6AFF, перед `ORG $6b00`), 9 байт в конце верхней (79F7–79FF), 3 байта перед 6E00. Карта памяти — в [THREE_PLUS_ONE.md](THREE_PLUS_ONE.md), состояние — в [MERGE.md](MERGE.md).
